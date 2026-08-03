@@ -1,0 +1,183 @@
+.dmh-root {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    font-family: "Segoe UI", sans-serif;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.dmh-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 5px 8px;
+    flex: 0 0 auto;
+    border-bottom: 1px solid #E1E1E1;
+}
+
+// Warning shown when the row-level dataset was truncated
+.dmh-notice {
+    flex: 0 0 auto;
+    padding: 4px 8px;
+    background: #FFF4CE;
+    border-bottom: 1px solid #F2D98C;
+    color: #605E5C;
+    font-size: 11px;
+    line-height: 1.3;
+}
+
+.dmh-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #252423;
+    flex: 1 1 0%;
+    min-width: 0;
+
+    span {
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    select {
+        font-size: 12px;
+        padding: 2px 4px;
+        flex: 1 1 0%;
+        min-width: 0;
+        width: 0;
+    }
+}
+
+.dmh-empty-state {
+    display: none;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 16px;
+    color: #605E5C;
+    font-size: 13px;
+}
+
+.dmh-scroll {
+    flex: 1 1 0%;
+    overflow: auto;
+    min-height: 0;
+    height: 0;
+}
+
+.dmh-table {
+    border-collapse: collapse;
+    table-layout: fixed;
+
+    th, td {
+        border: 1px solid #E1E1E1;
+        box-sizing: border-box;
+        padding: 2px 6px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .dmh-corner {
+        position: sticky;
+        top: 0;
+        left: 0;
+        z-index: 3;
+        background: #FAFAFA;
+        min-width: 100px;
+    }
+
+    .dmh-col-header {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #FAFAFA;
+        width: var(--dmh-col-width, 90px);
+        min-width: var(--dmh-col-width, 90px);
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .dmh-orient-horizontal {
+        white-space: normal;
+        word-break: break-word;
+        padding-top: 6px;
+        padding-bottom: 6px;
+    }
+
+    .dmh-orient-vertical {
+        height: 110px;
+        span, & {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+        }
+    }
+
+    .dmh-orient-diagonal {
+        height: 90px;
+        transform-origin: left bottom;
+        transform: rotate(-45deg) translateX(6px);
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    .dmh-row-header {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        background: #FAFAFA;
+        font-weight: 600;
+        text-align: right;
+        min-width: 100px;
+    }
+
+    .dmh-cell {
+        height: var(--dmh-row-height, 28px);
+        text-align: center;
+        cursor: pointer;
+        transition: opacity 0.15s ease-in-out;
+    }
+
+    .dmh-cell-empty {
+        cursor: default;
+        color: #A19F9D;
+    }
+
+    // Totals
+    .dmh-total-header {
+        font-style: italic;
+    }
+
+    .dmh-total-cell {
+        background: #F5F5F5;
+        font-weight: 600;
+        cursor: default;
+        text-align: center;
+        border-left: 2px solid #D2D0CE;
+    }
+
+    .dmh-total-row {
+        .dmh-total-cell {
+            border-left: 1px solid #E1E1E1;
+            border-top: 2px solid #D2D0CE;
+        }
+
+        .dmh-row-header {
+            border-top: 2px solid #D2D0CE;
+        }
+    }
+
+    .dmh-grand-total {
+        background: #EDEBE9;
+        border-left: 2px solid #D2D0CE;
+    }
+
+    tr {
+        height: var(--dmh-row-height, 28px);
+    }
+}

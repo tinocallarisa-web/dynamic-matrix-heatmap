@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terms of Use &amp; Licence — Dynamic Matrix Heatmap by TCViz</title>
+<style>
+  :root{--bg:#FAF9F5;--bg2:#EDE9DE;--bd:#F5F3ED;--line:#DAD9D4;
+        --t1:#3D3929;--t2:#535146;--t3:#83827D;--acc:#C96442;--accd:#B05730;
+        --acc2:#9C87F5;--acc2l:#DBD3F0}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--t1);
+       font-family:'Segoe UI',system-ui,-apple-system,sans-serif;line-height:1.65}
+  .wrap{max-width:840px;margin:0 auto;padding:48px 24px 80px}
+  header{border-bottom:3px solid var(--acc);padding-bottom:20px;margin-bottom:36px}
+  h1{margin:0 0 6px;font-size:32px;letter-spacing:-.5px}
+  h2{margin:36px 0 12px;font-size:21px;color:var(--accd)}
+  h3{margin:24px 0 8px;font-size:16px}
+  .sub{color:var(--t3);font-size:14px;margin:0}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--bg2);font-weight:600}
+  .tier{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;
+        text-transform:uppercase;letter-spacing:.4px}
+  .free{background:var(--bg2);color:var(--t2);border:1px solid var(--line)}
+  .pro{background:var(--acc2l);color:#4A3B8C;border:1px solid var(--acc2)}
+  .note{background:var(--bg2);border-left:4px solid var(--acc);padding:16px 20px;
+        border-radius:0 8px 8px 0;margin:20px 0}
+  code{background:var(--bg2);padding:2px 6px;border-radius:4px;font-size:13px}
+  ul{padding-left:22px}li{margin:6px 0}
+  a{color:var(--accd)}
+  footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);
+         color:var(--t3);font-size:13px;display:flex;gap:18px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Terms of Use &amp; Licence</h1>
+  <p class="sub">Dynamic Matrix Heatmap — a Power BI custom visual by TCViz · Last updated: 3 August 2026</p>
+</header>
+
+<p>By installing or using Dynamic Matrix Heatmap (the "visual") you agree to these terms. If you do
+not agree, do not install or use it.</p>
+
+<h2>1. What you get</h2>
+<p>TCViz grants you a non-exclusive, non-transferable, worldwide licence to use the visual inside
+Microsoft Power BI, for as long as these terms are respected. You may use it in commercial reports,
+in as many reports as you like, and share those reports with your colleagues and clients.</p>
+
+<h2>2. Free and Pro tiers</h2>
+<p>The visual is fully functional at no cost within the Free limits below. Pro is a paid licence sold
+through Microsoft AppSource and unlocks the remaining capabilities.</p>
+
+<table>
+  <tr><th style="width:52%">Capability</th><th>Free</th><th>Pro</th></tr>
+  <tr><td>Matrix with in-canvas X / Y / Value dropdowns</td><td>✓</td><td>✓</td></tr>
+  <tr><td>Global heatmap colour scale (3 configurable colours)</td><td>✓</td><td>✓</td></tr>
+  <tr><td>Empty cell handling, fonts, colours, row and column sizing</td><td>✓</td><td>✓</td></tr>
+  <tr><td>Column header orientation (horizontal / vertical / diagonal)</td><td>✓</td><td>✓</td></tr>
+  <tr><td>Tooltips, cross-filtering, context menu, keyboard navigation</td><td>✓</td><td>✓</td></tr>
+  <tr><td>High contrast support</td><td>✓</td><td>✓</td></tr>
+  <tr><td>Dimensions in the dropdowns</td><td>up to 3</td><td>up to 10</td></tr>
+  <tr><td>Measures</td><td>up to 2</td><td>up to 5</td></tr>
+  <tr><td><strong>Distinct count of</strong> — exact unique counts for any X/Y combination</td><td>—</td><td>✓</td></tr>
+  <tr><td><strong>Show value as</strong> % of row, % of column, % of grand total</td><td>—</td><td>✓</td></tr>
+  <tr><td><strong>Row and column totals</strong>, with exact distinct counts in the margins</td><td>—</td><td>✓</td></tr>
+</table>
+
+<div class="note">
+  <strong>Nothing is crippled or watermarked.</strong> The Free tier renders a complete, usable
+  matrix with no branding overlay and no time limit. Pro raises the field limits and adds the
+  client-side aggregation features.
+</div>
+
+<h3>How the licence is checked</h3>
+<p>Entitlement is resolved through Microsoft's official <code>IVisualLicenseManager</code> API. TCViz
+runs no licence server and receives no data. If the check cannot complete, the visual falls back to
+the Free tier rather than failing.</p>
+
+<h2>3. Purchasing and refunds</h2>
+<p>Pro licences are sold, billed and supported commercially by Microsoft through AppSource.
+Purchases, renewals, cancellations and refunds are governed by Microsoft's Marketplace Terms of Use
+and handled by Microsoft, not by TCViz.</p>
+
+<h2>4. What you may not do</h2>
+<ul>
+  <li>Reverse engineer, decompile or disassemble the visual, except where that restriction is
+      unenforceable under applicable law</li>
+  <li>Redistribute, resell, sublicense or rent the visual as a standalone product</li>
+  <li>Remove or obscure copyright or attribution notices</li>
+  <li>Circumvent, disable or tamper with the licence check</li>
+  <li>Present the visual as your own work or as part of a competing visual library</li>
+</ul>
+
+<h2>5. Your data</h2>
+<p>You keep all rights to your data. The visual processes it only in memory to render the matrix, and
+transmits nothing. See the <a href="privacy.html">Privacy Policy</a> for detail.</p>
+
+<h2>6. Accuracy of aggregation</h2>
+<p>The visual re-aggregates values when projecting a multi-dimension result onto the two dimensions
+you select. Sum, Minimum, Maximum and Count re-aggregate exactly. <strong>Average is an unweighted
+approximation.</strong> A distinct count produced by a DAX measure cannot be re-aggregated correctly
+by any client — use the <code>Distinct count of</code> field well, where the visual counts unique
+values from the raw column and the result is exact. You are responsible for validating figures
+before relying on them for decisions.</p>
+
+<h2>7. No warranty</h2>
+<p>The visual is provided "as is", without warranty of any kind, express or implied, including
+merchantability, fitness for a particular purpose and non-infringement. TCViz does not warrant that
+it will be uninterrupted or error free, or that it will work with every dataset or every future
+version of Power BI.</p>
+
+<h2>8. Limitation of liability</h2>
+<p>To the maximum extent permitted by law, TCViz is not liable for any indirect, incidental, special,
+consequential or punitive damages, nor for lost profits, revenue, data or business opportunity,
+arising from use of or inability to use the visual. Total aggregate liability is limited to the
+amount you paid for the licence in the twelve months before the claim.</p>
+
+<h2>9. Support</h2>
+<p>Support is provided on a best-effort basis through
+<a href="https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/issues">GitHub issues</a> and by
+email. Response times are not guaranteed under either tier.</p>
+
+<h2>10. Termination</h2>
+<p>This licence ends automatically if you breach these terms. It also ends if your Pro subscription
+lapses, at which point the visual reverts to the Free tier — your reports keep working, with Pro
+features switched off. You may stop using the visual at any time.</p>
+
+<h2>11. Changes to these terms</h2>
+<p>TCViz may update these terms. Material changes will be noted in the
+<a href="https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/blob/main/CHANGELOG.md">changelog</a>.
+Continued use after an update constitutes acceptance.</p>
+
+<h2>12. Governing law</h2>
+<p>These terms are governed by the laws of Spain, without regard to conflict of law provisions.</p>
+
+<h2>13. Contact</h2>
+<p><a href="mailto:tinocallarisa@gmail.com">tinocallarisa@gmail.com</a></p>
+
+<footer>
+  <span>© 2026 TCViz</span>
+  <a href="support.html">Support</a>
+  <a href="privacy.html">Privacy</a>
+  <a href="https://github.com/tinocallarisa-web/dynamic-matrix-heatmap">GitHub</a>
+</footer>
+
+</div>
+</body>
+</html>

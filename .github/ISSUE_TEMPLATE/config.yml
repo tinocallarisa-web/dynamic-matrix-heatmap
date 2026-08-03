@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation and troubleshooting
+    url: https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/support.html
+    about: Field wells, format pane reference and answers to the most common questions — start here.
+  - name: Licensing, billing and refunds
+    url: mailto:tinocallarisa@gmail.com
+    about: Pro licences are sold through Microsoft AppSource. Email us for anything the AppSource order page does not cover.
+  - name: Changelog
+    url: https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/blob/main/CHANGELOG.md
+    about: What changed in each release, including known limitations.
