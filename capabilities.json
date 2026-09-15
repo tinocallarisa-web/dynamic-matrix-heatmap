@@ -220,10 +220,10 @@
     "supportsLandingPage": true,
     "supportsKeyboardFocus": true,
     "supportsMultiVisualSelection": true,
-    "supportsReportTooltips": true,
     "tooltips": {
         "supportedTypes": { "default": true, "canvas": true },
-        "roles": ["dimensions"]
+        "roles": ["dimensions"],
+        "supportEnhancedTooltips": true
     },
     "privileges": []
 }

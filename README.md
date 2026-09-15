@@ -68,7 +68,7 @@ outside your own report file.
 ## Support
 
 [Open an issue](https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/issues) for bugs and
-feature requests. Licensing questions: tinocallarisa@gmail.com
+feature requests. Licensing questions: support@tcviz.com
 
 ---
 

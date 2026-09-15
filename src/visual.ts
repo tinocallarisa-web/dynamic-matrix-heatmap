@@ -262,10 +262,11 @@ export class Visual implements IVisual {
             const measures = this.isPro ? allMeasures : allMeasures.slice(0, FREE_MAX_MEASURES);
             const distinctCols = this.isPro ? allDistinctCols : [];
 
+            // True only when something was actually withheld, so the notice never appears on Pro
             const limited =
                 allDimensions.length > dimensions.length ||
                 allMeasures.length > measures.length ||
-                allDistinctCols.length > 0;
+                allDistinctCols.length > distinctCols.length;
 
             // ---- Validation ----------------------------------------------------------------
             if (dimensions.length === 0) {

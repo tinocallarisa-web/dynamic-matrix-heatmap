@@ -1,0 +1,134 @@
+═══════════════════════════════════════════════════════════════
+ LONG DESCRIPTION — paste into the YouTube description field
+ Replace the 0:00 timestamps with the real ones once the video is cut.
+═══════════════════════════════════════════════════════════════
+
+Let your report readers build their own crosstab — without edit rights, without touching the model,
+and without the double-counting that breaks distinct counts in a pivot.
+
+Dynamic Matrix Heatmap puts three dropdowns inside the visual: X dimension, Y dimension, and value.
+Anyone reading the report picks the combination they need. Cells are coloured by a global heatmap
+scale, so the pattern is visible before you read a single number.
+
+The part that matters most is underneath. Power BI evaluates a measure at the granularity of every
+field in the visual. Show only two of them and the rest have to be recombined — sums, minimums and
+maximums recombine exactly, but a distinct count does not: a customer appearing under two categories
+gets counted twice. This visual keeps the underlying rows and counts unique values itself, so the
+figure is exact for every combination and the grand total matches your card visual.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CHAPTERS
+
+0:00  The problem with fixed matrices
+0:00  Setting up the field wells
+0:00  Choosing X, Y and the value from the canvas
+0:00  Reading the heatmap scale
+0:00  Why distinct counts break in a normal pivot
+0:00  Distinct count of — exact unique counts
+0:00  Show value as % of row, column and grand total
+0:00  Row and column totals
+0:00  Cross-filtering the rest of the page
+0:00  Formatting: colours, fonts, header orientation
+0:00  Free vs Pro
+0:00  Where to get it
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+WHAT YOU CAN DO WITH IT
+
+• Let business users explore crosses of data without asking a developer
+• Replace five near-identical matrix visuals with one
+• Count distinct customers, orders or products per intersection — correctly
+• See where the mass of your data sits, as percentages of row, column or total
+• Cross-filter the rest of the page by clicking a cell
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FREE
+
+• Matrix with in-canvas X / Y / Value dropdowns
+• Global three-colour heatmap scale
+• All formatting: fonts, colours, sizing, header orientation
+• Cross-filtering, tooltips, context menu, keyboard navigation
+• High contrast support
+• Up to 3 dimensions and 2 measures
+
+PRO
+
+• Up to 10 dimensions and 5 measures
+• Distinct count of — exact unique counts for any X/Y combination
+• Show value as % of row, % of column, % of grand total
+• Row and column totals, with exact distinct counts in the margins
+
+No watermark. No time limit. The Free tier is a complete, usable visual.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TYPICAL USES
+
+Retail and distribution — customer coverage by service level, route or wholesaler
+Sales — revenue concentration by channel and quarter
+Operations — quality or effort scores across two operational axes
+Finance — cost distribution across cost centre and period
+HR — headcount across department and location, counted correctly
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+LINKS
+
+Documentation ..... https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/support.html
+Privacy policy .... https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/privacy.html
+Terms & licence ... https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/terms.html
+GitHub ............ https://github.com/tinocallarisa-web/dynamic-matrix-heatmap
+Report a bug ...... https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/issues
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PRIVACY
+
+The visual makes no network requests of any kind. No analytics, no telemetry, no external scripts.
+Its privileges array is empty, so Power BI blocks outbound connections at the platform level. The
+only thing it saves is which fields you picked in the dropdowns, inside your own report file.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+A NOTE ON ACCURACY
+
+Sum, minimum, maximum and count re-aggregate exactly when projecting onto your chosen pair of
+dimensions. Average is an unweighted approximation. A distinct count from a DAX measure cannot be
+recombined correctly by any client — that is exactly what the "Distinct count of" field well is for.
+All of this is documented rather than hidden.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+#PowerBI #PowerBIVisuals #DataVisualization #BusinessIntelligence #PowerBITips
+#DataAnalytics #Dashboard #SelfServiceBI #PowerBICustomVisual #TCViz
+
+
+═══════════════════════════════════════════════════════════════
+ SHORT VERSION — Shorts, LinkedIn, X
+═══════════════════════════════════════════════════════════════
+
+Your report readers shouldn't need edit rights to change a crosstab.
+
+Dynamic Matrix Heatmap puts X, Y and value dropdowns inside the visual, so anyone can pivot on their
+own. And because it aggregates client-side, distinct counts stay exact for every combination — no
+double counting, and the grand total matches your card.
+
+Free tier is fully functional. Pro adds distinct counts, percentages and totals.
+
+https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/support.html
+
+#PowerBI #DataVisualization #BusinessIntelligence
+
+
+═══════════════════════════════════════════════════════════════
+ ALTERNATIVE TITLES
+═══════════════════════════════════════════════════════════════
+
+1. Dynamic Matrix Heatmap for Power BI — let readers build their own crosstab
+2. Power BI: a pivot your users can change without edit rights
+3. Why distinct counts break in a Power BI matrix (and how to fix them)
+4. One Power BI visual instead of five matrices — Dynamic Matrix Heatmap
+5. Self-service crosstabs in Power BI, with distinct counts that actually add up

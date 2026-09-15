@@ -1,0 +1,30 @@
+═══════════════════════════════════════════════════════════════
+ MAIN TAG BLOCK — 487 characters, within YouTube's 500 limit
+ Paste as-is into the Tags field.
+═══════════════════════════════════════════════════════════════
+
+power bi, powerbi, power bi visuals, power bi custom visual, power bi matrix, power bi pivot table, dynamic matrix, matrix heatmap, power bi heatmap, conditional formatting power bi, distinct count power bi, power bi crosstab, self service bi, power bi tutorial, power bi tips, data visualization, business intelligence, power bi dashboard, power bi report, power bi appsource, pivot table, crosstab, heatmap visual, power bi aggregation, tcviz
+
+
+═══════════════════════════════════════════════════════════════
+ VARIANT — if the video leans on the distinct count problem
+═══════════════════════════════════════════════════════════════
+
+power bi, powerbi, distinct count power bi, count distinct, power bi measure, dax distinct count, power bi aggregation, double counting, power bi matrix, power bi pivot table, dynamic matrix, matrix heatmap, power bi custom visual, power bi visuals, data accuracy, business intelligence, data visualization, power bi tutorial, power bi tips, self service bi, power bi dashboard, tcviz
+
+
+═══════════════════════════════════════════════════════════════
+ VARIANT — if the video leans on self-service exploration
+═══════════════════════════════════════════════════════════════
+
+power bi, powerbi, self service bi, power bi field parameters, dynamic dimensions power bi, power bi slicer, interactive dashboard, power bi custom visual, dynamic matrix, power bi matrix, matrix heatmap, power bi pivot table, crosstab, data exploration, business intelligence, data visualization, power bi tutorial, power bi tips, power bi dashboard, power bi report, tcviz
+
+
+═══════════════════════════════════════════════════════════════
+ NOTES
+═══════════════════════════════════════════════════════════════
+
+• YouTube counts the commas and spaces toward the 500 character limit.
+• Put the most specific tags first — they carry the most weight.
+• Keep "tcviz" last in every variant so the channel accumulates brand association.
+• Do not reuse all three blocks on the same video; pick the one matching its angle.

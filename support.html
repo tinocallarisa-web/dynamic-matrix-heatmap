@@ -31,6 +31,9 @@
   .steps li::before{content:counter(s);position:absolute;left:0;top:0;width:26px;height:26px;
     border-radius:50%;background:var(--acc);color:#fff;font-weight:700;font-size:13px;
     display:flex;align-items:center;justify-content:center}
+  .video{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;
+    border-radius:10px;border:1px solid var(--line);margin:20px 0}
+  .video iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
   details{background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin:10px 0}
   summary{cursor:pointer;font-weight:600}
   ul{padding-left:22px}li{margin:6px 0}
@@ -50,6 +53,14 @@
 <p>Dynamic Matrix Heatmap lets the people reading your report choose their own crosstab. Instead of
 you building one matrix per combination, they pick the X dimension, the Y dimension and the value
 from dropdowns inside the visual — no edit rights, no request to a developer.</p>
+
+<h2>Video walkthrough</h2>
+<div class="video">
+  <iframe src="https://www.youtube-nocookie.com/embed/vobbf6405e4"
+          title="Dynamic Matrix Heatmap — walkthrough"
+          allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen loading="lazy"></iframe>
+</div>
 
 <h2>Quick start</h2>
 <ol class="steps">
@@ -146,7 +157,7 @@ open an issue with your AppSource order reference.</p></details>
 <ul>
   <li><a href="https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/issues">Report a bug or request a feature</a></li>
   <li><a href="https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/blob/main/CHANGELOG.md">Changelog</a></li>
-  <li>Licensing questions: <a href="mailto:tinocallarisa@gmail.com">tinocallarisa@gmail.com</a></li>
+  <li>Licensing questions: <a href="mailto:support@tcviz.com">support@tcviz.com</a></li>
 </ul>
 
 <footer>

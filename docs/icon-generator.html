@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Icon generator — Dynamic Matrix Heatmap</title>
+<style>
+  :root{--bg:#FAF9F5;--bg2:#EDE9DE;--line:#DAD9D4;--t1:#3D3929;--t3:#83827D;
+        --acc:#C96442;--accd:#B05730}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--t1);font-family:'Segoe UI',system-ui,sans-serif;
+       padding:40px 24px 60px}
+  .wrap{max-width:900px;margin:0 auto}
+  h1{font-size:26px;margin-bottom:6px}
+  p.sub{color:var(--t3);font-size:14px;margin-bottom:28px}
+  .row{display:flex;gap:36px;align-items:flex-start;flex-wrap:wrap;margin-bottom:32px}
+  .box{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px;text-align:center}
+  .box h3{font-size:13px;margin-bottom:14px;color:var(--t3);letter-spacing:.5px}
+  .chk{background-image:linear-gradient(45deg,#eee 25%,transparent 25%),
+       linear-gradient(-45deg,#eee 25%,transparent 25%),
+       linear-gradient(45deg,transparent 75%,#eee 75%),
+       linear-gradient(-45deg,transparent 75%,#eee 75%);
+       background-size:12px 12px;background-position:0 0,0 6px,6px -6px,-6px 0}
+  button{background:var(--acc);color:#fff;border:0;padding:10px 20px;border-radius:8px;
+         font:600 13px 'Segoe UI',sans-serif;cursor:pointer;margin:6px 4px}
+  button:hover{background:var(--accd)}
+  .note{background:var(--bg2);border-left:4px solid var(--acc);padding:14px 18px;
+        border-radius:0 8px 8px 0;font-size:13px;line-height:1.6}
+  code{background:#fff;padding:2px 6px;border-radius:4px;font-size:12px;border:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Icon generator</h1>
+  <p class="sub">Dynamic Matrix Heatmap — TCViz. Renders the SVG below to PNG at both required sizes.</p>
+
+  <div class="row">
+    <div class="box">
+      <h3>300 × 300 — AppSource</h3>
+      <div class="chk" style="display:inline-block"><canvas id="c300" width="300" height="300"></canvas></div>
+      <br><button onclick="dl(300)">Download 300×300</button>
+    </div>
+
+    <div class="box">
+      <h3>36 × 36 — visual pane</h3>
+      <div class="chk" style="display:inline-block;padding:20px">
+        <canvas id="c36" width="36" height="36"></canvas>
+      </div>
+      <br>
+      <div style="margin:10px 0;font-size:11px;color:var(--t3)">actual size ↑</div>
+      <button onclick="dl(36)">Download 36×36</button>
+      <button onclick="dl(20)">Download 20×20</button>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Which one goes in <code>assets/icon.png</code>?</strong><br>
+    Microsoft's documentation specifies 20×20, but plenty of published visuals ship larger icons and
+    pass certification. Use <strong>300×300</strong> for the AppSource listing. For
+    <code>assets/icon.png</code>, start with 20×20 to match the documented requirement — if the
+    packager or the review complains, swap it for the 36×36.
+    <br><br>
+    Downloads land in your browser's download folder. Rename to <code>icon.png</code> and drop it
+    into <code>assets/</code>.
+  </div>
+
+  <!-- Source SVG. Kept inline so the file is self-contained. -->
+  <div id="src" style="display:none">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
+      <defs>
+        <linearGradient id="frame" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0" stop-color="#B05730"/>
+          <stop offset="0.55" stop-color="#C96442"/>
+          <stop offset="1" stop-color="#9C87F5"/>
+        </linearGradient>
+      </defs>
+
+      <rect width="300" height="300" rx="66" fill="#FAF9F5"/>
+      <rect x="13" y="13" width="274" height="274" rx="56" fill="none"
+            stroke="url(#frame)" stroke-width="19"/>
+
+      <!-- 3x3 heatmap grid: reads as a matrix even at 20px -->
+      <g>
+        <rect x="62"  y="62"  width="56" height="56" rx="9" fill="#FFFFFF" stroke="#DAD9D4" stroke-width="2"/>
+        <rect x="122" y="62"  width="56" height="56" rx="9" fill="#FDBE85"/>
+        <rect x="182" y="62"  width="56" height="56" rx="9" fill="#C96442"/>
+
+        <rect x="62"  y="122" width="56" height="56" rx="9" fill="#FDBE85"/>
+        <rect x="122" y="122" width="56" height="56" rx="9" fill="#D94701"/>
+        <rect x="182" y="122" width="56" height="56" rx="9" fill="#FDBE85"/>
+
+        <rect x="62"  y="182" width="56" height="56" rx="9" fill="#C96442"/>
+        <rect x="122" y="182" width="56" height="56" rx="9" fill="#FFFFFF" stroke="#DAD9D4" stroke-width="2"/>
+        <rect x="182" y="182" width="56" height="56" rx="9" fill="#9C87F5"/>
+      </g>
+    </svg>
+  </div>
+
+<script>
+var svgMarkup = document.getElementById('src').innerHTML.trim();
+var blob = new Blob([svgMarkup], { type: 'image/svg+xml;charset=utf-8' });
+var url  = URL.createObjectURL(blob);
+
+/* Rasterise from the SVG at each target size rather than downscaling one bitmap,
+   so small sizes stay crisp instead of turning to mush. */
+function draw(canvas, size) {
+  var img = new Image();
+  img.onload = function () {
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, size, size);
+    ctx.drawImage(img, 0, 0, size, size);
+  };
+  img.src = url;
+}
+
+draw(document.getElementById('c300'), 300);
+draw(document.getElementById('c36'), 36);
+
+function dl(size) {
+  var img = new Image();
+  img.onload = function () {
+    var c = document.createElement('canvas');
+    c.width = c.height = size;
+    var ctx = c.getContext('2d');
+
+    /* Partner Center rejects logos containing transparency, and the rounded outer corners of
+       the SVG would leave alpha there. Painting an opaque background first removes the alpha
+       channel entirely; the colour matches the icon background, so nothing looks different. */
+    ctx.fillStyle = '#FAF9F5';
+    ctx.fillRect(0, 0, size, size);
+    ctx.drawImage(img, 0, 0, size, size);
+
+    var a = document.createElement('a');
+    a.download = 'icon-' + size + 'x' + size + '.png';
+    a.href = c.toDataURL('image/png');
+    a.click();
+  };
+  img.src = url;
+}
+</script>
+
+</div>
+</body>
+</html>
