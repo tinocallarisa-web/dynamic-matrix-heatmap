@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Changelog — Dynamic Matrix Heatmap | TCViz</title>
+  <style>
+    body { font-family: 'Segoe UI', system-ui, sans-serif; max-width: 820px; margin: 40px auto; padding: 0 24px; color: #3D3929; line-height: 1.7; background: #FAF9F5; }
+    h1 { font-size: 28px; color: #B05730; margin-bottom: 4px; }
+    h2 { font-size: 21px; margin-top: 44px; color: #C96442; border-bottom: 1px solid #DAD9D4; padding-bottom: 6px; }
+    h2 .date { font-size: 13px; font-weight: 400; color: #83827D; margin-left: 8px; }
+    h3.kind { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin: 24px 0 8px; color: #535146; }
+    h3.kind-fixed { color: #B05730; }
+    h3.kind-added { color: #4B7A4E; }
+    h3.kind-removed { color: #83827D; }
+    a { color: #B05730; }
+    code { background: #EDE9DE; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+    ul { padding-left: 22px; }
+    li { margin-bottom: 10px; }
+    footer { margin-top: 60px; font-size: 12px; color: #83827D; border-top: 1px solid #DAD9D4; padding-top: 16px; }
+    .meta { font-size: 14px; color: #535146; }
+  </style>
+</head>
+<body>
+  <h1>Changelog — Dynamic Matrix Heatmap</h1>
+  <p class="meta">Current version <strong>1.0.1.0</strong> &nbsp;|&nbsp;
+    <a href="support.html">Support</a> &nbsp;|&nbsp;
+    <a href="mailto:support@tcviz.com">support@tcviz.com</a></p>
+
+  <p>All notable changes to Dynamic Matrix Heatmap are documented here.</p>
+  <p>This project follows <a href="https://keepachangelog.com/en/1.1.0/" target="_blank" rel="noopener">Keep a Changelog</a> and the Power BI four-part version scheme (<code>major.minor.patch.build</code>).</p>
+  <h2 id="v1.0.1.0">1.0.1.0 <span class="date">2026-09-15</span></h2>
+  <h3 class="kind kind-fixed">Fixed</h3>
+  <ul>
+  <li><strong>Pro could not be unlocked.</strong> The published 1.0.0.0 package never queried the licence. The check now runs through <code>IVisualLicenseManager</code>, matches the plan <code>dynamic-matrix-heatmap-tcviz</code> as the full Service ID or the Plan ID on its own, and accepts the Warning (payment grace period) state.</li>
+  <li><strong>No purchase path.</strong> Power BI's <code>notifyFeatureBlocked</code> (English / Spanish) and licence icon are raised when a Pro capability is used without a licence, only once the licence has resolved and never where licences cannot be checked (Publish to Web, embedding, export).</li>
+  <li><strong>Licensing text of our own removed.</strong> The notice "Free tier … Pro unlocks …" is now a neutral note: "Showing the first 3 dimensions and 2 measures."</li>
+  <li>The icon file referenced by <code>pbiviz.json</code> (<code>assets/icon.png</code>) was missing from the source tree.</li>
+  </ul>
+  <h3 class="kind kind-added">Added</h3>
+  <ul>
+  <li><strong>Pro preview while editing.</strong> Without a licence, in edit mode, Pro capabilities render under a "Pro preview" watermark. In reading view the free result is shown.</li>
+  <li>"(Pro)" on *Show value as*, *Show totals* and *Distinct count of*; the free limits are stated in the Dimensions and Measures descriptions.</li>
+  </ul>
+  <h3 class="kind kind-changed">Changed</h3>
+  <ul>
+  <li>ESLint script added; <code>npm audit</code> clean (<code>overrides</code> for <code>qs</code> and <code>uuid</code> in the build toolchain).</li>
+  </ul>
+  <h2 id="v1.0.0.0">1.0.0.0 <span class="date">2026-08-03</span></h2>
+  <p>First public release.</p>
+  <h3 class="kind kind-added">Added</h3>
+  <ul>
+  <li><strong>In-canvas dimension switching.</strong> X axis, Y axis and Value dropdowns rendered inside the visual, so report readers can pivot without edit rights. The Y dropdown excludes whatever is selected in X.</li>
+  <li><strong>Client-side aggregation engine.</strong> The visual indexes the source rows and aggregates them itself for the selected X/Y projection, rather than re-summing values Power BI collapsed at a different granularity.</li>
+  <li><strong><code>Distinct count of</code> field well</strong> (Pro). Counts unique values from a raw ID column, so the result is exact for any X/Y combination and the grand total matches a card visual.</li>
+  <li><strong>Automatic aggregation detection.</strong> Reads the aggregation Power BI applied to a field from its label and query name, with a manual override for DAX measures where it is not readable.</li>
+  <li><strong>Show value as</strong> (Pro): absolute, % of row, % of column, % of grand total.</li>
+  <li><strong>Row and column totals</strong> (Pro), with exact distinct counts in the margins.</li>
+  <li>Global three-colour heatmap scale, configurable from the format pane.</li>
+  <li>Empty cell handling: blank, dash, zero or grey fill.</li>
+  <li>Column header orientation: horizontal, vertical (90°) or diagonal (45°).</li>
+  <li>Separate font, size and colour for axis labels, cell values and the controls bar.</li>
+  <li>Configurable row height and column width, with horizontal and vertical scrolling.</li>
+  <li>Cross-filtering by declarative tuple filter, so cost is proportional to the number of selected cells rather than to the rows behind them.</li>
+  <li>Native context menu, keyboard navigation (Tab / Enter / Space) and standard tooltips.</li>
+  <li>Report tooltip support.</li>
+  <li>High contrast support, honouring the system palette.</li>
+  <li>Segmented data loading for row-level detail.</li>
+  <li>Selection of X, Y and Value persisted in the report file.</li>
+  </ul>
+  <h3 class="kind kind-knownlimitations">Known limitations</h3>
+  <ul>
+  <li>Average is an unweighted approximation when dimensions beyond the selected pair are loaded. Sum, minimum, maximum and count re-aggregate exactly.</li>
+  <li>Up to 25 distinct values are rendered per axis.</li>
+  <li>With distinct counts, percentages of a row need not total 100 — an entity present in several columns is counted in each.</li>
+  </ul>
+
+  <footer>
+    Generated from CHANGELOG.md by scripts/gen-changelog.js — do not edit this file by hand.<br />
+    &copy; 2026 TCViz. &nbsp;|&nbsp;
+    <a href="privacy.html">Privacy Policy</a> &nbsp;|&nbsp;
+    <a href="terms.html">Terms of Use</a>
+  </footer>
+</body>
+</html>
