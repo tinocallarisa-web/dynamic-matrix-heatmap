@@ -1,7 +1,7 @@
 {
   "name": "visual",
   "description": "default_template_value",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "repository": {
     "type": "default_template_value",
     "url": "default_template_value"
@@ -12,7 +12,8 @@
     "start": "pbiviz start",
     "package": "pbiviz package",
     "build:test": "node build-test.js",
-    "lint": "npx eslint ."
+    "lint": "npx eslint .",
+    "eslint": "npx eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
     "@types/d3": "7.4.3",
@@ -28,5 +29,9 @@
     "eslint-plugin-powerbi-visuals": "^1.0.0",
     "powerbi-visuals-tools": "^7.2.1",
     "typescript": "5.5.4"
+  },
+  "overrides": {
+    "qs": "^6.16.0",
+    "uuid": "^11.1.1"
   }
 }

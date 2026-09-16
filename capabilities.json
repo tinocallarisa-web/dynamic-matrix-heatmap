@@ -5,17 +5,17 @@
             "displayNameKey": "Visual_Dimensions",
             "name": "dimensions",
             "kind": "Grouping",
-            "description": "Fields available in the X and Y dropdowns. Up to 10."
+            "description": "Fields available in the X and Y dropdowns. Up to 10 (Free: 3)."
         },
         {
             "displayName": "Measures",
             "displayNameKey": "Visual_Measures",
             "name": "measures",
             "kind": "Measure",
-            "description": "Pre-aggregated DAX measures. Re-aggregated with the mode selected in the Values card."
+            "description": "Pre-aggregated DAX measures. Re-aggregated with the mode selected in the Values card. Up to 5 (Free: 2)."
         },
         {
-            "displayName": "Distinct count of",
+            "displayName": "Distinct count of (Pro)",
             "displayNameKey": "Visual_DistinctFields",
             "name": "distinctFields",
             "kind": "Grouping",
@@ -60,7 +60,7 @@
             "displayNameKey": "Visual_Values",
             "properties": {
                 "displayMode": {
-                    "displayName": "Show value as",
+                    "displayName": "Show value as (Pro)",
                     "type": {
                         "enumeration": [
                             { "value": "absolute", "displayName": "Absolute" },
@@ -97,7 +97,7 @@
                     }
                 },
                 "showTotals": {
-                    "displayName": "Show totals",
+                    "displayName": "Show totals (Pro)",
                     "type": { "bool": true }
                 }
             }

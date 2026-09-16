@@ -1,0 +1,42 @@
+Dynamic Matrix Heatmap 1.0.1.0 - GUID dynamicMatrixHeatmap790912782D2A48CE80E680D64C793458
+Full notes: docs/CERTIFICATION-NOTES.md, branch "certification" of
+github.com/tinocallarisa-web/dynamic-matrix-heatmap
+
+WHAT CHANGED
+1.0.0.0 is published; its package never queried the licence, so Pro could not be unlocked.
+Now IVisualLicenseManager: Plan ID "dynamic-matrix-heatmap-tcviz" matched as full Service ID
+or Plan ID, Active and Warning, unsupported environments honoured, requested once and
+deferred. Own "Free tier... Pro unlocks..." text replaced by a neutral note; purchase path
+is notifyFeatureBlocked (en/es, <500 chars) + notifyLicenseRequired(General). "(Pro)" on
+Show value as, Show totals, Distinct count of. npm audit 0, eslint 0 errors. No role,
+property name or default changed.
+
+PRO PREVIEW (watermark, per the publishing guidelines)
+Free user in edit mode, licence resolved, supported environment: Pro capabilities render
+with a "Pro preview" watermark on paid features only. Reading view, before the licence
+resolves, or where it cannot be read: free result, no watermark.
+
+PRIVACY
+No network calls, no telemetry, no storage. Only the dataView; selection field names
+persisted in the .pbix. privileges is []. The TupleFilter $schema is an identifier, not a
+requested URL. No innerHTML in the visual's code.
+
+FREE VS PRO
+Free: in-canvas X/Y/Value dropdowns, heatmap, formatting, tooltips, cross-filter, context
+menu, keyboard, high contrast, up to 3 dimensions and 2 measures.
+Pro: up to 10 dimensions and 5 measures, Distinct count of, Show value as %, totals.
+
+TEST - FREE (no plan)
+1. 4+ Dimensions, 3+ Measures. Edit mode: all fields, "Pro preview" watermark, licence
+   banner. Reading view: note "Showing the first 3 dimensions and 2 measures.", no watermark.
+2. Pick X and Y: matrix renders. Click a cell: other visuals filter; click again clears.
+3. Right click: context menu. Tab + Enter on a cell: same as click.
+
+TEST - PRO (active plan)
+All fields, Distinct count of, Show totals and Show value as work; no note, no watermark.
+Pro without a purchase: node build-test.js (isPro true, GUID _test).
+
+Rendering events on every path of update().
+
+Video https://www.youtube.com/watch?v=vobbf6405e4
+Support/privacy/terms: tinocallarisa-web.github.io/dynamic-matrix-heatmap/

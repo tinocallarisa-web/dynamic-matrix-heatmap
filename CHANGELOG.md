@@ -7,6 +7,33 @@ four-part version scheme (`major.minor.patch.build`).
 
 ---
 
+## [1.0.1.0] — 2026-09-15
+
+### Fixed
+
+- **Pro could not be unlocked.** The published 1.0.0.0 package never queried the licence. The check now
+  runs through `IVisualLicenseManager`, matches the plan `dynamic-matrix-heatmap-tcviz` as the full
+  Service ID or the Plan ID on its own, and accepts the Warning (payment grace period) state.
+- **No purchase path.** Power BI's `notifyFeatureBlocked` (English / Spanish) and licence icon are raised
+  when a Pro capability is used without a licence, only once the licence has resolved and never where
+  licences cannot be checked (Publish to Web, embedding, export).
+- **Licensing text of our own removed.** The notice "Free tier … Pro unlocks …" is now a neutral note:
+  "Showing the first 3 dimensions and 2 measures."
+- The icon file referenced by `pbiviz.json` (`assets/icon.png`) was missing from the source tree.
+
+### Added
+
+- **Pro preview while editing.** Without a licence, in edit mode, Pro capabilities render under a
+  "Pro preview" watermark. In reading view the free result is shown.
+- "(Pro)" on *Show value as*, *Show totals* and *Distinct count of*; the free limits are stated in the
+  Dimensions and Measures descriptions.
+
+### Changed
+
+- ESLint script added; `npm audit` clean (`overrides` for `qs` and `uuid` in the build toolchain).
+
+---
+
 ## [1.0.0.0] — 2026-08-03
 
 First public release.

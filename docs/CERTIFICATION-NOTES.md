@@ -1,9 +1,10 @@
 # Certification Notes — Dynamic Matrix Heatmap
 
-**Version 1.0.0.0 · TCViz · First submission**
+**Version 1.0.1.0 · TCViz**
 
-> Paste the whole of this document into the *Notes for certification* field in Partner Center.
-> That field is cleared on every resubmission, which is why the text lives in the repository.
+> The text to paste into *Notes for certification* is `docs/CERTIFICATION-NOTES-SHORT.txt`: that field
+> truncates at 2,500 characters without warning. This file is the full reference, reached through the
+> `certification` branch.
 
 ---
 
@@ -13,12 +14,10 @@
 |---|---|
 | Repository | https://github.com/tinocallarisa-web/dynamic-matrix-heatmap |
 | **Certification branch** | https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/tree/certification |
-| Branch contents | Exactly the code that produced the submitted package. No build output, no `node_modules`, no `dist`, no `.tmp`. |
+| Branch contents | Exactly the code that produced the submitted package. No `node_modules`, `dist` or `.tmp`. |
 | Build command | `npm install` then `npx pbiviz package` |
-| API version | 5.11.1 |
-
-The repository is public. The `certification` branch is a direct merge of `main` at the release
-commit, with `isPro` resolved by `licenseManager` and the GUID carrying no suffix.
+| Lint / audit | `npm run eslint` (0 errors), `npm audit` (0 vulnerabilities) |
+| API version | 5.11.1 · `powerbi-visuals-tools` 7.2.1 |
 
 ## 2. Public pages
 
@@ -31,188 +30,121 @@ commit, with `isPro` resolved by `licenseManager` and the GUID carrying no suffi
 | Issue tracker | https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/issues |
 | Changelog | https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/blob/main/CHANGELOG.md |
 
-All pages are served by GitHub Pages from the repository root and are live at the time of submission.
+## 3. What changed in 1.0.1.0
 
-## 3. What the visual does
+1.0.0.0 is published. An internal audit found that its package never queried the licence, so Pro could
+not be unlocked, and that free users had no purchase path.
 
-A matrix where the **report reader** chooses the crosstab. Three dropdowns rendered inside the
-canvas select the X dimension, the Y dimension and the value; cells are coloured by a global
-heatmap scale. No edit rights and no model changes are needed to change the view.
-
-The distinguishing capability is that the visual **aggregates client-side**. Power BI evaluates a
-measure at the granularity of every field in the visual; projecting that onto two chosen dimensions
-requires recombining the rest. Sums, minimums, maximums and counts recombine exactly, but a distinct
-count does not. The `Distinct count of` field well takes a raw ID column and the visual counts unique
-values itself, so the figure is exact for any pair of dimensions and the grand total matches a card
-visual.
-
-## 4. Privacy and network access
-
-**The visual makes no network requests of any kind.**
-
-- `"privileges": []` in `capabilities.json` — Power BI blocks outbound connections at platform level
-- No `fetch`, no `XMLHttpRequest`, no WebSocket
-- No external scripts, no CDN fonts, no analytics, no telemetry, no error reporting
-- No local file reads
-- No cookies, `localStorage` or `sessionStorage`
-
-**What is persisted**, and only inside the user's own `.pbix` via `persistProperties`:
-
-| Property | Content |
+| Problem in 1.0.0.0 | Fix in 1.0.1.0 |
 |---|---|
-| `selectionState.xDimension` | Field *name* selected in the X dropdown |
-| `selectionState.yDimension` | Field *name* selected in the Y dropdown |
-| `selectionState.valueKey` | Key of the entry selected in the Value dropdown |
+| No `getAvailableServicePlans()` call in the published package | Licence requested once, deferred, outside the render path |
+| Plan compared with strict equality, Active only | `matchesPlan()` accepts the full Service ID or the Plan ID `dynamic-matrix-heatmap-tcviz`; Active and Warning accepted |
+| `isLicenseUnsupportedEnv` / `isLicenseInfoAvailable` not read | Honoured: no purchase prompt where a Pro customer cannot be recognised |
+| Own licensing text: "Free tier … Pro unlocks …" | Neutral note "Showing the first 3 dimensions and 2 measures."; purchase path is `notifyFeatureBlocked` (en/es, under 500 characters) plus `notifyLicenseRequired(General)` |
+| Pro settings unlabelled | "(Pro)" on *Show value as*, *Show totals*, *Distinct count of* |
+| No ESLint script; `npm audit` warnings | `eslint` script, 0 errors; `overrides` for `qs` and `uuid`, 0 vulnerabilities |
+| `assets/icon.png` missing from the source tree | Restored |
 
-These are field names, never data values. They exist so the selection survives saving and reopening.
+**Pro preview.** Following the publishing guidelines ("use watermarks only for paid features used
+without a valid licence"), a free user **editing** a report, whose licence has resolved, in an
+environment that supports licensing, sees Pro capabilities working under a "Pro preview" watermark. In
+reading view (`viewMode` 0), before the licence resolves, or where it cannot be read, the free result
+renders with no watermark. Free features never carry a watermark.
 
-Clicking a cell writes a standard Power BI filter through `applyJsonFilter` (object `general`,
-property `filter`), exactly as a slicer does. Nothing leaves the report.
+No data role name, property name or default changed, so existing reports keep their settings.
 
-Third-party dependencies are limited to `d3`, `powerbi-visuals-utils-formattingmodel`,
-`powerbi-visuals-utils-formattingutils` and `powerbi-visuals-utils-tooltiputils`. All are bundled;
-none reach the network.
+## 4. What the visual does
 
-## 5. Licence validation
+A matrix where the **report reader** chooses the crosstab. Three dropdowns rendered inside the canvas
+select the X dimension, the Y dimension and the value; cells are coloured by a global heatmap scale.
 
-Implemented with Microsoft's official `IVisualLicenseManager`. **TCViz operates no licence server
-and receives no call from the visual.**
+The visual **aggregates client-side**. The `Distinct count of` field well takes a raw ID column and the
+visual counts unique values itself, so the figure is exact for any pair of dimensions.
 
-- Plan ID (`spIdentifier`): `dynamic-matrix-heatmap-tcviz`
-- Constant `SP_IDENTIFIER` in `src/visual.ts` matches this exactly
-- `ServicePlanState.Active` is compared by numeric value (1) because it is a `const enum`
-- `getAvailableServicePlans()` returns an `IPromise`, so it is wrapped in a real `Promise` that
-  resolves `false` on any failure
+## 5. Privacy and network access
 
-**Resolution never blocks rendering.** `requestLicenseDeferred()` is called from `update()` *after*
-`renderingFinished`, and defers through `setTimeout(..., 0)`. `applyLicense()` only ever upgrades
-Free → Pro; if the check fails the DOM is left untouched and the user stays on the Free tier. A
-licensing outage can therefore never present as a broken visual.
+**The visual makes no network requests of any kind.** `"privileges": []`; no `fetch`, `XMLHttpRequest`
+or WebSocket; no external scripts, fonts, analytics or telemetry; no local files, cookies or storage.
 
-## 6. How to validate the Pro features — please read
+Persisted only inside the `.pbix` via `persistProperties`: `selectionState.xDimension`,
+`selectionState.yDimension`, `selectionState.valueKey` — field names, never data values. Clicking a cell
+writes a standard filter through `applyJsonFilter`, as a slicer does.
 
-**There is no licence key to supply, and none exists to supply.**
+The `TupleFilter` `$schema` value (`http://powerbi.com/product/schema#tuple`) is a schema identifier,
+not a URL that is requested.
 
-This visual uses Microsoft's own `IVisualLicenseManager`. Entitlement is granted by Power BI when a
-user holds an active plan; the visual only asks Power BI a yes/no question. TCViz issues no keys,
-tokens or credentials, and operates no licence server — so there is nothing of that kind we can give
-you, and no test account to hand over.
+Bundled dependencies: `d3`, `powerbi-visuals-utils-formattingmodel`, `powerbi-visuals-utils-formattingutils`,
+`powerbi-visuals-utils-tooltiputils`. None reach the network. The visual's own code does not use
+`innerHTML`.
 
-To let you verify the paid features anyway, we publish a **review build with the Pro tier forced
-on**, so no purchase or entitlement is needed:
+## 6. Licence validation
 
-| | |
-|---|---|
-| Review build | https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/releases/tag/v1.0.0.0 |
-| File | `dynamicMatrixHeatmap790912782D2A48CE80E680D64C793458_test.1.0.0.0.pbiviz` |
-| Appears in the pane as | **Dynamic Matrix Heatmap (TEST)** |
+Official `IVisualLicenseManager` only. TCViz operates no licence server.
 
-That package differs from the submitted one in exactly two ways, both produced by the committed
-script `build-test.js`:
+- `getAvailableServicePlans()` (IPromise2, consumed with `then(ok, err)`) is requested once, deferred with
+  `setTimeout(..., 0)`, after `update()` has emitted its rendering events.
+- Pro when a plan matches `dynamic-matrix-heatmap-tcviz` with state Active (1) or Warning (2).
+- On error or unsupported environment: Free, and no purchase prompt.
 
-1. `private isPro = false;` is replaced by `private isPro = true;`
-2. `_test` is appended to the GUID, so it can be installed alongside the submitted build
-
-Everything else is byte-for-byte the submitted code. The script patches, packages and then restores
-the source, so the repository — and the `certification` branch you are reviewing — always holds the
-production state with `isPro` resolved by `licenseManager`.
-
-Install both packages side by side: the submitted one shows Free behaviour, the `_test` one shows
-Pro behaviour. Section 8 gives the steps for each.
+**Testing Pro without a purchase.** Build `node build-test.js`: it replaces `private isPro = false;` with
+`true`, appends `_test` to the GUID, packages and restores the source. `node build-test.js --free` builds
+the free behaviour under `_testfree`. Nothing else differs from the submitted package.
 
 ## 7. Free and Pro features
 
-### Free
+**Free:** matrix with in-canvas X / Y / Value dropdowns; global three-colour heatmap; empty cells, fonts,
+colours, sizing, header orientation; tooltips, cross-filtering, context menu, keyboard (Tab / Enter /
+Space on cells); high contrast; up to **3 dimensions** and **2 measures**.
 
-- Matrix with in-canvas X / Y / Value dropdowns
-- Global three-colour heatmap scale
-- Empty cell handling, fonts, colours, row and column sizing
-- Column header orientation (horizontal / vertical / diagonal)
-- Tooltips, cross-filtering, context menu, keyboard navigation
-- High contrast support
-- Up to **3 dimensions** and **2 measures**
-
-### Pro
-
-- Up to **10 dimensions** and **5 measures**
-- **`Distinct count of`** — exact unique counts for any X/Y combination
-- **Show value as** — % of row, % of column, % of grand total
-- **Row and column totals**, with exact distinct counts in the margins
-
-Nothing is watermarked or time limited. The Free tier renders a complete, usable matrix.
+**Pro:** up to **10 dimensions** and **5 measures**; **Distinct count of**; **Show value as** % of row /
+column / grand total; **row and column totals**.
 
 ## 8. Certification requirements
 
 | Requirement | Status |
 |---|---|
-| `supportsHighlight` | ✅ true — non-highlighted cells dimmed to 0.3 opacity |
-| `supportsSynchronizingFilterState` | ✅ true |
-| `supportsLandingPage` | ✅ true — guidance shown before fields are assigned |
-| `supportsKeyboardFocus` | ✅ true — cells are focusable, Enter and Space activate |
-| `supportsMultiVisualSelection` | ✅ true |
-| Rendering events | ✅ `renderingStarted` / `renderingFinished` / `renderingFailed` on every exit path of `update()`, including early returns and the catch block |
-| No arbitrary code execution | ✅ no `eval`, no `Function` constructor, no `innerHTML` with data |
-| No external resources | ✅ everything bundled |
-| High contrast | ✅ `host.colorPalette.isHighContrast` honoured; colour scale dropped for system foreground/background, selection marked with an outline |
-| Tooltips | ✅ `host.tooltipService` via `ITooltipServiceWrapper`; report tooltips declared |
-| Context menu | ✅ `selectionManager.showContextMenu()` on cells and on empty areas |
+| `supportsHighlight` | ✅ non-highlighted cells dimmed to 0.3 opacity |
+| `supportsSynchronizingFilterState` | ✅ |
+| `supportsLandingPage` | ✅ guidance shown before fields are assigned, including the Pro plan features |
+| `supportsKeyboardFocus` | ✅ cells focusable; Enter and Space activate |
+| `supportsMultiVisualSelection` | ✅ |
+| Rendering events | ✅ on every path of `update()`; licence request and notification run after the try/catch |
+| No arbitrary code | ✅ no `eval`, `Function`, `innerHTML` in the visual's code |
+| High contrast | ✅ `colorPalette.isHighContrast` honoured |
+| Tooltips / context menu | ✅ |
 
 ## 9. Testing instructions
 
-### Sample data
+### Free tier (submitted package, no active plan)
 
-Any fact table works. The included sample uses order rows with several descriptive dimensions
-(complexity, distance, delivery effort) plus `customer_id` and `total_sales`.
+1. Add the visual: the landing message explains the field wells and the Pro plan.
+2. Drag **four or more** fields into `Dimensions` and **three or more** measures into `Measures`.
+3. **Edit mode:** all fields are available and a "Pro preview" watermark is shown; Power BI raises its
+   licence banner and icon.
+4. **Reading view (Power BI Service):** the note reads *"Showing the first 3 dimensions and 2 measures."*,
+   only those appear in the dropdowns, and there is no watermark.
+5. Select an X and a Y. The matrix renders.
+6. Edit mode: **Values → Show totals (Pro)** on and **Show value as (Pro)** = *% of row* render under the
+   watermark; in reading view both are ignored.
+7. Click a cell: other visuals filter to that intersection. Click again to clear.
+8. Right click a cell: the native Power BI context menu. Tab into the matrix and press Enter: same as a click.
 
-### Free tier
+### Pro tier (same package, active `dynamic-matrix-heatmap-tcviz` plan)
 
-1. Add the visual to a report page.
-2. Drag **four or more** fields into `Dimensions`.
-3. Drag **three or more** measures into `Measures`.
-4. Expected: an amber notice reads *"Free tier: showing the first 3 dimensions and 2 measures…"*, and
-   only those appear in the dropdowns.
-5. Select an X and a Y. The matrix renders with the heatmap scale.
-6. In the format pane, set **Values → Show totals** on and **Show value as** to *% of row*.
-   Expected: both are ignored — the matrix stays absolute with no totals.
-7. Click a cell. Expected: other visuals on the page filter to that intersection. Click again to clear.
-8. Right click a cell. Expected: the native Power BI context menu.
-9. Tab into the matrix and press Enter on a cell. Expected: the same as a click.
-
-### Pro tier
-
-With an active `dynamic-matrix-heatmap-tcviz` plan:
-
-1. Same setup as above. Expected: no amber notice; all fields available in the dropdowns.
-2. Drag a raw ID column (for example `customer_id`) into `Distinct count of`. It appears in the
-   Value dropdown as *"Distinct customer_id"*.
-3. Select it. Expected: each cell shows the number of unique IDs in that intersection.
-4. Turn on **Values → Show totals**. Expected: the grand total equals the distinct count over the
-   whole dataset — compare against a card visual with *Count (Distinct)* of the same column. They
-   match exactly. Note that the row and column totals are **not** the sum of their cells, because an
-   entity present in several cells is counted once per margin.
-5. Set **Show value as** to *% of grand total*. Expected: percentages, totalling 100% for an
-   additive measure.
-6. Switch the OS to a high contrast theme. Expected: the colour scale is replaced by system
-   foreground and background; the selected cell carries an outline.
-
-### Verifying aggregation
-
-Select a measure whose label begins *"Average of"*. Expected: cells show means, and a row total is
-the mean of that entire row — not the mean of the cell means, and not their sum.
+1. All fields available; no note, no watermark, no licence notification.
+2. Drag a raw ID column into `Distinct count of (Pro)`; select *"Distinct customer_id"*: each cell shows
+   unique IDs.
+3. **Show totals** on: the grand total equals a card visual with *Count (Distinct)* of the same column.
+4. **Show value as** = *% of grand total*: percentages.
 
 ## 10. Known limitations, stated deliberately
 
 - **Average is an unweighted approximation** when dimensions beyond the selected pair are loaded.
-  Sum, minimum, maximum and count re-aggregate exactly. This is documented in `terms.html`,
-  `support.html` and the changelog.
-- A distinct count produced by a **DAX measure** cannot be recombined correctly by any client. The
-  `Distinct count of` well exists precisely to avoid that, and the documentation directs users there.
+- A distinct count produced by a DAX measure cannot be recombined correctly; `Distinct count of` exists for that.
 - Up to **25 distinct values** are rendered per axis.
-- With distinct counts, percentages of a row need not total 100 — an entity present in several
-  columns is counted in each. Inherent to distinct counting, not a defect.
-- Row-level detail is loaded in segments (`fetchMoreData`) up to a bounded number of windows. When
-  the limit is reached an amber notice states that the dataset is partial.
+- Row-level detail loads in segments (`fetchMoreData`) up to a bounded number of windows; a note states when the dataset is partial.
+- Build warning, not a gap: none for Format Pane (the visual uses `getFormattingModel`).
 
 ## 11. Contact
 
-Tino Callarisa — support@tcviz.com
+TCViz — support@tcviz.com

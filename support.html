@@ -47,7 +47,7 @@
 
 <header>
   <h1>Support &amp; Documentation</h1>
-  <p class="sub">Dynamic Matrix Heatmap — a Power BI custom visual by TCViz · Version 1.0.0.0 · Last updated: 3 August 2026</p>
+  <p class="sub">Dynamic Matrix Heatmap — a Power BI custom visual by TCViz · Version 1.0.1.0 · Last updated: 15 September 2026</p>
 </header>
 
 <p>Dynamic Matrix Heatmap lets the people reading your report choose their own crosstab. Instead of
@@ -107,6 +107,17 @@ from dropdowns inside the visual — no edit rights, no request to a developer.<
   <tr><td>Column header orientation</td><td>Horizontal, vertical (90°) or diagonal (45°).</td></tr>
 </table>
 
+<h2>Free, Pro and the Pro preview</h2>
+<p>Paid settings and field wells are marked <strong>(Pro)</strong> in Power BI. Without a licence:</p>
+<ul>
+  <li><strong>While you edit a report</strong>, Pro capabilities you use are shown working under a
+      <strong>Pro preview</strong> watermark, and Power BI shows how to get a licence.</li>
+  <li><strong>In reading view and published reports</strong>, the free result is shown — the first 3
+      dimensions and 2 measures, absolute values, no totals — with a short note and no watermark.</li>
+  <li>Where Power BI cannot check licences (Publish to Web, embedding, PDF/PowerPoint export) the free
+      result is shown, even for Pro customers.</li>
+</ul>
+
 <h2>Interaction</h2>
 <ul>
   <li><strong>Click a cell</strong> — filters the rest of the page to that X/Y intersection.</li>
@@ -142,9 +153,11 @@ dimension or two.</p></details>
 <p>Check the relationship between the tables in Model view. Filtering from a fact table to a
 dimension table needs the cross-filter direction set to <strong>Both</strong>.</p></details>
 
-<details><summary>Pro features are greyed out after purchasing</summary>
-<p>Sign out and back into Power BI to refresh entitlement, then reopen the report. If it persists,
-open an issue with your AppSource order reference.</p></details>
+<details><summary>Pro features are not active after purchasing</summary>
+<p>The visual detects the licence when the report is opened or refreshed. Microsoft notes it can take
+up to an hour for a new licence to be recognised: refresh the browser (F5) or close and reopen Power BI
+Desktop. A licence is required per user. If it persists, open an issue with your AppSource order
+reference.</p></details>
 
 <h2>Limits and known behaviour</h2>
 <ul>

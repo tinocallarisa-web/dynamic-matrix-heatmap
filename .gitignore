@@ -15,3 +15,6 @@ webpack.statistics*.html
 .DS_Store
 Thumbs.db
 *.log
+
+# Paquetes archivados de cada envio (recuperables desde el tag)
+_releases/

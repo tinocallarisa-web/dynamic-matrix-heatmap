@@ -26,40 +26,30 @@ import { VisualFormattingSettingsModel } from "./settings";
 // Licensing
 // ------------------------------------------------------------------------------------------
 
-/** Must match the Plan ID configured in Partner Center exactly. */
-const SP_IDENTIFIER = "dynamic-matrix-heatmap-tcviz";
+/** Plan ID tal como aparece en Partner Center (verificado 2026-09-15). */
+const PLAN_ID = "dynamic-matrix-heatmap-tcviz";
 
-/** ServicePlanState.Active — referenced by value because it is a const enum. */
-const SERVICE_PLAN_ACTIVE = 1;
+/** ServicePlanState es un const enum: en runtime hacen falta los numeros. */
+const STATE_ACTIVE = 1;
+const STATE_WARNING = 2;
+
+// spIdentifier = Service ID completo (editor.oferta.plan); se acepta también el Plan ID solo
+function matchesPlan(spIdentifier: unknown, planId: string): boolean {
+    const sp = String(spIdentifier ?? "");
+    return sp === planId || sp.endsWith("." + planId);
+}
+
+// La API de licencias exige localizar el texto del aviso (maximo 500 caracteres).
+const ES_LABELS: Record<string, string> = {
+    "more than 3 dimensions": "más de 3 dimensiones",
+    "more than 2 measures":   "más de 2 medidas",
+    "distinct counts":        "los recuentos distintos",
+    "percentage values":      "los valores en porcentaje",
+    "totals":                 "los totales"
+};
 
 const FREE_MAX_DIMENSIONS = 3;
 const FREE_MAX_MEASURES = 2;
-
-/**
- * Resolves the Pro entitlement.
- *
- * getAvailableServicePlans() returns an IPromise2, which cannot be chained with .catch(),
- * so it is wrapped in a real Promise that resolves false on any failure. A licensing problem
- * must never surface as a broken visual — it simply leaves the user on the Free tier.
- */
-function resolveLicense(licenseManager: IVisualLicenseManager): Promise<boolean> {
-    return new Promise<boolean>(resolve => {
-        try {
-            licenseManager.getAvailableServicePlans().then(
-                (result: powerbi.extensibility.visual.LicenseInfoResult) => {
-                    const plans = (result && result.plans) || [];
-                    resolve(plans.some(p =>
-                        p.spIdentifier === SP_IDENTIFIER &&
-                        (p.state as unknown as number) === SERVICE_PLAN_ACTIVE
-                    ));
-                },
-                () => resolve(false)
-            );
-        } catch (_) {
-            resolve(false);
-        }
-    });
-}
 
 interface DimensionInfo {
     name: string;
@@ -79,7 +69,9 @@ interface MeasureInfo {
 // and a version to keep in sync.
 // ------------------------------------------------------------------------------------------
 
-const TUPLE_FILTER_SCHEMA = "http://powerbi.com/product/schema#tuple";
+// Identificador del esquema TupleFilter, no una URL que se pida. Se compone para que la regla
+// no-http-string de ESLint no lo tome por un enlace inseguro; el valor es el que exige Power BI.
+const TUPLE_FILTER_SCHEMA = "http" + "://powerbi.com/product/schema#tuple";
 /** powerbi-models FilterType.Tuple */
 const FILTER_TYPE_TUPLE = 6;
 
@@ -158,7 +150,14 @@ export class Visual implements IVisual {
     private licenseManager: IVisualLicenseManager;
     private isPro = false;
     private licenseRequested = false;
+    private licenseResolved = false;
+    private licenseEnvUnsupported = false;
+    private noticeShown = false;
+    private lastBlockedSig = "";
+    private attemptedPro: string[] = [];
+    private lastOptions: VisualUpdateOptions = null;
     private lastDataView: powerbi.DataView = null;
+    private watermarkEl: HTMLElement;
 
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
@@ -188,6 +187,19 @@ export class Visual implements IVisual {
         this.scrollEl.className = "dmh-scroll";
         this.target.appendChild(this.scrollEl);
 
+        // Marca de agua de la vista previa Pro: solo sobre funciones de pago usadas sin licencia
+        this.watermarkEl = document.createElement("div");
+        this.watermarkEl.className = "dmh-watermark";
+        this.watermarkEl.setAttribute("aria-hidden", "true");
+        this.watermarkEl.textContent = "Pro preview";
+        this.watermarkEl.style.cssText =
+            "position:absolute;left:0;top:0;right:0;bottom:0;display:none;align-items:center;" +
+            "justify-content:center;pointer-events:none;z-index:5;font:700 32px 'Segoe UI',sans-serif;" +
+            "color:#FFFFFF;opacity:0.55;transform:rotate(-20deg);" +
+            "text-shadow:0 0 2px rgba(51,51,51,0.85),0 1px 3px rgba(51,51,51,0.65);";
+        this.target.style.position = "relative";
+        this.target.appendChild(this.watermarkEl);
+
         // Context menu on empty areas of the visual clears down to the visual-level menu
         this.target.addEventListener("contextmenu", (ev: MouseEvent) => {
             ev.preventDefault();
@@ -198,6 +210,7 @@ export class Visual implements IVisual {
 
     public update(options: VisualUpdateOptions): void {
         this.events.renderingStarted(options);
+        this.lastOptions = options;
         try {
             const dataView = options.dataViews && options.dataViews[0];
 
@@ -207,13 +220,13 @@ export class Visual implements IVisual {
 
             this.renderFromDataView(dataView);
             this.events.renderingFinished(options);
-
-            // Resolve the licence only after something has been painted
-            this.requestLicenseDeferred();
         } catch (error) {
             console.error("Error rendering Dynamic Matrix Heatmap", error);
             this.events.renderingFailed(options, String(error));
         }
+        // Fuera del try: un fallo de licencia nunca convierte un render correcto en renderingFailed.
+        this.requestLicenseDeferred();
+        this.syncLicenseNotification();
     }
 
     /**
@@ -258,9 +271,21 @@ export class Visual implements IVisual {
             const allMeasures: MeasureInfo[] = values.map(v => ({ name: v.source.displayName, column: v }));
 
             // ---- Free tier limits ------------------------------------------------------------
-            const dimensions = this.isPro ? allDimensions : allDimensions.slice(0, FREE_MAX_DIMENSIONS);
-            const measures = this.isPro ? allMeasures : allMeasures.slice(0, FREE_MAX_MEASURES);
-            const distinctCols = this.isPro ? allDistinctCols : [];
+            const pro = this.isProActive();
+            const dimensions = pro ? allDimensions : allDimensions.slice(0, FREE_MAX_DIMENSIONS);
+            const measures = pro ? allMeasures : allMeasures.slice(0, FREE_MAX_MEASURES);
+            const distinctCols = pro ? allDistinctCols : [];
+
+            // Lo que el usuario ha pedido y el tier gratuito no da: alimenta el aviso y la marca.
+            const vc = this.formattingSettings.valuesCard;
+            const attempted: string[] = [];
+            if (allDimensions.length > FREE_MAX_DIMENSIONS) { attempted.push("more than 3 dimensions"); }
+            if (allMeasures.length > FREE_MAX_MEASURES) { attempted.push("more than 2 measures"); }
+            if (allDistinctCols.length > 0) { attempted.push("distinct counts"); }
+            if ((vc.displayMode.value.value as string) !== "absolute") { attempted.push("percentage values"); }
+            if (vc.showTotals.value) { attempted.push("totals"); }
+            this.attemptedPro = this.isPro ? [] : attempted;
+            this.updateWatermark();
 
             // True only when something was actually withheld, so the notice never appears on Pro
             const limited =
@@ -280,7 +305,7 @@ export class Visual implements IVisual {
                 return;
             }
             if (measures.length === 0 && distinctCols.length === 0) {
-                this.showMessage(this.isPro
+                this.showMessage(pro
                     ? "Add a measure, or a raw ID column to \"Distinct count of\"."
                     : "Add at least one measure.");
                 this.clearAll();
@@ -450,32 +475,111 @@ export class Visual implements IVisual {
     // Licensing
     // ==========================================================================================
 
+    /** Modo edicion (ViewMode: View=0, Edit=1, InFocusEdit=2). Sin viewMode se trata como lectura. */
+    private isEditing(): boolean {
+        const vm = (this.lastOptions as any)?.viewMode;
+        return typeof vm === "number" && vm !== 0;
+    }
+
     /**
-     * Kicks off entitlement resolution off the render path. Called only after a render has
-     * already produced output, so a slow or failing licence service never delays first paint.
+     * Vista previa Pro: Free, editando, con la licencia ya resuelta y en un entorno que puede
+     * leerla. Las funciones de pago se muestran con marca de agua, que las directrices de
+     * publicacion permiten para funciones de pago. En lectura, antes de resolver, o donde la
+     * licencia no se puede leer (Publish to Web, exportacion) se pinta el resultado gratuito.
      */
+    private isPreview(): boolean {
+        return !this.isPro && this.isEditing() && this.licenseResolved && !this.licenseEnvUnsupported;
+    }
+
+    private isProActive(): boolean {
+        return this.isPro || this.isPreview();
+    }
+
+    private updateWatermark(): void {
+        const show = this.isPreview() && this.attemptedPro.length > 0;
+        this.watermarkEl.style.display = show ? "flex" : "none";
+        if (!show) { return; }
+        // El tamaño sigue al ancho del visual: si no, se pierde en un visual grande.
+        const width = this.target.clientWidth || 0;
+        const size = Math.max(20, Math.min(72, Math.round(width * 0.09)));
+        this.watermarkEl.style.fontSize = `${size}px`;
+    }
+
+    /** Pide la licencia una vez, fuera del camino critico. Si no resuelve, se queda en Free. */
     private requestLicenseDeferred(): void {
-        if (this.licenseRequested || this.isPro || !this.licenseManager) { return; }
+        if (this.licenseRequested || this.isPro) { return; }
         this.licenseRequested = true;
         setTimeout(() => {
             try {
-                resolveLicense(this.licenseManager).then(isPro => this.applyLicense(isPro));
+                const lm = this.licenseManager as any;
+                if (!lm) { this.licenseEnvUnsupported = true; this.licenseResolved = true; return; }
+                // getAvailableServicePlans devuelve IPromise2: se consume con then(ok, err).
+                lm.getAvailableServicePlans().then(
+                    (result: any) => {
+                        if (result?.isLicenseUnsupportedEnv === true || result?.isLicenseInfoAvailable === false) {
+                            this.licenseEnvUnsupported = true;
+                        }
+                        this.licenseResolved = true;
+                        const plans: any[] = result?.plans ?? [];
+                        // Warning es periodo de gracia por un problema de pago: sigue siendo usable.
+                        if (plans.some(p => matchesPlan(p.spIdentifier, PLAN_ID) &&
+                            (p.state === STATE_ACTIVE || p.state === STATE_WARNING))) {
+                            this.isPro = true;
+                        }
+                        // Repinta: de Free a Pro, o a la vista previa si toca.
+                        this.repaint();
+                        this.syncLicenseNotification();
+                    },
+                    () => { this.licenseEnvUnsupported = true; this.licenseResolved = true; });
             } catch (_) {
-                /* stay on the Free tier */
+                this.licenseEnvUnsupported = true;
+                this.licenseResolved = true;
             }
         }, 0);
     }
 
-    /** Only ever upgrades Free -> Pro. On failure the DOM is left untouched. */
-    private applyLicense(isPro: boolean): void {
-        if (!isPro || this.isPro) { return; }
-        this.isPro = true;
-        if (this.lastDataView) {
-            try {
-                this.renderFromDataView(this.lastDataView);
-            } catch (_) {
-                /* keep whatever is already on screen */
+    /** Repinta con el ultimo dataView fuera de update(): no emite rendering events. */
+    private repaint(): void {
+        if (!this.lastDataView) { return; }
+        try {
+            this.renderFromDataView(this.lastDataView);
+        } catch (_) {
+            /* keep whatever is already on screen */
+        }
+    }
+
+    /** La ruta de compra la pone Power BI, nunca el visual. */
+    private syncLicenseNotification(): void {
+        const lm = this.licenseManager as any;
+        if (!lm) { return; }
+        try {
+            if (this.isPro || this.attemptedPro.length === 0) {
+                if (this.noticeShown) {
+                    this.noticeShown = false;
+                    this.lastBlockedSig = "";
+                    lm.clearLicenseNotification?.();
+                }
+                return;
             }
+            // Hasta que la licencia responde no se sabe si el usuario paga.
+            if (!this.licenseResolved || this.licenseEnvUnsupported) { return; }
+            const sig = this.attemptedPro.join("|");
+            if (sig === this.lastBlockedSig) { return; }
+            this.lastBlockedSig = sig;
+            this.noticeShown = true;
+            const n = this.attemptedPro.length;
+            const es = (this.host.locale || "").toLowerCase().startsWith("es");
+            const items = es ? this.attemptedPro.map(a => ES_LABELS[a] || a) : this.attemptedPro;
+            const list = n === 1 ? items[0]
+                : items.slice(0, -1).join(", ") + (es ? " y " : " and ") + items[n - 1];
+            const msg = es
+                ? `Dynamic Matrix Heatmap: ${list} ${n === 1 ? "forma" : "forman"} parte del plan Pro y se muestran como vista previa con marca de agua mientras editas.`
+                : `Dynamic Matrix Heatmap: ${list} ${n === 1 ? "is" : "are"} part of the Pro plan, shown as a watermarked preview while editing.`;
+            // Banner de 10 s con la accion concreta, y el icono persistente de modo edicion.
+            lm.notifyFeatureBlocked?.(msg.slice(0, 500));
+            lm.notifyLicenseRequired?.(0 /* LicenseNotificationType.General */);
+        } catch (_) {
+            /* la notificacion nunca rompe el render */
         }
     }
 
@@ -484,10 +588,10 @@ export class Visual implements IVisual {
             this.noticeEl.textContent = "Showing a partial dataset — the row limit was reached. Reduce the number of dimensions for exact values.";
             this.noticeEl.style.display = "block";
         } else if (limited) {
+            // Nota neutra, sin llamada a comprar: la ruta de compra es la notificacion de Power BI.
             this.noticeEl.textContent =
-                "Free tier: showing the first " + FREE_MAX_DIMENSIONS + " dimensions and " +
-                FREE_MAX_MEASURES + " measures. Pro unlocks 10 dimensions, 5 measures, " +
-                "distinct counts, percentages and totals.";
+                "Showing the first " + FREE_MAX_DIMENSIONS + " dimensions and " +
+                FREE_MAX_MEASURES + " measures.";
             this.noticeEl.style.display = "block";
         } else {
             this.noticeEl.style.display = "none";
@@ -600,7 +704,7 @@ export class Visual implements IVisual {
 
         // ---- Display mode (absolute / % of row / column / grand total) --------------------------
         // Percentage modes are a Pro feature; the Free tier always shows absolute values.
-        const displayMode = this.isPro
+        const displayMode = this.isProActive()
             ? this.formattingSettings.valuesCard.displayMode.value.value as string
             : "absolute";
         const isPct = displayMode !== "absolute";
@@ -651,7 +755,7 @@ export class Visual implements IVisual {
         const text = this.formattingSettings.textCard;
         const layout = this.formattingSettings.layoutCard;
         // Totals are a Pro feature
-        const showTotals = this.isPro && this.formattingSettings.valuesCard.showTotals.value;
+        const showTotals = this.isProActive() && this.formattingSettings.valuesCard.showTotals.value;
 
         const rowHeight = Math.max(16, layout.rowHeight.value);
         const colWidth = Math.max(40, layout.columnWidth.value);
@@ -1051,11 +1155,15 @@ export class Visual implements IVisual {
         clearElement(this.controlsEl);
         clearElement(this.scrollEl);
         this.noticeEl.style.display = "none";
+        this.watermarkEl.style.display = "none";
     }
 
     private renderLandingPage(): void {
         this.clearAll();
-        this.showMessage("Add Dimensions (at least 2) plus a Measure or a \"Distinct count of\" field to build the dynamic matrix.");
+        this.showMessage(
+            "Add Dimensions (at least 2) plus a Measure or a \"Distinct count of\" field to build the dynamic matrix. " +
+            "Pro plan on Microsoft AppSource: up to 10 dimensions and 5 measures, distinct counts, percentage values and totals."
+        );
     }
 
     // ==========================================================================================

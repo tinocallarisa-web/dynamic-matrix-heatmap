@@ -12,7 +12,7 @@ import FormattingSettingsModel = formattingSettings.Model;
 class ValuesCardSettings extends FormattingSettingsCard {
     displayMode = new formattingSettings.ItemDropdown({
         name: "displayMode",
-        displayName: "Show value as",
+        displayName: "Show value as (Pro)",
         items: [
             { value: "absolute", displayName: "Absolute" },
             { value: "pctRow", displayName: "% of row" },
@@ -52,7 +52,7 @@ class ValuesCardSettings extends FormattingSettingsCard {
 
     showTotals = new formattingSettings.ToggleSwitch({
         name: "showTotals",
-        displayName: "Show totals",
+        displayName: "Show totals (Pro)",
         value: false
     });
 
