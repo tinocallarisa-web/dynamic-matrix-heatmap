@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Support &amp; Documentation — Dynamic Matrix Heatmap by TCViz</title>
+<style>
+  :root{--bg:#FAF9F5;--bg2:#EDE9DE;--line:#DAD9D4;
+        --t1:#3D3929;--t2:#535146;--t3:#83827D;--acc:#C96442;--accd:#B05730;
+        --acc2:#9C87F5;--acc2l:#DBD3F0}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--t1);
+       font-family:'Segoe UI',system-ui,-apple-system,sans-serif;line-height:1.65}
+  .wrap{max-width:900px;margin:0 auto;padding:48px 24px 80px}
+  header{border-bottom:3px solid var(--acc);padding-bottom:20px;margin-bottom:36px}
+  h1{margin:0 0 6px;font-size:32px;letter-spacing:-.5px}
+  h2{margin:40px 0 12px;font-size:22px;color:var(--accd)}
+  h3{margin:26px 0 8px;font-size:16px}
+  .sub{color:var(--t3);font-size:14px;margin:0}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--bg2);font-weight:600}
+  code{background:var(--bg2);padding:2px 6px;border-radius:4px;font-size:13px}
+  .note{background:var(--bg2);border-left:4px solid var(--acc);padding:16px 20px;
+        border-radius:0 8px 8px 0;margin:20px 0}
+  .pro{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;
+       background:var(--acc2l);color:#4A3B8C;border:1px solid var(--acc2);
+       text-transform:uppercase;letter-spacing:.4px}
+  .steps{counter-reset:s;list-style:none;padding:0}
+  .steps li{counter-increment:s;position:relative;padding:0 0 14px 40px;margin:0}
+  .steps li::before{content:counter(s);position:absolute;left:0;top:0;width:26px;height:26px;
+    border-radius:50%;background:var(--acc);color:#fff;font-weight:700;font-size:13px;
+    display:flex;align-items:center;justify-content:center}
+  .video{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;
+    border-radius:10px;border:1px solid var(--line);margin:20px 0}
+  .video iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
+  details{background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin:10px 0}
+  summary{cursor:pointer;font-weight:600}
+  ul{padding-left:22px}li{margin:6px 0}
+  a{color:var(--accd)}
+  footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);
+         color:var(--t3);font-size:13px;display:flex;gap:18px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Support &amp; Documentation</h1>
+  <p class="sub">Dynamic Matrix Heatmap — a Power BI custom visual by TCViz · Version 1.0.1.0 · Last updated: 15 September 2026</p>
+</header>
+
+<p>Dynamic Matrix Heatmap lets the people reading your report choose their own crosstab. Instead of
+you building one matrix per combination, they pick the X dimension, the Y dimension and the value
+from dropdowns inside the visual — no edit rights, no request to a developer.</p>
+
+<h2>Video walkthrough</h2>
+<div class="video">
+  <iframe src="https://www.youtube-nocookie.com/embed/vobbf6405e4"
+          title="Dynamic Matrix Heatmap — walkthrough"
+          allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen loading="lazy"></iframe>
+</div>
+
+<h2>Quick start</h2>
+<ol class="steps">
+  <li>Drop the visual on the canvas.</li>
+  <li>Drag two or more fields into <strong>Dimensions</strong>. These populate the X and Y dropdowns.</li>
+  <li>Drag at least one measure into <strong>Measures</strong>.</li>
+  <li>In the visual, pick an <strong>X axis</strong> and a <strong>Y axis</strong>. The matrix appears.</li>
+  <li>Optional: drag a raw ID column (such as <code>customer_id</code>) into <strong>Distinct count of</strong> <span class="pro">Pro</span> to count unique values exactly.</li>
+</ol>
+
+<h2>Field wells</h2>
+<table>
+  <tr><th>Well</th><th>Accepts</th><th>Limit</th><th>Purpose</th></tr>
+  <tr><td>Dimensions</td><td>Any grouping field</td><td>3 Free / 10 Pro</td><td>Populates the X and Y dropdowns. Keep cardinality around 20–25 values per field.</td></tr>
+  <tr><td>Measures</td><td>Measures or numeric columns</td><td>2 Free / 5 Pro</td><td>Values shown in the cells.</td></tr>
+  <tr><td>Distinct count of</td><td>Raw ID columns</td><td>3 <span class="pro">Pro</span></td><td>The visual counts unique values itself, so the result is exact for every X/Y combination.</td></tr>
+</table>
+
+<h2>Why distinct counts are different here</h2>
+<div class="note">
+  Power BI computes a measure at the granularity of <em>all</em> the fields in the visual. When you
+  display only two of them, the other values have to be combined. Sums, minimums, maximums and
+  counts recombine exactly — but a distinct count does not, because a customer appearing under two
+  different pickings would be counted twice.
+  <br><br>
+  That is what the <strong>Distinct count of</strong> well solves: give the visual the raw ID column
+  and it counts unique values itself, in memory, for whichever pair of dimensions is on screen. The
+  grand total matches your card visual exactly.
+</div>
+
+<h2>Format pane</h2>
+<table>
+  <tr><th>Card</th><th>Setting</th><th>What it does</th></tr>
+  <tr><td rowspan="4">Values</td><td>Aggregation</td><td>How rows sharing a cell are combined. <em>Auto</em> reads what Power BI applied to the field; override it for DAX measures, where the aggregation is not readable.</td></tr>
+  <tr><td>Show value as <span class="pro">Pro</span></td><td>Absolute, % of row, % of column, % of grand total.</td></tr>
+  <tr><td>Number format</td><td><em>Auto</em> uses the model's format. Override when the model format is wrong for what is shown.</td></tr>
+  <tr><td>Show totals <span class="pro">Pro</span></td><td>Adds a total row and column, with exact distinct counts in the margins.</td></tr>
+  <tr><td>Heatmap colors</td><td>Minimum / Middle / Maximum</td><td>Three-point colour scale, applied globally across every visible cell.</td></tr>
+  <tr><td>Empty cells</td><td>Display as</td><td>Blank, dash, zero or grey fill.</td></tr>
+  <tr><td rowspan="2">Text</td><td>Axis labels, values</td><td>Font, size and colour, set separately.</td></tr>
+  <tr><td>Controls bar</td><td>Background colour and label font for the dropdown bar.</td></tr>
+  <tr><td rowspan="3">Layout</td><td>Row height</td><td>Minimum row height in pixels.</td></tr>
+  <tr><td>Column width</td><td>Column width in pixels.</td></tr>
+  <tr><td>Column header orientation</td><td>Horizontal, vertical (90°) or diagonal (45°).</td></tr>
+</table>
+
+<h2>Free, Pro and the Pro preview</h2>
+<p>Paid settings and field wells are marked <strong>(Pro)</strong> in Power BI. Without a licence:</p>
+<ul>
+  <li><strong>While you edit a report</strong>, Pro capabilities you use are shown working under a
+      <strong>Pro preview</strong> watermark, and Power BI shows how to get a licence.</li>
+  <li><strong>In reading view and published reports</strong>, the free result is shown — the first 3
+      dimensions and 2 measures, absolute values, no totals — with a short note and no watermark.</li>
+  <li>Where Power BI cannot check licences (Publish to Web, embedding, PDF/PowerPoint export) the free
+      result is shown, even for Pro customers.</li>
+</ul>
+
+<h2>Interaction</h2>
+<ul>
+  <li><strong>Click a cell</strong> — filters the rest of the page to that X/Y intersection.</li>
+  <li><strong>Click it again</strong> — clears the filter.</li>
+  <li><strong>Ctrl / Cmd + click</strong> — adds cells to the selection.</li>
+  <li><strong>Right click</strong> — the standard Power BI menu (Include, Exclude, Drill through).</li>
+  <li><strong>Tab and Enter</strong> — keyboard navigation across cells.</li>
+</ul>
+
+<h2>Troubleshooting</h2>
+
+<details><summary>The values do not match my card visual</summary>
+<p>If you are showing a count of something that can appear in more than one category, use the
+<strong>Distinct count of</strong> well with the raw ID column rather than a DAX measure. A distinct
+count computed at a finer grain cannot be recombined correctly by any client.</p></details>
+
+<details><summary>A field shows as a percentage when it should not</summary>
+<p>This happens when the same field is added twice, once normally and once with "Show value as →
+Percent of grand total": Power BI marks the underlying column as a percentage and the mark reaches
+both instances. The visual detects and corrects this automatically. If it persists, set
+<strong>Values → Number format → Number</strong>, and check the column's format in your model.</p></details>
+
+<details><summary>An average behaves like a sum</summary>
+<p>Set <strong>Values → Aggregation → Average</strong>. Auto-detection reads the field's label and
+query name, but a DAX measure carries its aggregation inside the DAX where it cannot be read.</p></details>
+
+<details><summary>"Showing a partial dataset"</summary>
+<p>The row limit was reached. The visual loads row-level detail in segments to keep distinct counts
+exact; with many dimensions at once the combinations exceed what Power BI will deliver. Remove a
+dimension or two.</p></details>
+
+<details><summary>Clicking a cell does not filter another table</summary>
+<p>Check the relationship between the tables in Model view. Filtering from a fact table to a
+dimension table needs the cross-filter direction set to <strong>Both</strong>.</p></details>
+
+<details><summary>Pro features are not active after purchasing</summary>
+<p>The visual detects the licence when the report is opened or refreshed. Microsoft notes it can take
+up to an hour for a new licence to be recognised: refresh the browser (F5) or close and reopen Power BI
+Desktop. A licence is required per user. If it persists, open an issue with your AppSource order
+reference.</p></details>
+
+<h2>Limits and known behaviour</h2>
+<ul>
+  <li>Up to 25 distinct values are shown per axis; beyond that, the rest are omitted.</li>
+  <li><strong>Average is an unweighted approximation</strong> when extra dimensions are loaded. Sum, minimum, maximum and count are exact.</li>
+  <li>With distinct counts, percentages of a row need not add to 100 — an entity present in several columns is counted in each. That is inherent to distinct counting, not a defect.</li>
+</ul>
+
+<h2>Getting help</h2>
+<ul>
+  <li><a href="https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/issues">Report a bug or request a feature</a></li>
+  <li><a href="https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/blob/main/CHANGELOG.md">Changelog</a></li>
+  <li>Licensing questions: <a href="mailto:support@tcviz.com">support@tcviz.com</a></li>
+</ul>
+
+<footer>
+  <span>© 2026 TCViz</span>
+  <a href="privacy.html">Privacy</a>
+  <a href="terms.html">Terms</a>
+  <a href="https://github.com/tinocallarisa-web/dynamic-matrix-heatmap">GitHub</a>
+</footer>
+
+</div>
+</body>
+</html>
