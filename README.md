@@ -6,7 +6,7 @@ Instead of building one matrix per combination of fields, you drop in the dimens
 reading the report picks the X dimension, the Y dimension and the value from dropdowns inside the
 visual — no edit rights, no request to a developer, no reconfiguring the model.
 
-![Version](https://img.shields.io/badge/version-1.0.0.0-C96442)
+![Version](https://img.shields.io/badge/version-1.1.0.0-C96442)
 ![API](https://img.shields.io/badge/Power%20BI%20API-5.11.1-B05730)
 
 ---

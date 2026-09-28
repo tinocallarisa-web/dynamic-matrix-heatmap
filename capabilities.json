@@ -15,6 +15,13 @@
             "description": "Pre-aggregated DAX measures. Re-aggregated with the mode selected in the Values card. Up to 5 (Free: 2)."
         },
         {
+            "name": "weights",
+            "kind": "Measure",
+            "displayName": "Weights for averages",
+            "displayNameKey": "Visual_Weights",
+            "description": "A row count, so averages can be combined correctly across the dimensions you did not pick for X and Y. Without it the visual can only average the averages Power BI sent, which weighs every combination the same."
+        },
+        {
             "displayName": "Distinct count of (Pro)",
             "displayNameKey": "Visual_DistinctFields",
             "name": "distinctFields",
@@ -28,6 +35,7 @@
                 {
                     "dimensions": { "min": 0, "max": 10 },
                     "measures": { "min": 0, "max": 5 },
+                    "weights": { "min": 0, "max": 1 },
                     "distinctFields": { "min": 0, "max": 3 }
                 }
             ],
@@ -41,7 +49,8 @@
                 },
                 "values": {
                     "select": [
-                        { "for": { "in": "measures" } }
+                        { "for": { "in": "measures" } },
+                        { "for": { "in": "weights" } }
                     ]
                 }
             }
@@ -67,32 +76,6 @@
                             { "value": "pctRow", "displayName": "% of row" },
                             { "value": "pctCol", "displayName": "% of column" },
                             { "value": "pctTotal", "displayName": "% of grand total" }
-                        ]
-                    }
-                },
-                "aggregation": {
-                    "displayName": "Aggregation",
-                    "description": "Auto reads the aggregation Power BI applied to the field. Override it when the field is a DAX measure, where the aggregation is not readable.",
-                    "type": {
-                        "enumeration": [
-                            { "value": "auto", "displayName": "Auto (detect)" },
-                            { "value": "sum", "displayName": "Sum" },
-                            { "value": "average", "displayName": "Average" },
-                            { "value": "min", "displayName": "Minimum" },
-                            { "value": "max", "displayName": "Maximum" },
-                            { "value": "count", "displayName": "Count of rows" }
-                        ]
-                    }
-                },
-                "numberFormat": {
-                    "displayName": "Number format",
-                    "description": "Auto uses the field's format from the model. Override it when the model format is wrong for what the visual shows.",
-                    "type": {
-                        "enumeration": [
-                            { "value": "auto", "displayName": "Auto (from model)" },
-                            { "value": "number", "displayName": "Number" },
-                            { "value": "integer", "displayName": "Whole number" },
-                            { "value": "percent", "displayName": "Percentage" }
                         ]
                     }
                 },
@@ -211,7 +194,8 @@
             "properties": {
                 "xDimension": { "type": { "text": true } },
                 "yDimension": { "type": { "text": true } },
-                "valueKey": { "type": { "text": true } }
+                "valueKey": { "type": { "text": true } },
+                "perValue": { "type": { "text": true } }
             }
         }
     },

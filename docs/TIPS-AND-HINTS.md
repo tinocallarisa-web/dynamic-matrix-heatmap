@@ -1,6 +1,6 @@
 # Tips &amp; Hints — Dynamic Matrix Heatmap
 
-**Version 1.0.0.0 · TCViz**
+**Version 1.1.0.0 · TCViz**
 Video walkthrough: https://www.youtube.com/watch?v=vobbf6405e4
 
 > Content for the *Tips &amp; Hints* page of the sample `.pbix`.
@@ -33,9 +33,7 @@ Aim for roughly 20–25 distinct values per dimension. Up to 25 are rendered per
 
 | Card | Setting | What it does |
 |---|---|---|
-| Values | Aggregation | How rows sharing a cell combine. *Auto* reads what Power BI applied |
 | Values | Show value as *(Pro)* | Absolute, % of row, % of column, % of grand total |
-| Values | Number format | *Auto* uses the model's format; override when it is wrong |
 | Values | Show totals *(Pro)* | Total row and column, with exact distinct counts |
 | Heatmap colors | Minimum / Middle / Maximum | Three-point scale, applied globally |
 | Empty cells | Display as | Blank, dash, zero or grey fill |
@@ -113,10 +111,18 @@ X = route · Y = complexity · Value = Average of score
 **A field shows as a percentage when it should not.** This happens when the same field is added
 twice, once normally and once with *Show value as → Percent of grand total*: Power BI marks the
 underlying column as a percentage and it reaches both. The visual detects and corrects this. If it
-persists, set **Values → Number format → Number**.
+persists, check the column's format in your model — the visual uses the model's format string, in
+your report's locale.
 
-**An average behaves like a sum.** Set **Values → Aggregation → Average**. Auto-detection reads the
-field's label and query name, but a DAX measure hides its aggregation inside the DAX.
+**An average is not the number the native matrix shows.** X and Y are chosen inside the visual, so
+Power BI cannot aggregate to that pair: it aggregates at the grain of every bound dimension and the
+visual combines the rest. Sums, minimums, maximums and counts survive that; an average does not,
+because every combination would count the same whether it holds one row or ten thousand. Bind a row
+count to the **Weights for averages** well and the visual uses the weighted average.
+
+**A distinct count is too high.** Do not bind *Count (Distinct)* as a measure: a customer buying in two
+regions sits in two combinations and gets counted twice. Use the **Distinct count of** well with the raw
+ID column, which the visual counts per cell and is exact for any X/Y pair.
 
 **"Showing a partial dataset".** Too many dimension combinations. Remove a dimension or two.
 

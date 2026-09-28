@@ -23,12 +23,54 @@
 </head>
 <body>
   <h1>Changelog — Dynamic Matrix Heatmap</h1>
-  <p class="meta">Current version <strong>1.0.1.0</strong> &nbsp;|&nbsp;
+  <p class="meta">Current version <strong>1.1.0.0</strong> &nbsp;|&nbsp;
     <a href="support.html">Support</a> &nbsp;|&nbsp;
     <a href="mailto:support@tcviz.com">support@tcviz.com</a></p>
 
   <p>All notable changes to Dynamic Matrix Heatmap are documented here.</p>
   <p>This project follows <a href="https://keepachangelog.com/en/1.1.0/" target="_blank" rel="noopener">Keep a Changelog</a> and the Power BI four-part version scheme (<code>major.minor.patch.build</code>).</p>
+  <h2 id="v1.1.0.0">1.1.0.0 <span class="date">2026-09-28</span></h2>
+  <h3 class="kind kind-fixed">Fixed</h3>
+  <ul>
+    <li><strong>A counted field showed the number of groups, not the count.</strong> With five dimensions
+      bound and two chosen, <code>Count of total_sales</code> read 52 in the matrix against 4,908 in a card
+      over the same field. Power BI sends one partial count per row group and they have to be added; the
+      code returned how many groups there were. Row totals, column totals and the grand total were wrong
+      the same way, and consistently so &mdash; which is what made the number look plausible.</li>
+    <li><strong>A distinct count bound as a measure was silently added up.</strong> A customer who buys in
+      two regions sits in two combinations, so adding them counts that customer twice. It is now reported
+      as an operation that cannot be combined. For exact unique counts, use the <em>Distinct count of</em>
+      well with the raw ID column.</li>
+    <li><strong>Numbers ignored the report&rsquo;s locale.</strong> The model&rsquo;s format string was
+      honoured but the separators were not, so a reader in Spain saw <code>1,234.56</code> where the rest
+      of the report writes <code>1.234,56</code>.</li>
+    <li><strong>The banner naming the blocked feature never reached the reader.</strong> Power BI shows one
+      notification at a time and the last replaces the previous, so the generic Upgrade bar overwrote the
+      message saying <em>which</em> capability was Pro. The Upgrade bar now follows about 10 s later.</li>
+    <li><strong>&ldquo;Edit interactions&rdquo; was ignored</strong>, and the per-measure settings were
+      being written into the report in reading view, where there is no format pane to keep in sync.</li>
+    <li><strong>Dragging a field into &ldquo;Distinct count of&rdquo; without a licence did nothing and
+      said nothing.</strong> The free-tier notice now names what was actually withheld.</li>
+  </ul>
+  <h3 class="kind kind-added">Added</h3>
+  <ul>
+    <li><strong>A Weights field well, so averages come out right.</strong> Because X and Y are picked
+      inside the visual, after the query has run, averages had to be combined without weights &mdash; every
+      combination counting the same whether it held one row or ten thousand. Bind a row count to
+      <em>Weights for averages</em> and the result is the weighted average, the same number the native
+      matrix shows.</li>
+    <li><strong>Bookmark support</strong>, <strong>Spanish in the format pane</strong>, and a note while
+      editing when a measure cannot be combined correctly.</li>
+  </ul>
+  <h3 class="kind kind-changed">Changed</h3>
+  <ul>
+    <li><strong>Aggregation, Number format and &ldquo;Count of rows&rdquo; were removed from the format
+      pane.</strong> The first two repeated a decision the field well and the model already take, in a
+      worse place. The third promised something this visual cannot know: the data mapping is categorical,
+      so each row it receives is a unique combination, not a row of your table. What is left in the card is
+      what nothing else gives you here: the percentage view and the totals, now set per measure.</li>
+  </ul>
+
   <h2 id="v1.0.1.0">1.0.1.0 <span class="date">2026-09-15</span></h2>
   <h3 class="kind kind-fixed">Fixed</h3>
   <ul>

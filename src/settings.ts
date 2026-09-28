@@ -13,6 +13,7 @@ class ValuesCardSettings extends FormattingSettingsCard {
     displayMode = new formattingSettings.ItemDropdown({
         name: "displayMode",
         displayName: "Show value as (Pro)",
+        displayNameKey: "Visual_ShowValueAs",
         items: [
             { value: "absolute", displayName: "Absolute" },
             { value: "pctRow", displayName: "% of row" },
@@ -22,44 +23,22 @@ class ValuesCardSettings extends FormattingSettingsCard {
         value: { value: "absolute", displayName: "Absolute" }
     });
 
-    aggregation = new formattingSettings.ItemDropdown({
-        name: "aggregation",
-        displayName: "Aggregation",
-        description: "Auto reads the aggregation Power BI applied to the field. Override it when the field is a DAX measure, where the aggregation is not readable.",
-        items: [
-            { value: "auto", displayName: "Auto (detect)" },
-            { value: "sum", displayName: "Sum" },
-            { value: "average", displayName: "Average" },
-            { value: "min", displayName: "Minimum" },
-            { value: "max", displayName: "Maximum" },
-            { value: "count", displayName: "Count of rows" }
-        ],
-        value: { value: "auto", displayName: "Auto (detect)" }
-    });
-
-    numberFormat = new formattingSettings.ItemDropdown({
-        name: "numberFormat",
-        displayName: "Number format",
-        description: "Auto uses the field's format from the model. Override it when the model format is wrong for what the visual shows.",
-        items: [
-            { value: "auto", displayName: "Auto (from model)" },
-            { value: "number", displayName: "Number" },
-            { value: "integer", displayName: "Whole number" },
-            { value: "percent", displayName: "Percentage" }
-        ],
-        value: { value: "auto", displayName: "Auto (from model)" }
-    });
-
     showTotals = new formattingSettings.ToggleSwitch({
         name: "showTotals",
         displayName: "Show totals (Pro)",
+        displayNameKey: "Visual_ShowTotals",
         value: false
     });
 
     name: string = "values";
     displayName: string = "Values";
+    displayNameKey: string = "Visual_Values";
+    // Sin esto el usuario sigue leyendo la tarjeta como global, que es justo el malentendido
+    // que el reparto por medida viene a quitar.
+    description: string = "Aggregation, Show value as and Number format belong to the measure selected in the visual, not to the whole visual. Switch measure and these three show that measure's own settings.";
+    descriptionKey: string = "Visual_Values_Desc";
     slices: Array<FormattingSettingsSlice> = [
-        this.aggregation, this.displayMode, this.numberFormat, this.showTotals
+        this.displayMode, this.showTotals
     ];
 }
 
@@ -70,23 +49,27 @@ class HeatmapCardSettings extends FormattingSettingsCard {
     minColor = new formattingSettings.ColorPicker({
         name: "minColor",
         displayName: "Minimum value color",
+        displayNameKey: "Visual_MinColor",
         value: { value: "#FFFFFF" }
     });
 
     midColor = new formattingSettings.ColorPicker({
         name: "midColor",
         displayName: "Middle value color",
+        displayNameKey: "Visual_MidColor",
         value: { value: "#FDBE85" }
     });
 
     maxColor = new formattingSettings.ColorPicker({
         name: "maxColor",
         displayName: "Maximum value color",
+        displayNameKey: "Visual_MaxColor",
         value: { value: "#D94701" }
     });
 
     name: string = "heatmap";
     displayName: string = "Heatmap colors";
+    displayNameKey: string = "Visual_Heatmap";
     slices: Array<FormattingSettingsSlice> = [this.minColor, this.midColor, this.maxColor];
 }
 
@@ -97,6 +80,7 @@ class EmptyCellsCardSettings extends FormattingSettingsCard {
     mode = new formattingSettings.ItemDropdown({
         name: "mode",
         displayName: "Display as",
+        displayNameKey: "Visual_DisplayAs",
         items: [
             { value: "blank", displayName: "Blank" },
             { value: "dash", displayName: "Dash (-)" },
@@ -108,6 +92,7 @@ class EmptyCellsCardSettings extends FormattingSettingsCard {
 
     name: string = "emptyCells";
     displayName: string = "Empty cells";
+    displayNameKey: string = "Visual_EmptyCells";
     slices: Array<FormattingSettingsSlice> = [this.mode];
 }
 
@@ -118,65 +103,76 @@ class TextCardSettings extends FormattingSettingsCard {
     labelFontFamily = new formattingSettings.FontPicker({
         name: "labelFontFamily",
         displayName: "Axis label font",
+        displayNameKey: "Visual_AxisFont",
         value: "Segoe UI"
     });
 
     labelFontSize = new formattingSettings.NumUpDown({
         name: "labelFontSize",
         displayName: "Axis label size",
+        displayNameKey: "Visual_AxisSize",
         value: 11
     });
 
     labelColor = new formattingSettings.ColorPicker({
         name: "labelColor",
         displayName: "Axis label color",
+        displayNameKey: "Visual_AxisColor",
         value: { value: "#252423" }
     });
 
     valueFontFamily = new formattingSettings.FontPicker({
         name: "valueFontFamily",
         displayName: "Value font",
+        displayNameKey: "Visual_ValueFont",
         value: "Segoe UI"
     });
 
     valueFontSize = new formattingSettings.NumUpDown({
         name: "valueFontSize",
         displayName: "Value size",
+        displayNameKey: "Visual_ValueSize",
         value: 12
     });
 
     valueColor = new formattingSettings.ColorPicker({
         name: "valueColor",
         displayName: "Value color",
+        displayNameKey: "Visual_ValueColor",
         value: { value: "#252423" }
     });
 
     controlsBackground = new formattingSettings.ColorPicker({
         name: "controlsBackground",
         displayName: "Controls bar background",
+        displayNameKey: "Visual_ControlsBg",
         value: { value: "#FFFFFF" }
     });
 
     controlsFontFamily = new formattingSettings.FontPicker({
         name: "controlsFontFamily",
         displayName: "Controls label font",
+        displayNameKey: "Visual_ControlsFont",
         value: "Segoe UI"
     });
 
     controlsFontSize = new formattingSettings.NumUpDown({
         name: "controlsFontSize",
         displayName: "Controls label size",
+        displayNameKey: "Visual_ControlsSize",
         value: 12
     });
 
     controlsFontColor = new formattingSettings.ColorPicker({
         name: "controlsFontColor",
         displayName: "Controls label color",
+        displayNameKey: "Visual_ControlsColor",
         value: { value: "#252423" }
     });
 
     name: string = "text";
     displayName: string = "Text";
+    displayNameKey: string = "Visual_Text";
     slices: Array<FormattingSettingsSlice> = [
         this.labelFontFamily, this.labelFontSize, this.labelColor,
         this.valueFontFamily, this.valueFontSize, this.valueColor,
@@ -191,18 +187,21 @@ class LayoutCardSettings extends FormattingSettingsCard {
     rowHeight = new formattingSettings.NumUpDown({
         name: "rowHeight",
         displayName: "Row height (px)",
+        displayNameKey: "Visual_RowHeight",
         value: 28
     });
 
     columnWidth = new formattingSettings.NumUpDown({
         name: "columnWidth",
         displayName: "Column width (px)",
+        displayNameKey: "Visual_ColumnWidth",
         value: 90
     });
 
     columnHeaderOrientation = new formattingSettings.ItemDropdown({
         name: "columnHeaderOrientation",
         displayName: "Column header orientation",
+        displayNameKey: "Visual_HeaderOrientation",
         items: [
             { value: "horizontal", displayName: "Horizontal" },
             { value: "vertical", displayName: "Vertical (90°)" },
@@ -213,6 +212,7 @@ class LayoutCardSettings extends FormattingSettingsCard {
 
     name: string = "layout";
     displayName: string = "Layout";
+    displayNameKey: string = "Visual_Layout";
     slices: Array<FormattingSettingsSlice> = [this.rowHeight, this.columnWidth, this.columnHeaderOrientation];
 }
 

@@ -47,7 +47,7 @@
 
 <header>
   <h1>Support &amp; Documentation</h1>
-  <p class="sub">Dynamic Matrix Heatmap — a Power BI custom visual by TCViz · Version 1.0.1.0 · Last updated: 15 September 2026</p>
+  <p class="sub">Dynamic Matrix Heatmap — a Power BI custom visual by TCViz · Version 1.1.0.0 · Last updated: 15 September 2026</p>
 </header>
 
 <p>Dynamic Matrix Heatmap lets the people reading your report choose their own crosstab. Instead of
@@ -76,6 +76,7 @@ from dropdowns inside the visual — no edit rights, no request to a developer.<
   <tr><th>Well</th><th>Accepts</th><th>Limit</th><th>Purpose</th></tr>
   <tr><td>Dimensions</td><td>Any grouping field</td><td>3 Free / 10 Pro</td><td>Populates the X and Y dropdowns. Keep cardinality around 20–25 values per field.</td></tr>
   <tr><td>Measures</td><td>Measures or numeric columns</td><td>2 Free / 5 Pro</td><td>Values shown in the cells.</td></tr>
+  <tr><td>Weights for averages</td><td>A row count</td><td>1, optional</td><td>Lets the visual weight an average when it combines across the dimensions you did not pick. Without it the average is unweighted and the visual says so while you edit.</td></tr>
   <tr><td>Distinct count of</td><td>Raw ID columns</td><td>3 <span class="pro">Pro</span></td><td>The visual counts unique values itself, so the result is exact for every X/Y combination.</td></tr>
 </table>
 
@@ -94,9 +95,7 @@ from dropdowns inside the visual — no edit rights, no request to a developer.<
 <h2>Format pane</h2>
 <table>
   <tr><th>Card</th><th>Setting</th><th>What it does</th></tr>
-  <tr><td rowspan="4">Values</td><td>Aggregation</td><td>How rows sharing a cell are combined. <em>Auto</em> reads what Power BI applied to the field; override it for DAX measures, where the aggregation is not readable.</td></tr>
-  <tr><td>Show value as <span class="pro">Pro</span></td><td>Absolute, % of row, % of column, % of grand total.</td></tr>
-  <tr><td>Number format</td><td><em>Auto</em> uses the model's format. Override when the model format is wrong for what is shown.</td></tr>
+  <tr><td rowspan="2">Values</td><td>Show value as <span class="pro">Pro</span></td><td>Absolute, % of row, % of column, % of grand total. Set per measure: the card names the one it is editing, and each measure keeps its own.</td></tr>
   <tr><td>Show totals <span class="pro">Pro</span></td><td>Adds a total row and column, with exact distinct counts in the margins.</td></tr>
   <tr><td>Heatmap colors</td><td>Minimum / Middle / Maximum</td><td>Three-point colour scale, applied globally across every visible cell.</td></tr>
   <tr><td>Empty cells</td><td>Display as</td><td>Blank, dash, zero or grey fill.</td></tr>
@@ -137,12 +136,22 @@ count computed at a finer grain cannot be recombined correctly by any client.</p
 <details><summary>A field shows as a percentage when it should not</summary>
 <p>This happens when the same field is added twice, once normally and once with "Show value as →
 Percent of grand total": Power BI marks the underlying column as a percentage and the mark reaches
-both instances. The visual detects and corrects this automatically. If it persists, set
-<strong>Values → Number format → Number</strong>, and check the column's format in your model.</p></details>
+both instances. The visual detects and corrects this automatically. If it persists, check the column's
+format in your model — the visual uses the model's format string, in your report's locale.</p></details>
 
-<details><summary>An average behaves like a sum</summary>
-<p>Set <strong>Values → Aggregation → Average</strong>. Auto-detection reads the field's label and
-query name, but a DAX measure carries its aggregation inside the DAX where it cannot be read.</p></details>
+<details><summary>An average is not the number the native matrix shows</summary>
+<p>Because X and Y are chosen inside the visual, Power BI cannot aggregate to that pair: it aggregates
+at the grain of every bound dimension and the visual combines the rest. Sums, minimums, maximums and
+counts survive that; an average does not, because every combination would count the same whether it
+holds one row or ten thousand. Bind a row count to the <strong>Weights for averages</strong> field well
+and the visual uses the weighted average, which is the number the native matrix shows. Without it, a
+note while you edit tells you the average is unweighted.</p></details>
+
+<details><summary>A distinct count is too high</summary>
+<p>Do not bind <em>Count (Distinct)</em> as a measure. Power BI computes it at the grain of every bound
+dimension, and a distinct count cannot be combined: a customer who buys in two regions sits in two
+combinations and would be counted twice. Put the raw ID column in the <strong>Distinct count of</strong>
+field well instead — the visual counts unique values per cell, which is exact for any X/Y pair.</p></details>
 
 <details><summary>"Showing a partial dataset"</summary>
 <p>The row limit was reached. The visual loads row-level detail in segments to keep distinct counts

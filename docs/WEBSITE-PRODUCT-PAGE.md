@@ -1,6 +1,6 @@
 # Dynamic Matrix Heatmap — Product Page Content
 
-**Version 1.0.0.0 · TCViz**
+**Version 1.1.0.0 · TCViz**
 Video: https://www.youtube.com/watch?v=vobbf6405e4
 
 Content for the four tabs of the product page on the TCViz website.
@@ -84,8 +84,12 @@ cannot guarantee.
 
 - **Automatic aggregation detection.** Reads the aggregation Power BI applied to a field from its
   label and query name, so *Average of CVI* averages and *Sum of sales* sums, with no configuration
-- **Manual override** for DAX measures, where the aggregation lives inside the DAX and cannot be read
-- **`Distinct count of`** *(Pro)* — counts unique values from a raw column, exact for any X/Y pair
+- **`Weights for averages`** — bind a row count and averages are combined as a weighted average, the
+  same number the native matrix shows. Without it the visual says, while you edit, that the average is
+  unweighted rather than showing it as if it were right
+- **`Distinct count of`** *(Pro)* — counts unique values from a raw column, exact for any X/Y pair.
+  A distinct count bound as a measure cannot be combined at all — a customer buying in two regions
+  would be counted twice — and the visual says so instead of adding them up
 - **Format correction.** When the same field is added twice, once with *Show value as → Percent of
   grand total*, Power BI marks the underlying column as a percentage and it reaches both instances.
   The visual detects that case and corrects the display automatically

@@ -93,6 +93,18 @@ interface ITupleFilter {
 }
 
 
+/**
+ * Lo que el visual decide por medida.
+ *
+ * Que significa un numero -agregacion y formato- lo decide el sistema: el pozo de campos y el
+ * modelo, donde Power BI ya lo hace y lo hace mejor. Lo que no existe en ningun otro sitio es
+ * COMO se presenta aqui, y eso si cambia con cada medida: los ingresos como % de la fila y el
+ * recuento en absoluto, en la misma matriz.
+ */
+interface ValueSettings {
+    mode: string;
+}
+
 /** A selectable entry in the Measure dropdown: either a DAX measure or a client-side distinct count. */
 interface ValueOption {
     /** "m:<index>" for a measure, "d:<index>" for a distinct-count field */
@@ -118,6 +130,7 @@ export class Visual implements IVisual {
     private selectionManager: ISelectionManager;
     private tooltipServiceWrapper: ITooltipServiceWrapper;
     private formattingSettingsService: FormattingSettingsService;
+    private localization: powerbi.extensibility.ILocalizationManager;
     private formattingSettings: VisualFormattingSettingsModel;
 
     private target: HTMLElement;
@@ -137,6 +150,16 @@ export class Visual implements IVisual {
     // In-memory
     /** Cells currently filtered, as "<x><y>" keys. Drives dimming and the filter payload. */
     private selectedCells: Set<string> = new Set<string>();
+    /** Ajustes por medida, indexados por su etiqueta, que es lo que el usuario ve y elige. */
+    private perValue: { [label: string]: ValueSettings } = {};
+    /** La medida que el panel estaba editando en el render anterior. */
+    private lastActiveLabel: string = null;
+    /** Aviso de medida no aditiva colapsada en el cliente. Solo se pinta en edicion. */
+    private aggWarning: string = null;
+    /** Que se ha retenido por el tier gratuito, en palabras, para el aviso. */
+    private limitedDetail = "";
+    /** Nombre de la medida activa, para que la tarjeta diga a cual esta aplicando. */
+    private activeLabel: string = null;
     private fetchCount: number = 0;
 
     // Licensing. isPro is a field initializer on purpose — the constructor must never reset it,
@@ -154,6 +177,10 @@ export class Visual implements IVisual {
     private licenseEnvUnsupported = false;
     private noticeShown = false;
     private lastBlockedSig = "";
+    /** Temporizador de la barra de Upgrade. Vive fuera de update() porque Power BI
+     *  destruye y recrea el visual al cambiar de pagina, y un timer suelto dispararia
+     *  sobre un visual que ya no existe. */
+    private upgradeTimer = 0;
     private attemptedPro: string[] = [];
     private lastOptions: VisualUpdateOptions = null;
     private lastDataView: powerbi.DataView = null;
@@ -163,7 +190,10 @@ export class Visual implements IVisual {
         this.host = options.host;
         this.events = options.host.eventService;
         this.selectionManager = options.host.createSelectionManager();
-        this.formattingSettingsService = new FormattingSettingsService();
+        // Sin el gestor de localizacion, el util ignora displayNameKey y el panel de formato
+        // sale en ingles aunque los recursos existan: son las dos mitades de lo mismo.
+        this.localization = options.host.createLocalizationManager();
+        this.formattingSettingsService = new FormattingSettingsService(this.localization);
         this.licenseManager = options.host.licenseManager;
         this.tooltipServiceWrapper = createTooltipServiceWrapper(options.host.tooltipService, options.element);
 
@@ -218,6 +248,7 @@ export class Visual implements IVisual {
                 this.fetchCount = 0;
             }
 
+            this.syncSelectionFromFilters(options);
             this.renderFromDataView(dataView);
             this.events.renderingFinished(options);
         } catch (error) {
@@ -268,7 +299,12 @@ export class Visual implements IVisual {
                 .filter(c => c.source.roles && c.source.roles["distinctFields"])
                 .map(c => ({ name: c.source.displayName, column: c }));
 
-            const allMeasures: MeasureInfo[] = values.map(v => ({ name: v.source.displayName, column: v }));
+            // El campo de pesos comparte el bloque de valores con las medidas, pero no es una de
+            // ellas: no debe salir en el desplegable ni contar para el tope del tier gratuito.
+            const allMeasures: MeasureInfo[] = values
+                .filter(v => v.source.roles && v.source.roles["measures"])
+                .map(v => ({ name: v.source.displayName, column: v }));
+            const weightColumn = values.find(v => v.source.roles && v.source.roles["weights"]) || null;
 
             // ---- Free tier limits ------------------------------------------------------------
             const pro = this.isProActive();
@@ -282,7 +318,6 @@ export class Visual implements IVisual {
             if (allDimensions.length > FREE_MAX_DIMENSIONS) { attempted.push("more than 3 dimensions"); }
             if (allMeasures.length > FREE_MAX_MEASURES) { attempted.push("more than 2 measures"); }
             if (allDistinctCols.length > 0) { attempted.push("distinct counts"); }
-            if ((vc.displayMode.value.value as string) !== "absolute") { attempted.push("percentage values"); }
             if (vc.showTotals.value) { attempted.push("totals"); }
             this.attemptedPro = this.isPro ? [] : attempted;
             this.updateWatermark();
@@ -292,6 +327,22 @@ export class Visual implements IVisual {
                 allDimensions.length > dimensions.length ||
                 allMeasures.length > measures.length ||
                 allDistinctCols.length > distinctCols.length;
+
+            // El aviso tiene que nombrar lo que se ha retenido. Decia siempre "las primeras 3
+            // dimensiones y 2 medidas", asi que quien arrastraba un campo a "Distinct count of"
+            // sin licencia no veia aparecer la opcion NI una sola palabra que lo explicara: el
+            // campo entraba en el pozo y no pasaba nada.
+            const retenido: string[] = [];
+            if (allDimensions.length > dimensions.length) {
+                retenido.push(`the first ${FREE_MAX_DIMENSIONS} of ${allDimensions.length} dimensions`);
+            }
+            if (allMeasures.length > measures.length) {
+                retenido.push(`the first ${FREE_MAX_MEASURES} of ${allMeasures.length} measures`);
+            }
+            if (allDistinctCols.length > distinctCols.length) {
+                retenido.push("no distinct counts, which are a Pro feature");
+            }
+            this.limitedDetail = retenido.length ? "Showing " + retenido.join(", ") + "." : "";
 
             // ---- Validation ----------------------------------------------------------------
             if (dimensions.length === 0) {
@@ -333,6 +384,12 @@ export class Visual implements IVisual {
             if (persisted && typeof persisted["valueKey"] === "string" && persisted["valueKey"]) {
                 this.selectedValueKey = persisted["valueKey"] as string;
             }
+            if (this.lastActiveLabel === null && persisted && typeof persisted["perValue"] === "string" && persisted["perValue"]) {
+                try {
+                    const leido = JSON.parse(persisted["perValue"] as string);
+                    if (leido && typeof leido === "object") { this.perValue = leido; }
+                } catch (_) { /* un mapa ilegible se descarta: se vuelve a lo del panel */ }
+            }
 
             // Invalidate stale selections
             if (this.selectedX !== null && dimNames.indexOf(this.selectedX) === -1) { this.selectedX = null; }
@@ -353,11 +410,19 @@ export class Visual implements IVisual {
             }
 
             const activeValue = valueOptions.find(v => v.key === this.selectedValueKey);
+            // Los ajustes son de la medida, no del visual: hasta saber cual esta activa no se
+            // puede decir si se ha pedido un porcentaje, que es Pro.
+            const valueSettings = this.resolveValueSettings(activeValue);
+            if (!this.isPro && valueSettings.mode !== "absolute" &&
+                this.attemptedPro.indexOf("percentage values") < 0) {
+                this.attemptedPro = this.attemptedPro.concat(["percentage values"]);
+                this.updateWatermark();
+            }
             const highlightSource = activeValue.kind === "measure"
                 ? (measures[activeValue.index].column.highlights || null)
                 : (measures.length > 0 ? (measures[0].column.highlights || null) : null);
 
-            this.renderMatrix(dimensions, measures, distinctCols, activeValue, highlightSource);
+            this.renderMatrix(dimensions, measures, distinctCols, activeValue, highlightSource, valueSettings, weightColumn);
         }
     }
 
@@ -438,6 +503,65 @@ export class Visual implements IVisual {
         };
     }
 
+    /**
+     * Decide que ajustes manda: los de la medida activa, no los del panel a secas.
+     *
+     * El panel de formato de Power BI no sabe de "la medida activa": tiene un solo juego de
+     * controles. Asi que aqui se usa como EDITOR de la medida que esta seleccionada en la barra
+     * del visual, y cada medida guarda los suyos.
+     *
+     * - Si sigue la misma medida, lo que haya cambiado en el panel es una edicion suya y se guarda.
+     * - Si el usuario ha cambiado de medida, el panel tiene que pasar a mostrar los de la nueva.
+     *
+     * La escritura al panel provoca otro update, pero en ese ya coinciden los dos lados y no se
+     * vuelve a escribir: no hay bucle.
+     */
+    private resolveValueSettings(activeValue: ValueOption): ValueSettings {
+        const vc = this.formattingSettings.valuesCard;
+        const panel: ValueSettings = { mode: vc.displayMode.value.value as string };
+        const distintos = (a: ValueSettings, b: ValueSettings) => !a || a.mode !== b.mode;
+
+        const label = activeValue.label;
+        const guardado = this.perValue[label];
+
+        // Nada de esto se escribe en vista de lectura. Ahi no hay panel que poner al dia ni ajuste
+        // que aprender: el consumidor solo cambia de medida en el desplegable del visual, y lo que
+        // toca es LEER lo que dejo quien hizo el informe. Escribir seria tocarle el informe a otro
+        // por un panel que no tiene abierto.
+        const editando = this.isEditing();
+
+        if (this.lastActiveLabel === label) {
+            if (editando && distintos(guardado, panel)) {
+                this.perValue[label] = panel;
+                this.persistSelection();
+            }
+            return editando ? panel : (guardado || panel);
+        }
+
+        this.lastActiveLabel = label;
+        if (!guardado) {
+            // Medida vista por primera vez: hereda lo que muestre el panel y se queda con ello.
+            if (editando) {
+                this.perValue[label] = panel;
+                this.persistSelection();
+            }
+            return panel;
+        }
+        if (editando && distintos(guardado, panel)) { this.pushValueSettingsToPane(guardado); }
+        return guardado;
+    }
+
+    /** Deja el panel mostrando los ajustes de la medida recien seleccionada. */
+    private pushValueSettingsToPane(s: ValueSettings): void {
+        this.host.persistProperties({
+            merge: [{
+                objectName: "values",
+                selector: undefined,
+                properties: { displayMode: s.mode }
+            }]
+        } as VisualObjectInstancesToPersist);
+    }
+
     private persistSelection(): void {
         const instance: VisualObjectInstancesToPersist = {
             merge: [{
@@ -446,7 +570,8 @@ export class Visual implements IVisual {
                 properties: {
                     xDimension: this.selectedX || "",
                     yDimension: this.selectedY || "",
-                    valueKey: this.selectedValueKey || ""
+                    valueKey: this.selectedValueKey || "",
+                    perValue: JSON.stringify(this.perValue)
                 }
             }]
         };
@@ -476,6 +601,12 @@ export class Visual implements IVisual {
     // ==========================================================================================
 
     /** Modo edicion (ViewMode: View=0, Edit=1, InFocusEdit=2). Sin viewMode se trata como lectura. */
+    /** Texto localizado con respaldo: si falta el recurso, se usa el ingles, nunca la clave. */
+    private texto(clave: string, respaldo: string): string {
+        const s = this.localization?.getDisplayName(clave);
+        return (!s || s === clave) ? respaldo : s;
+    }
+
     private isEditing(): boolean {
         const vm = (this.lastOptions as any)?.viewMode;
         return typeof vm === "number" && vm !== 0;
@@ -557,6 +688,7 @@ export class Visual implements IVisual {
                 if (this.noticeShown) {
                     this.noticeShown = false;
                     this.lastBlockedSig = "";
+                    this.cancelUpgradeTimer();
                     lm.clearLicenseNotification?.();
                 }
                 return;
@@ -575,23 +707,51 @@ export class Visual implements IVisual {
             const msg = es
                 ? `Dynamic Matrix Heatmap: ${list} ${n === 1 ? "forma" : "forman"} parte del plan Pro y se muestran como vista previa con marca de agua mientras editas.`
                 : `Dynamic Matrix Heatmap: ${list} ${n === 1 ? "is" : "are"} part of the Pro plan, shown as a watermarked preview while editing.`;
-            // Banner de 10 s con la accion concreta, y el icono persistente de modo edicion.
+            // Power BI muestra UNA notificacion a la vez y la ultima sustituye a la anterior.
+            // Encadenadas sin espera, notifyLicenseRequired se comia el banner que nombra la
+            // funcion bloqueada: el usuario veia "Upgrade" sin saber a cambio de que. Primero
+            // se limpia lo que hubiera, luego se nombra la funcion, y la barra de compra entra
+            // cuando ese banner ya ha cumplido sus ~10 s.
+            lm.clearLicenseNotification?.();
             lm.notifyFeatureBlocked?.(msg.slice(0, 500));
-            lm.notifyLicenseRequired?.(0 /* LicenseNotificationType.General */);
+            this.cancelUpgradeTimer();
+            this.upgradeTimer = window.setTimeout(() => {
+                this.upgradeTimer = 0;
+                try {
+                    // Entre medias el usuario ha podido quitar la funcion o llegar la licencia.
+                    if (this.isPro || this.attemptedPro.length === 0) { return; }
+                    lm.notifyLicenseRequired?.(0 /* LicenseNotificationType.General */);
+                } catch (_) { /* la notificacion nunca rompe el render */ }
+            }, 10500);
         } catch (_) {
             /* la notificacion nunca rompe el render */
         }
+    }
+
+    private cancelUpgradeTimer(): void {
+        if (this.upgradeTimer) {
+            window.clearTimeout(this.upgradeTimer);
+            this.upgradeTimer = 0;
+        }
+    }
+
+    /** Power BI recrea el visual al cambiar de pagina: el temporizador no puede sobrevivirle. */
+    public destroy(): void {
+        this.cancelUpgradeTimer();
     }
 
     private renderNotice(moreDataAvailable: boolean, fetchCount: number, limited: boolean): void {
         if (moreDataAvailable && fetchCount >= MAX_FETCHES) {
             this.noticeEl.textContent = "Showing a partial dataset — the row limit was reached. Reduce the number of dimensions for exact values.";
             this.noticeEl.style.display = "block";
+        } else if (this.aggWarning) {
+            this.noticeEl.textContent = this.aggWarning;
+            this.noticeEl.style.display = "block";
         } else if (limited) {
             // Nota neutra, sin llamada a comprar: la ruta de compra es la notificacion de Power BI.
-            this.noticeEl.textContent =
-                "Showing the first " + FREE_MAX_DIMENSIONS + " dimensions and " +
-                FREE_MAX_MEASURES + " measures.";
+            this.noticeEl.textContent = this.limitedDetail ||
+                ("Showing the first " + FREE_MAX_DIMENSIONS + " dimensions and " +
+                 FREE_MAX_MEASURES + " measures.");
             this.noticeEl.style.display = "block";
         } else {
             this.noticeEl.style.display = "none";
@@ -607,7 +767,9 @@ export class Visual implements IVisual {
         measures: MeasureInfo[],
         distinctCols: DimensionInfo[],
         activeValue: ValueOption,
-        highlights: powerbi.PrimitiveValue[]
+        highlights: powerbi.PrimitiveValue[],
+        valueSettings: ValueSettings,
+        weightColumn: DataViewValueColumn
     ): void {
         const xDim = dimensions.find(d => d.name === this.selectedX);
         const yDim = dimensions.find(d => d.name === this.selectedY);
@@ -663,8 +825,52 @@ export class Visual implements IVisual {
         const aggMode = activeValue.kind === "measure"
             ? this.resolveAggregation(measures[activeValue.index].column)
             : "sum";
+        // ---- Aviso: lo que no se puede colapsar bien ---------------------------------------------
+        // El visual deja elegir X e Y aqui dentro, asi que Power BI no puede agregar a ese par:
+        // agrega al grano de TODAS las dimensiones enlazadas y el visual colapsa el resto.
+        //
+        // Cual de las operaciones aguanta ese segundo colapso:
+        //   sum    parciales que se suman      -> correcto
+        //   min    minimo de minimos           -> correcto
+        //   max    maximo de maximos           -> correcto
+        //   count  parciales que se suman      -> correcto desde que se arreglo
+        //   avg    promedio de promedios       -> NO: cada combinacion pesaria igual tenga una
+        //          fila o diez mil, y los pesos no viajan en el dataView, asi que no hay forma
+        //          de corregirlo aqui
+        // y una medida DAX cuya operacion no se puede leer puede ser cualquiera de las cosas
+        // que no se colapsan: un recuento distinto, un ratio, un porcentaje.
+        //
+        // Solo se avisa si el colapso ocurre de verdad: con una fila por celda no se combina nada.
+        let colapsa = false;
+        cellRows.forEach(filas => { if (filas.length > 1) { colapsa = true; } });
+
+        const detectada = activeValue.kind === "measure"
+            ? this.detectNativeAggregation(measures[activeValue.index].column)
+            : "sum";
+        const esDax = activeValue.kind === "measure" && detectada === null;
+        this.activeLabel = activeValue.label;
+        // Promedio que puso Power BI, no el usuario: quien elige "Promedio" sobre un campo sumado
+        // esta pidiendo la media por combinacion, que es una pregunta legitima.
+        // Con pesos el promedio ya sale ponderado, que es el numero correcto: no hay que avisar.
+        const promedioNativo = detectada === "average" && !weightColumn;
+
+        this.aggWarning = null;
+        if (colapsa && this.isEditing()) {
+            if (promedioNativo) {
+                this.aggWarning = this.texto("Visual_Notice_AvgOfAvg", "This is an average of averages. Power BI averaged the field at the grain of every bound dimension, and those averages are combined here, so each combination counts the same whether it holds one row or ten thousand. The weights are not in the data the visual receives, so it cannot correct for them. Bind only the dimensions you compare, or use a measure that carries its own weighting.");
+            } else if (esDax) {
+                this.aggWarning = this.texto("Visual_Notice_NonAdditive", "This measure is being collapsed in the visual: Power BI aggregated it at the grain of every bound dimension, and the rest is combined here. If the measure is not additive \u2014 a distinct count, a ratio, a percentage \u2014 the number may not be the one you expect. Bind only the dimensions you compare, or use an additive measure.");
+            }
+        }
+
         const measureValues = activeValue.kind === "measure" ? measures[activeValue.index].column.values : null;
+        const weightValues = weightColumn ? weightColumn.values : null;
         const distinctValues = activeValue.kind === "distinct" ? distinctCols[activeValue.index].column.values : null;
+
+        // "count" solo puede venir ya del pozo: Power BI aplico Count al campo y cada fila que
+        // llega ES un recuento parcial, asi que colapsar al par X/Y elegido es SUMARLOS. Antes se
+        // devolvia el numero de filas, que es cuantos grupos hay y no cuantas cosas hay dentro:
+        // con cinco dimensiones enlazadas y dos elegidas, 52 en vez de 4.908.
 
         const evaluate = (indices: number[]): number | null => {
             if (!indices || indices.length === 0) { return null; }
@@ -684,6 +890,11 @@ export class Visual implements IVisual {
             let cnt = 0;
             let mn = Infinity;
             let mx = -Infinity;
+            // Promedio ponderado: la unica forma de colapsar promedios sin mentir. Power BI mando
+            // un promedio por combinacion; sin el peso de cada una, combinarlas hace que una
+            // combinacion de diez mil filas cuente lo mismo que una de una sola.
+            let sumaPond = 0;
+            let sumaPesos = 0;
             for (const i of indices) {
                 const v = measureValues[i] as number;
                 if (v === null || v === undefined || isNaN(v)) { continue; }
@@ -691,13 +902,20 @@ export class Visual implements IVisual {
                 cnt++;
                 if (v < mn) { mn = v; }
                 if (v > mx) { mx = v; }
+                if (weightValues) {
+                    const w = weightValues[i] as number;
+                    if (w !== null && w !== undefined && !isNaN(w) && w > 0) {
+                        sumaPond += v * w;
+                        sumaPesos += w;
+                    }
+                }
             }
             if (cnt === 0) { return null; }
             switch (aggMode) {
-                case "average": return sum / cnt;
+                case "average": return sumaPesos > 0 ? sumaPond / sumaPesos : sum / cnt;
                 case "min":     return mn;
                 case "max":     return mx;
-                case "count":   return cnt;
+                case "count":   return sum;  // parciales de Power BI: se suman
                 default:        return sum;
             }
         };
@@ -705,7 +923,7 @@ export class Visual implements IVisual {
         // ---- Display mode (absolute / % of row / column / grand total) --------------------------
         // Percentage modes are a Pro feature; the Free tier always shows absolute values.
         const displayMode = this.isProActive()
-            ? this.formattingSettings.valuesCard.displayMode.value.value as string
+            ? valueSettings.mode
             : "absolute";
         const isPct = displayMode !== "absolute";
         const grandTotal = evaluate(allRows);
@@ -724,8 +942,15 @@ export class Visual implements IVisual {
         // ---- Formatters ---------------------------------------------------------------------------
         // absFmt always renders the underlying magnitude; fmt renders what the cell shows.
         const absFormatString = this.resolveFormatString(activeValue, measures, aggMode);
-        const absFmt = valueFormatter.create({ format: absFormatString });
-        const fmt = isPct ? valueFormatter.create({ format: "0.0%" }) : absFmt;
+        // cultureSelector: sin el, el formateador usa la cultura por defecto en vez de la del
+        // informe. El formato del modelo se respetaba, pero los separadores no: un lector en
+        // Espana, Alemania o Francia veia 1,234.56 donde su informe escribe 1.234,56. Afecta a
+        // las celdas, a los tooltips y al total general, que salen todos de estos dos.
+        const cultura = this.host.locale;
+        const absFmt = valueFormatter.create({ format: absFormatString, cultureSelector: cultura });
+        const fmt = isPct
+            ? valueFormatter.create({ format: "0.0%", cultureSelector: cultura })
+            : absFmt;
 
         // ---- Precompute all displayed cell values (also drives the color scale) ------------------
         const displayed: Map<string, number> = new Map();
@@ -1063,6 +1288,9 @@ export class Visual implements IVisual {
 
     private onCellClick(cellKey: string, indices: number[], xDim: DimensionInfo, yDim: DimensionInfo, multiSelect: boolean): void {
         if (!indices.length) { return; }
+        // El autor del informe puede apagar las interacciones de este visual desde
+        // "Editar interacciones". Ignorarlo filtraba el informe contra su decision.
+        if (this.host.hostCapabilities?.allowInteractions === false) { return; }
 
         if (multiSelect) {
             // Ctrl/Cmd+click toggles this cell in or out of the current set
@@ -1081,6 +1309,39 @@ export class Visual implements IVisual {
 
         this.applyCellFilter(xDim, yDim);
         this.applySelectionDimming();
+    }
+
+    /**
+     * Rebuilds the selection from the filter Power BI hands back.
+     *
+     * The selected cells lived only in memory. Power BI persists the filter — a bookmark stores it,
+     * and it survives a page change — but it recreates the visual, so `selectedCells` came back
+     * empty: the report stayed filtered while the matrix showed nothing selected and every cell at
+     * full opacity. Reading `jsonFilters` back makes the two agree again, which is what bookmark
+     * support actually means here.
+     *
+     * Our own filter returns through this same path right after a click, which simply rebuilds the
+     * identical set.
+     */
+    private syncSelectionFromFilters(options: VisualUpdateOptions): void {
+        const filtros = options.jsonFilters as unknown as ITupleFilter[];
+        // Sin array no hay informacion: dejar la seleccion como esta es mas seguro que borrarla.
+        if (!Array.isArray(filtros)) { return; }
+
+        const mio = filtros.find(f =>
+            f && f.filterType === FILTER_TYPE_TUPLE &&
+            Array.isArray(f.target) && f.target.length === 2 &&
+            Array.isArray(f.values));
+
+        const restaurada = new Set<string>();
+        if (mio) {
+            mio.values.forEach(par => {
+                if (Array.isArray(par) && par.length === 2) {
+                    restaurada.add(String(par[0].value) + KEY_SEP + String(par[1].value));
+                }
+            });
+        }
+        this.selectedCells = restaurada;
     }
 
     /** Dims cells outside the current selection. Our own dataView is not filtered, so we do this ourselves. */
@@ -1179,6 +1440,15 @@ export class Visual implements IVisual {
         const src = column.source;
         if (!src) { return null; }
 
+        // Un recuento DISTINTO no se puede colapsar: el mismo cliente aparece en varias
+        // combinaciones y sumarlas lo cuenta dos veces. Se detectaba como "count" y se sumaba en
+        // silencio. Devolver null lo deja como operacion no legible, que es la verdad: no hay
+        // ninguna forma correcta de combinarlo, y salta el aviso de medida no aditiva. Para
+        // contar distintos bien esta el pozo "Distinct count of", que cuenta sobre la columna
+        // cruda y da el numero exacto para cualquier par X/Y.
+        const texto = ((src.displayName || "") + " " + (src.queryName || "")).toLowerCase();
+        if (texto.indexOf("distinct") >= 0) { return null; }
+
         const map = (token: string): string | null => {
             switch (token.toLowerCase()) {
                 case "sum":
@@ -1236,9 +1506,15 @@ export class Visual implements IVisual {
      * native Distinct Count cannot be re-aggregated at all — that is what the "Distinct count of"
      * field is for, where the visual counts unique values from the raw column itself.
      */
+    /**
+     * La agregacion la decide el pozo de campos, no el panel.
+     *
+     * Hasta 1.1.0.0 habia un desplegable que la repetia, y era peor sitio para decidirlo: en el
+     * pozo el mismo campo se enlaza dos veces -Suma y Recuento- y las dos salen en la lista de
+     * medidas del visual, calculadas por Power BI. Una medida DAX no expone su operacion, y ahi
+     * se suman los parciales; cuando eso no vale, el aviso de medida no aditiva lo dice.
+     */
     private resolveAggregation(column: DataViewValueColumn): string {
-        const override = this.formattingSettings.valuesCard.aggregation.value.value as string;
-        if (override !== "auto") { return override; }
         return this.detectNativeAggregation(column) || "sum";
     }
 
@@ -1282,14 +1558,6 @@ export class Visual implements IVisual {
     }
 
     private resolveFormatString(activeValue: ValueOption, measures: MeasureInfo[], aggMode: string): string {
-        // An explicit choice always wins, whatever the model says
-        const override = this.formattingSettings.valuesCard.numberFormat.value.value as string;
-        switch (override) {
-            case "number":  return "#,0.##";
-            case "integer": return "#,0";
-            case "percent": return "0.00%";
-        }
-
         if (activeValue.kind === "distinct") { return "#,0"; }
         if (aggMode === "count") { return "#,0"; }
 
@@ -1309,7 +1577,53 @@ export class Visual implements IVisual {
         return modelFormat;
     }
 
+    /**
+     * Traduce las opciones de los desplegables.
+     *
+     * El util localiza tarjetas y slices por `displayNameKey`, pero los items de un ItemDropdown
+     * son `IEnumMember` y no tienen clave: sin esto el panel quedaba a medias, con los titulos en
+     * espanol y las opciones en ingles. La clave se deriva del `value`, que es estable, y si el
+     * recurso falta se deja el texto original en vez de escribir la clave en pantalla.
+     */
+    private localizeDropdownItems(): void {
+        const traducir = (clave: string, actual: string): string => {
+            const s = this.localization?.getDisplayName(clave);
+            return (!s || s === clave) ? actual : s;
+        };
+        const cards = (this.formattingSettings as any)?.cards || [];
+        cards.forEach((card: any) => {
+            (card?.slices || []).forEach((slice: any) => {
+                if (!Array.isArray(slice.items)) { return; }
+                slice.items.forEach((it: any) => {
+                    // Clave especifica del desplegable primero: 'auto' significa "detectar" en
+                    // Aggregation y "del modelo" en Number format, y comparten value.
+                    const propia = "Visual_Item_" + slice.name + "_" + it.value;
+                    const generica = "Visual_Item_" + it.value;
+                    it.displayName = traducir(propia, traducir(generica, it.displayName));
+                });
+                if (slice.value && slice.value.value !== undefined) {
+                    const elegido = slice.items.find((it: any) => it.value === slice.value.value);
+                    if (elegido) { slice.value = elegido; }
+                }
+            });
+        });
+    }
+
     public getFormattingModel(): powerbi.visuals.FormattingModel {
+        this.localizeDropdownItems();
+        // La tarjeta edita la medida activa, y con el panel abierto no se ve cual es: el selector
+        // esta en el visual, detras. Sin el nombre en el titulo, "a cual aplica esto" es una
+        // pregunta legitima cada vez que se abre el panel.
+        const card = this.formattingSettings.valuesCard as any;
+        const base = this.texto("Visual_Values", "Values");
+        if (this.activeLabel) {
+            card.displayName = base + " — " + this.activeLabel;
+            // displayNameKey ganaria al displayName, asi que hay que quitarlo para este render.
+            card.displayNameKey = undefined;
+        } else {
+            card.displayName = base;
+            card.displayNameKey = undefined;
+        }
         return this.formattingSettingsService.buildFormattingModel(this.formattingSettings);
     }
 }

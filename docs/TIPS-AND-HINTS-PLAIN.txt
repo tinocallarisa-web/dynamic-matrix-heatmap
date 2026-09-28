@@ -1,5 +1,5 @@
 DYNAMIC MATRIX HEATMAP — TIPS & HINTS
-Version 1.0.0.0 · TCViz
+Version 1.1.0.0 · TCViz
 Video walkthrough: https://www.youtube.com/watch?v=vobbf6405e4
 
 Paste-ready for Power BI text boxes. No markdown tables, so formatting survives copy and paste.
@@ -40,10 +40,8 @@ FIELD WELLS
 FORMAT PANE
 
   VALUES
-    Aggregation ....... How rows sharing a cell combine
-                        Auto reads what Power BI applied to the field
     Show value as ..... Absolute · % of row · % of column · % of grand total   (PRO)
-    Number format ..... Auto uses the model's format; override when it is wrong
+                        Set per measure: the card names the one it is editing
     Show totals ....... Total row and column, exact distinct counts            (PRO)
 
   HEATMAP COLORS
@@ -170,11 +168,21 @@ TROUBLESHOOTING
   Happens when the same field is added twice, once normally and once with
   Show value as → Percent of grand total: Power BI marks the underlying column as
   a percentage and it reaches both instances. The visual detects and corrects this.
-  If it persists, set Values → Number format → Number.
+  If it persists, check the column's format in your model: the visual uses the
+  model's format string, in your report's locale.
 
-  AN AVERAGE BEHAVES LIKE A SUM
-  Set Values → Aggregation → Average. Auto-detection reads the field's label and
-  query name, but a DAX measure hides its aggregation inside the DAX.
+  AN AVERAGE IS NOT THE NUMBER THE NATIVE MATRIX SHOWS
+  X and Y are chosen inside the visual, so Power BI cannot aggregate to that pair:
+  it aggregates at the grain of every bound dimension and the visual combines the
+  rest. Sums, minimums, maximums and counts survive that; an average does not,
+  because every combination would count the same whether it holds one row or ten
+  thousand. Bind a row count to the Weights for averages well and the visual uses
+  the weighted average.
+
+  A DISTINCT COUNT IS TOO HIGH
+  Do not bind Count (Distinct) as a measure: a customer buying in two regions sits
+  in two combinations and gets counted twice. Use the Distinct count of well with
+  the raw ID column, which the visual counts per cell.
 
   "SHOWING A PARTIAL DATASET"
   Too many dimension combinations. Remove a dimension or two.

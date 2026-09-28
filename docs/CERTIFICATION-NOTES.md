@@ -1,6 +1,6 @@
 # Certification Notes — Dynamic Matrix Heatmap
 
-**Version 1.0.1.0 · TCViz**
+**Version 1.1.0.0 · TCViz**
 
 > The text to paste into *Notes for certification* is `docs/CERTIFICATION-NOTES-SHORT.txt`: that field
 > truncates at 2,500 characters without warning. This file is the full reference, reached through the
@@ -30,7 +30,30 @@
 | Issue tracker | https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/issues |
 | Changelog | https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/blob/main/CHANGELOG.md |
 
-## 3. What changed in 1.0.1.0
+## 3. What changed in 1.1.0.0
+
+Mostly correctness in how values are combined, which is the heart of this visual: X and Y are picked
+inside the visual, after the query has run, so the numbers Power BI sent have to be combined again for
+whichever pair the reader chose.
+
+| Problem | Fix |
+|---|---|
+| A field counted in the field well returned the number of row groups, not the count (52 against 4,908 on the same field in a card) | Power BI sends one partial count per group; they are added |
+| A distinct count bound as a measure was added up, double counting anything present in several combinations | Reported as an operation that cannot be combined; the `Distinct count of` well remains the exact route |
+| Averages were averages of averages, ignoring how many rows each combination held | New optional `Weights for averages` well: with a row count bound, the result is the weighted average and matches the native matrix |
+| Numbers used the default culture, not the report's | `cultureSelector` passed to every formatter |
+| `notifyFeatureBlocked` and `notifyLicenseRequired` called back to back, so the banner naming the feature was overwritten instantly | `clearLicenseNotification`, the banner, and the Upgrade bar ~10 s later; the timer is cancelled in `destroy()` |
+| Bookmarks restored the filter but not what the matrix showed as selected | The selection is rebuilt from `options.jsonFilters` |
+| `allowInteractions` ignored; per-measure settings persisted in reading view | Both honoured; nothing is written outside edit mode |
+| Format pane in English whatever the report's language | `stringResources` en-US and es-ES with a localization manager |
+
+Removed from the format pane: **Aggregation** and **Number format**, both redundant with the field well
+and the model, and **Count of rows**, which promised a number this visual cannot know — the data mapping
+is categorical, so each row it receives is a unique combination, not a row of the table.
+
+No new dependency and no new privilege. `privileges` is still `[]`.
+
+## 4. What changed in 1.0.1.0
 
 1.0.0.0 is published. An internal audit found that its package never queried the licence, so Pro could
 not be unlocked, and that free users had no purchase path.
