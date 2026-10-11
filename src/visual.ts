@@ -21,6 +21,60 @@ import VisualDataChangeOperationKind = powerbi.VisualDataChangeOperationKind;
 import IVisualLicenseManager = powerbi.extensibility.IVisualLicenseManager;
 
 import { VisualFormattingSettingsModel } from "./settings";
+import {
+    HtmlSubSelectableClass, HtmlSubSelectionHelper, SubSelectableDisplayNameAttribute,
+    SubSelectableObjectNameAttribute, SubSelectableTypeAttribute,
+} from "powerbi-visuals-utils-onobjectutils";
+
+/** Esquemas de color de tres puntos (bajo, medio, alto). "custom" usa los colores de la tarjeta. */
+const SCHEMES: Record<string, [string, string, string]> = {
+    orange: ["#FFFFFF", "#FDBE85", "#D94701"],
+    blues: ["#F7FBFF", "#6BAED6", "#08306B"],
+    greens: ["#F7FCF5", "#74C476", "#00441B"],
+    purples: ["#FCFBFD", "#9E9AC8", "#3F007D"],
+    greys: ["#FFFFFF", "#969696", "#252525"],
+    trafficUp: ["#D73027", "#FEE08B", "#1A9850"],
+    trafficDown: ["#1A9850", "#FEE08B", "#D73027"],
+    diverging: ["#2166AC", "#F7F7F7", "#B2182B"],
+    viridis: ["#440154", "#21918C", "#FDE725"],
+    cividis: ["#00224E", "#7D7C78", "#FEE838"],
+    github: ["#EBEDF0", "#40C463", "#216E39"]
+};
+
+/**
+ * Plantillas de estilo: [tarjeta, propiedad, valor]. Solo se aplican a lo que el autor no ha
+ * tocado (lo que no está en metadata.objects), así que un ajuste a mano siempre gana.
+ */
+const TEMPLATES: Record<string, [string, string, any][]> = {
+    classic: [],
+    clean: [["layout", "cellGap", 2], ["layout", "cellRadius", 4], ["heatmap", "scheme", "blues"]],
+    tiles: [["layout", "cellGap", 4], ["layout", "cellRadius", 8], ["layout", "rowHeight", 40], ["layout", "columnWidth", 72], ["heatmap", "scheme", "github"]],
+    contrast: [["heatmap", "scheme", "trafficUp"], ["text", "valueFontSize", 13], ["layout", "cellGap", 1]],
+    compact: [["layout", "rowHeight", 20], ["layout", "columnWidth", 56], ["text", "valueFontSize", 10], ["text", "labelFontSize", 10]]
+};
+
+/** Clave interna de la categoría "Otros": no puede coincidir con un valor real. */
+const OTH = "\u0002others";
+
+/** Orden natural de días y meses (en, es, pt, fr, de, it), completos y abreviados. */
+const CALENDARS: string[][] = [
+    ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+    ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+    ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"],
+    ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"],
+    ["segunda", "terça", "quarta", "quinta", "sexta", "sábado", "domingo"],
+    ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"],
+    ["montag", "dienstag", "mittwoch", "donnerstag", "freitag", "samstag", "sonntag"],
+    ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"],
+    ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"],
+    ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"],
+    ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"],
+    ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"],
+    ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"],
+    ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"],
+    ["januar", "februar", "märz", "april", "mai", "juni", "juli", "august", "september", "oktober", "november", "dezember"],
+    ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"]
+];
 
 // ------------------------------------------------------------------------------------------
 // Licensing
@@ -116,7 +170,8 @@ interface ValueOption {
 
 const EMPTY_STATE_CLASS = "dmh-empty-state";
 const KEY_SEP = "";
-const MAX_CATS = 25;
+/** Tope duro por eje: más allá, una tabla deja de ser legible y el DOM se resiente. */
+const MAX_CATS_LIMIT = 200;
 const MAX_FETCHES = 20;
 // KEY_SEP above is a control character (charCode 1) that cannot occur in real category values.
 
@@ -186,6 +241,19 @@ export class Visual implements IVisual {
     private lastDataView: powerbi.DataView = null;
     private watermarkEl: HTMLElement;
 
+    /** Orden por el valor de una columna (clic en su cabecera). */
+    private sortKey: string | null = null;
+    private sortDir: "desc" | "asc" = "desc";
+    private sortLoaded = false;
+    /** Miembros agrupados en "Otros" por eje, para filtrar y para el aviso. */
+    private othersX: string[] = [];
+    private othersY: string[] = [];
+    private trimNotice = "";
+
+    public visualOnObjectFormatting: powerbi.extensibility.visual.VisualOnObjectFormatting;
+    private subSelectionHelper: HtmlSubSelectionHelper;
+    private formatMode = false;
+
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
         this.events = options.host.eventService;
@@ -230,6 +298,18 @@ export class Visual implements IVisual {
         this.target.style.position = "relative";
         this.target.appendChild(this.watermarkEl);
 
+        // Formato sobre el lienzo: cabeceras, valores y barra de controles se formatean con un clic.
+        this.subSelectionHelper = HtmlSubSelectionHelper.createHtmlSubselectionHelper({
+            hostElement: options.element,
+            subSelectionService: options.host.subSelectionService,
+            selectionIdCallback: () => undefined,
+        });
+        this.visualOnObjectFormatting = {
+            getSubSelectionStyles: (subs) => this.getSubSelectionStyles(subs),
+            getSubSelectionShortcuts: (subs) => this.getSubSelectionShortcuts(subs),
+            getSubSelectables: (filter) => this.subSelectionHelper.getAllSubSelectables(filter),
+        };
+
         // Context menu on empty areas of the visual clears down to the visual-level menu
         this.target.addEventListener("contextmenu", (ev: MouseEvent) => {
             ev.preventDefault();
@@ -248,8 +328,14 @@ export class Visual implements IVisual {
                 this.fetchCount = 0;
             }
 
+            this.formatMode = !!(options as any).formatMode;
+            this.subSelectionHelper.setFormatMode(this.formatMode);
             this.syncSelectionFromFilters(options);
             this.renderFromDataView(dataView);
+            if (this.formatMode) {
+                const subs = (options as any).subSelections as powerbi.visuals.CustomVisualSubSelection[] | undefined;
+                this.subSelectionHelper.updateOutlinesFromSubSelections(subs ?? [], true);
+            }
             this.events.renderingFinished(options);
         } catch (error) {
             console.error("Error rendering Dynamic Matrix Heatmap", error);
@@ -273,9 +359,20 @@ export class Visual implements IVisual {
             dataView
         );
 
+        this.applyTemplate(dataView?.metadata?.objects);
+
         if (!dataView || !dataView.categorical) {
             this.renderLandingPage();
             return;
+        }
+
+        if (!this.sortLoaded) {
+            const st = dataView.metadata?.objects?.["selectionState"];
+            if (st && typeof st["sortKey"] === "string" && st["sortKey"]) {
+                this.sortKey = st["sortKey"] as string;
+                this.sortDir = st["sortDir"] === "asc" ? "asc" : "desc";
+            }
+            this.sortLoaded = true;
         }
 
         {
@@ -346,19 +443,19 @@ export class Visual implements IVisual {
 
             // ---- Validation ----------------------------------------------------------------
             if (dimensions.length === 0) {
-                this.showMessage("Add at least one dimension.");
+                this.showMessage(this.texto("Visual_Msg_AddDimension", "Add at least one dimension."));
                 this.clearAll();
                 return;
             }
             if (dimensions.length < 2) {
-                this.showMessage("You need at least 2 dimensions to generate the matrix.");
+                this.showMessage(this.texto("Visual_Msg_TwoDimensions", "You need at least 2 dimensions to generate the matrix."));
                 this.clearAll();
                 return;
             }
             if (measures.length === 0 && distinctCols.length === 0) {
                 this.showMessage(pro
-                    ? "Add a measure, or a raw ID column to \"Distinct count of\"."
-                    : "Add at least one measure.");
+                    ? this.texto("Visual_Msg_AddMeasurePro", "Add a measure, or a raw ID column to \"Distinct count of\".")
+                    : this.texto("Visual_Msg_AddMeasure", "Add at least one measure."));
                 this.clearAll();
                 return;
             }
@@ -369,7 +466,7 @@ export class Visual implements IVisual {
                 valueOptions.push({ key: "m:" + i, label: m.name, kind: "measure", index: i });
             });
             distinctCols.forEach((d, i) => {
-                valueOptions.push({ key: "d:" + i, label: "Distinct " + d.name, kind: "distinct", index: i });
+                valueOptions.push({ key: "d:" + i, label: this.texto("Visual_DistinctPrefix", "Distinct") + " " + d.name, kind: "distinct", index: i });
             });
 
             // ---- Restore persisted selection -------------------------------------------------
@@ -404,7 +501,7 @@ export class Visual implements IVisual {
             this.renderNotice(moreDataAvailable, this.fetchCount, limited);
 
             if (!this.selectedX || !this.selectedY) {
-                this.showMessage("Select X and Y to begin.");
+                this.showMessage(this.texto("Visual_Msg_SelectXY", "Select X and Y to begin."));
                 clearElement(this.scrollEl);
                 return;
             }
@@ -455,15 +552,16 @@ export class Visual implements IVisual {
             return select;
         };
 
-        this.xSelect = buildLabeledSelect("X axis");
-        this.ySelect = buildLabeledSelect("Y axis");
-        this.valueSelect = buildLabeledSelect("Value");
+        this.xSelect = buildLabeledSelect(this.texto("Visual_Ctl_X", "X axis"));
+        this.ySelect = buildLabeledSelect(this.texto("Visual_Ctl_Y", "Y axis"));
+        this.valueSelect = buildLabeledSelect(this.texto("Visual_Ctl_Value", "Value"));
+        this.subSelectable(this.controlsEl, "controls", this.texto("Visual_Ctl_Bar", "Controls bar"), powerbi.visuals.SubSelectionStylesType.Text);
 
         const fillDimensionOptions = (select: HTMLSelectElement, excludeName: string | null, selectedName: string | null) => {
             clearElement(select);
             const placeholder = document.createElement("option");
             placeholder.value = "";
-            placeholder.textContent = "-- select --";
+            placeholder.textContent = this.texto("Visual_Ctl_Select", "-- select --");
             select.appendChild(placeholder);
             dimensions.forEach(d => {
                 if (d.name === excludeName) { return; }
@@ -571,7 +669,9 @@ export class Visual implements IVisual {
                     xDimension: this.selectedX || "",
                     yDimension: this.selectedY || "",
                     valueKey: this.selectedValueKey || "",
-                    perValue: JSON.stringify(this.perValue)
+                    perValue: JSON.stringify(this.perValue),
+                    sortKey: this.sortKey || "",
+                    sortDir: this.sortDir
                 }
             }]
         };
@@ -742,7 +842,7 @@ export class Visual implements IVisual {
 
     private renderNotice(moreDataAvailable: boolean, fetchCount: number, limited: boolean): void {
         if (moreDataAvailable && fetchCount >= MAX_FETCHES) {
-            this.noticeEl.textContent = "Showing a partial dataset — the row limit was reached. Reduce the number of dimensions for exact values.";
+            this.noticeEl.textContent = this.texto("Visual_Notice_Partial", "Showing a partial dataset — the row limit was reached. Reduce the number of dimensions for exact values.");
             this.noticeEl.style.display = "block";
         } else if (this.aggWarning) {
             this.noticeEl.textContent = this.aggWarning;
@@ -778,91 +878,12 @@ export class Visual implements IVisual {
         const yValues = yDim.column.values;
         const rowCount = xValues.length;
 
-        const xCats = this.uniqueOrdered(xValues, MAX_CATS);
-        const yCats = this.uniqueOrdered(yValues, MAX_CATS);
-
-        // ---- Index every source row into its cell / row / column bucket -----------------------
-        // This is what makes the visual correct: we keep the underlying rows and aggregate them
-        // ourselves for whichever X/Y projection the user picked, instead of re-summing values
-        // Power BI already collapsed at a different granularity.
-        const cellRows: Map<string, number[]> = new Map();
-        const rowBucket: Map<string, number[]> = new Map();
-        const colBucket: Map<string, number[]> = new Map();
-        const allRows: number[] = [];
-        const cellHasHighlight: Map<string, boolean> = new Map();
-
-        const xCatSet = new Set(xCats.map(String));
-        const yCatSet = new Set(yCats.map(String));
-
-        for (let i = 0; i < rowCount; i++) {
-            const xv = xValues[i];
-            const yv = yValues[i];
-            if (xv === null || xv === undefined || yv === null || yv === undefined) { continue; }
-            const xs = String(xv);
-            const ys = String(yv);
-            if (!xCatSet.has(xs) || !yCatSet.has(ys)) { continue; }
-
-            const key = xs + KEY_SEP + ys;
-            const cell = cellRows.get(key);
-            if (cell) { cell.push(i); } else { cellRows.set(key, [i]); }
-
-            const rb = rowBucket.get(ys);
-            if (rb) { rb.push(i); } else { rowBucket.set(ys, [i]); }
-
-            const cb = colBucket.get(xs);
-            if (cb) { cb.push(i); } else { colBucket.set(xs, [i]); }
-
-            allRows.push(i);
-
-            if (highlights && highlights[i] !== null && highlights[i] !== undefined) {
-                cellHasHighlight.set(key, true);
-            }
-        }
-
         // ---- The aggregation engine ------------------------------------------------------------
         // Each measure resolves its own aggregation: the author's override if set, otherwise the
         // aggregation Power BI itself applied to the field (parsed from its queryName).
         const aggMode = activeValue.kind === "measure"
             ? this.resolveAggregation(measures[activeValue.index].column)
             : "sum";
-        // ---- Aviso: lo que no se puede colapsar bien ---------------------------------------------
-        // El visual deja elegir X e Y aqui dentro, asi que Power BI no puede agregar a ese par:
-        // agrega al grano de TODAS las dimensiones enlazadas y el visual colapsa el resto.
-        //
-        // Cual de las operaciones aguanta ese segundo colapso:
-        //   sum    parciales que se suman      -> correcto
-        //   min    minimo de minimos           -> correcto
-        //   max    maximo de maximos           -> correcto
-        //   count  parciales que se suman      -> correcto desde que se arreglo
-        //   avg    promedio de promedios       -> NO: cada combinacion pesaria igual tenga una
-        //          fila o diez mil, y los pesos no viajan en el dataView, asi que no hay forma
-        //          de corregirlo aqui
-        // y una medida DAX cuya operacion no se puede leer puede ser cualquiera de las cosas
-        // que no se colapsan: un recuento distinto, un ratio, un porcentaje.
-        //
-        // Solo se avisa si el colapso ocurre de verdad: con una fila por celda no se combina nada.
-        let colapsa = false;
-        cellRows.forEach(filas => { if (filas.length > 1) { colapsa = true; } });
-
-        const detectada = activeValue.kind === "measure"
-            ? this.detectNativeAggregation(measures[activeValue.index].column)
-            : "sum";
-        const esDax = activeValue.kind === "measure" && detectada === null;
-        this.activeLabel = activeValue.label;
-        // Promedio que puso Power BI, no el usuario: quien elige "Promedio" sobre un campo sumado
-        // esta pidiendo la media por combinacion, que es una pregunta legitima.
-        // Con pesos el promedio ya sale ponderado, que es el numero correcto: no hay que avisar.
-        const promedioNativo = detectada === "average" && !weightColumn;
-
-        this.aggWarning = null;
-        if (colapsa && this.isEditing()) {
-            if (promedioNativo) {
-                this.aggWarning = this.texto("Visual_Notice_AvgOfAvg", "This is an average of averages. Power BI averaged the field at the grain of every bound dimension, and those averages are combined here, so each combination counts the same whether it holds one row or ten thousand. The weights are not in the data the visual receives, so it cannot correct for them. Bind only the dimensions you compare, or use a measure that carries its own weighting.");
-            } else if (esDax) {
-                this.aggWarning = this.texto("Visual_Notice_NonAdditive", "This measure is being collapsed in the visual: Power BI aggregated it at the grain of every bound dimension, and the rest is combined here. If the measure is not additive \u2014 a distinct count, a ratio, a percentage \u2014 the number may not be the one you expect. Bind only the dimensions you compare, or use an additive measure.");
-            }
-        }
-
         const measureValues = activeValue.kind === "measure" ? measures[activeValue.index].column.values : null;
         const weightValues = weightColumn ? weightColumn.values : null;
         const distinctValues = activeValue.kind === "distinct" ? distinctCols[activeValue.index].column.values : null;
@@ -920,6 +941,153 @@ export class Visual implements IVisual {
             }
         };
 
+
+        // ---- Categorías: Otros, Top N y orden ---------------------------------------------------
+        // Antes se cortaba cada eje en las 25 primeras categorías que aparecían, sin aviso, y los
+        // totales solo sumaban lo visible. Ahora se quedan las de mayor total y el resto se agrupa
+        // en "Otros", así que los totales siguen cuadrando; el aviso dice cuántas se agruparon.
+        const axes = this.formattingSettings.axesCard;
+        const othersOn = !!axes.others.value;
+        const allBucket = (values: powerbi.PrimitiveValue[]) => {
+            const m: Map<string, number[]> = new Map();
+            const order: string[] = [];
+            for (let i = 0; i < rowCount; i++) {
+                const v = values[i];
+                if (v === null || v === undefined) { continue; }
+                const s = String(v);
+                const arr = m.get(s);
+                if (arr) { arr.push(i); } else { m.set(s, [i]); order.push(s); }
+            }
+            return { m, order };
+        };
+        const xb = allBucket(xValues);
+        const yb = allBucket(yValues);
+        const trim = (b: { m: Map<string, number[]>; order: string[] }, max: number) => {
+            const cap = Math.max(1, Math.min(MAX_CATS_LIMIT, Math.round(max) || 25));
+            if (b.order.length <= cap) { return { keep: new Set(b.order), members: [] as string[] }; }
+            const keepN = othersOn ? cap - 1 : cap;
+            const ranked = b.order.slice().sort((p, q) =>
+                Math.abs(evaluate(b.m.get(q)) ?? 0) - Math.abs(evaluate(b.m.get(p)) ?? 0));
+            const keep = new Set(ranked.slice(0, keepN));
+            return { keep, members: b.order.filter(s => !keep.has(s)) };
+        };
+        const tx = trim(xb, axes.maxCols.value);
+        const ty = trim(yb, axes.maxRows.value);
+        this.othersX = tx.members;
+        this.othersY = ty.members;
+        const mapX = (s: string): string | null => tx.keep.has(s) ? s : (othersOn && tx.members.length ? OTH : null);
+        const mapY = (s: string): string | null => ty.keep.has(s) ? s : (othersOn && ty.members.length ? OTH : null);
+
+        const avisos: string[] = [];
+        const avisa = (dim: DimensionInfo, total: number, n: number) => {
+            avisos.push(othersOn
+                ? this.texto("Visual_Notice_Others", "{dim}: {n} of {total} values grouped as Others.")
+                    .replace("{dim}", dim.name).replace("{n}", String(n)).replace("{total}", String(total))
+                : this.texto("Visual_Notice_Hidden", "{dim}: {n} of {total} values left out, and out of the totals.")
+                    .replace("{dim}", dim.name).replace("{n}", String(n)).replace("{total}", String(total)));
+        };
+        if (tx.members.length) { avisa(xDim, xb.order.length, tx.members.length); }
+        if (ty.members.length) { avisa(yDim, yb.order.length, ty.members.length); }
+        this.trimNotice = avisos.join(" ");
+
+        const order = (keys: string[], mode: string, bucket: Map<string, number[]>): string[] => {
+            const k = keys.slice();
+            const coll = new Intl.Collator(this.host.locale || undefined, { numeric: true, sensitivity: "base" });
+            if (mode === "nameAsc") { k.sort((p, q) => coll.compare(p, q)); }
+            else if (mode === "nameDesc") { k.sort((p, q) => coll.compare(q, p)); }
+            else if (mode === "valueDesc" || mode === "valueAsc") {
+                const tot = (s: string) => evaluate(bucket.get(s)) ?? -Infinity;
+                k.sort((p, q) => mode === "valueDesc" ? tot(q) - tot(p) : tot(p) - tot(q));
+            } else {
+                // Automático: el orden de los datos, salvo días de la semana y meses, en su orden natural.
+                const low = k.map(s => s.toLowerCase().trim());
+                const cal = CALENDARS.find(c => low.every(s => c.indexOf(s) >= 0));
+                if (cal) { k.sort((p, q) => cal.indexOf(p.toLowerCase().trim()) - cal.indexOf(q.toLowerCase().trim())); }
+            }
+            return k;
+        };
+        const xKept = xb.order.filter(s => tx.keep.has(s));
+        const yKept = yb.order.filter(s => ty.keep.has(s));
+        const xCats: string[] = order(xKept, axes.colsOrder.value.value as string, xb.m);
+        const yCats: string[] = order(yKept, axes.rowsOrder.value.value as string, yb.m);
+        if (othersOn && tx.members.length) { xCats.push(OTH); }
+        if (othersOn && ty.members.length) { yCats.push(OTH); }
+        const othersLabel = this.texto("Visual_OthersLabel", "Others");
+        const labelOf = (k: string, n: number) => k === OTH ? `${othersLabel} (${n})` : k;
+
+        // ---- Index every source row into its cell / row / column bucket -----------------------
+        // This is what makes the visual correct: we keep the underlying rows and aggregate them
+        // ourselves for whichever X/Y projection the user picked, instead of re-summing values
+        // Power BI already collapsed at a different granularity.
+        const cellRows: Map<string, number[]> = new Map();
+        const rowBucket: Map<string, number[]> = new Map();
+        const colBucket: Map<string, number[]> = new Map();
+        const allRows: number[] = [];
+        const cellHasHighlight: Map<string, boolean> = new Map();
+
+        for (let i = 0; i < rowCount; i++) {
+            const xv = xValues[i];
+            const yv = yValues[i];
+            if (xv === null || xv === undefined || yv === null || yv === undefined) { continue; }
+            const xs = mapX(String(xv));
+            const ys = mapY(String(yv));
+            if (xs === null || ys === null) { continue; }
+
+            const key = xs + KEY_SEP + ys;
+            const cell = cellRows.get(key);
+            if (cell) { cell.push(i); } else { cellRows.set(key, [i]); }
+
+            const rb = rowBucket.get(ys);
+            if (rb) { rb.push(i); } else { rowBucket.set(ys, [i]); }
+
+            const cb = colBucket.get(xs);
+            if (cb) { cb.push(i); } else { colBucket.set(xs, [i]); }
+
+            allRows.push(i);
+
+            if (highlights && highlights[i] !== null && highlights[i] !== undefined) {
+                cellHasHighlight.set(key, true);
+            }
+        }
+
+        // ---- Aviso: lo que no se puede colapsar bien ---------------------------------------------
+        // El visual deja elegir X e Y aqui dentro, asi que Power BI no puede agregar a ese par:
+        // agrega al grano de TODAS las dimensiones enlazadas y el visual colapsa el resto.
+        //
+        // Cual de las operaciones aguanta ese segundo colapso:
+        //   sum    parciales que se suman      -> correcto
+        //   min    minimo de minimos           -> correcto
+        //   max    maximo de maximos           -> correcto
+        //   count  parciales que se suman      -> correcto desde que se arreglo
+        //   avg    promedio de promedios       -> NO: cada combinacion pesaria igual tenga una
+        //          fila o diez mil, y los pesos no viajan en el dataView, asi que no hay forma
+        //          de corregirlo aqui
+        // y una medida DAX cuya operacion no se puede leer puede ser cualquiera de las cosas
+        // que no se colapsan: un recuento distinto, un ratio, un porcentaje.
+        //
+        // Solo se avisa si el colapso ocurre de verdad: con una fila por celda no se combina nada.
+        let colapsa = false;
+        cellRows.forEach(filas => { if (filas.length > 1) { colapsa = true; } });
+
+        const detectada = activeValue.kind === "measure"
+            ? this.detectNativeAggregation(measures[activeValue.index].column)
+            : "sum";
+        const esDax = activeValue.kind === "measure" && detectada === null;
+        this.activeLabel = activeValue.label;
+        // Promedio que puso Power BI, no el usuario: quien elige "Promedio" sobre un campo sumado
+        // esta pidiendo la media por combinacion, que es una pregunta legitima.
+        // Con pesos el promedio ya sale ponderado, que es el numero correcto: no hay que avisar.
+        const promedioNativo = detectada === "average" && !weightColumn;
+
+        this.aggWarning = null;
+        if (colapsa && this.isEditing()) {
+            if (promedioNativo) {
+                this.aggWarning = this.texto("Visual_Notice_AvgOfAvg", "This is an average of averages. Power BI averaged the field at the grain of every bound dimension, and those averages are combined here, so each combination counts the same whether it holds one row or ten thousand. The weights are not in the data the visual receives, so it cannot correct for them. Bind only the dimensions you compare, use a measure that carries its own weighting, or add a field to Weights for averages.");
+            } else if (esDax) {
+                this.aggWarning = this.texto("Visual_Notice_NonAdditive", "This measure is being collapsed in the visual: Power BI aggregated it at the grain of every bound dimension, and the rest is combined here. If the measure is not additive \u2014 a distinct count, a ratio, a percentage \u2014 the number may not be the one you expect. Bind only the dimensions you compare, or use an additive measure.");
+            }
+        }
+
         // ---- Display mode (absolute / % of row / column / grand total) --------------------------
         // Percentage modes are a Pro feature; the Free tier always shows absolute values.
         const displayMode = this.isProActive()
@@ -965,11 +1133,29 @@ export class Visual implements IVisual {
                 const dv = displayValue(raw, xs, ys);
                 if (dv !== null && !isNaN(dv)) {
                     displayed.set(key, dv);
+                    // "Otros" suma muchas categorías: no debe estirar la escala de color de las reales.
+                    if (xs === OTH || ys === OTH) { return; }
                     if (dv < globalMin) { globalMin = dv; }
                     if (dv > globalMax) { globalMax = dv; }
                 }
             });
         });
+        if (this.sortKey !== null && xCats.indexOf(this.sortKey) >= 0) {
+            const col = this.sortKey;
+            const v = (ys: string) => displayed.get(col + KEY_SEP + ys);
+            const others = yCats.indexOf(OTH) >= 0;
+            const rest = yCats.filter(k => k !== OTH);
+            rest.sort((p, q) => {
+                const a = v(p), b = v(q);
+                if (a === undefined && b === undefined) { return 0; }
+                if (a === undefined) { return 1; }
+                if (b === undefined) { return -1; }
+                return this.sortDir === "desc" ? b - a : a - b;
+            });
+            yCats.length = 0;
+            rest.forEach(k => yCats.push(k));
+            if (others) { yCats.push(OTH); }
+        }
         if (globalMin === Infinity) { globalMin = 0; globalMax = 0; }
         if (globalMin === globalMax) { globalMax = globalMin + 1; }
 
@@ -991,6 +1177,34 @@ export class Visual implements IVisual {
         table.className = "dmh-table";
         table.style.setProperty("--dmh-row-height", rowHeight + "px");
         table.style.setProperty("--dmh-col-width", colWidth + "px");
+        const gap = Math.max(0, Math.min(20, layout.cellGap.value || 0));
+        const radius = Math.max(0, Math.min(20, layout.cellRadius.value || 0));
+        if (gap > 0) {
+            table.style.borderCollapse = "separate";
+            table.style.borderSpacing = gap + "px";
+        }
+        // Esquema y reglas de color
+        const scheme = (heatmap.scheme.value.value as string) || "custom";
+        const [cMin, cMid, cMax] = SCHEMES[scheme] || [heatmap.minColor.value.value, heatmap.midColor.value.value, heatmap.maxColor.value.value];
+        const rc = this.formattingSettings.rulesCard;
+        const rules = [rc.r1, rc.r2, rc.r3].filter(r => r.on.value).map(r => ({
+            op: r.op.value.value as string, v: Number(r.value.value), color: r.color.value.value
+        }));
+        const ruleColor = (v: number): string | null => {
+            for (const r of rules) {
+                if (r.op === "gte" ? v >= r.v : v <= r.v) { return r.color; }
+            }
+            return null;
+        };
+        // Contraste automático del texto: sobre un fondo oscuro, letra blanca (salvo color a mano).
+        const autoText = (text.valueColor.value.value || "").toUpperCase() === "#252423";
+        const lum = (css: string): number => {
+            const m = /rgb\((\d+),(\d+),(\d+)\)/.exec(css) || [];
+            const rgb = m.length ? { r: +m[1], g: +m[2], b: +m[3] } : this.hexToRgb(css);
+            if (!rgb) { return 1; }
+            const f = (c: number) => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+            return 0.2126 * f(rgb.r) + 0.7152 * f(rgb.g) + 0.0722 * f(rgb.b);
+        };
 
         // ---- Header -----------------------------------------------------------------------------
         const thead = document.createElement("thead");
@@ -1001,7 +1215,25 @@ export class Visual implements IVisual {
         xCats.forEach(xv => {
             const th = document.createElement("th");
             th.className = "dmh-col-header dmh-orient-" + orientation;
-            th.textContent = String(xv);
+            const xk = String(xv);
+            const arrow = this.sortKey === xk ? (this.sortDir === "desc" ? " ▼" : " ▲") : "";
+            th.textContent = labelOf(xk, this.othersX.length) + arrow;
+            th.setAttribute("aria-sort", this.sortKey === xk ? (this.sortDir === "desc" ? "descending" : "ascending") : "none");
+            th.title = this.texto("Visual_SortHint", "Click to sort the rows by this column");
+            th.style.cursor = "pointer";
+            th.tabIndex = 0;
+            const sortHere = () => {
+                if (this.formatMode) { return; }
+                // Ciclo: de mayor a menor, de menor a mayor, sin orden.
+                if (this.sortKey !== xk) { this.sortKey = xk; this.sortDir = "desc"; }
+                else if (this.sortDir === "desc") { this.sortDir = "asc"; }
+                else { this.sortKey = null; this.sortDir = "desc"; }
+                this.persistSelection();
+                this.repaint();
+            };
+            th.addEventListener("click", sortHere);
+            th.addEventListener("keydown", (ev: KeyboardEvent) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); sortHere(); } });
+            this.subSelectable(th, "labels", this.texto("Visual_Sub_Labels", "Axis labels"), powerbi.visuals.SubSelectionStylesType.Text);
             th.style.fontFamily = text.labelFontFamily.value;
             th.style.fontSize = text.labelFontSize.value + "px";
             th.style.color = this.isHighContrast ? this.hcForeground : text.labelColor.value.value;
@@ -1014,7 +1246,7 @@ export class Visual implements IVisual {
         if (showTotals) {
             const th = document.createElement("th");
             th.className = "dmh-col-header dmh-total-header dmh-orient-" + orientation;
-            th.textContent = "Total";
+            th.textContent = this.texto("Visual_Total", "Total");
             th.style.fontFamily = text.labelFontFamily.value;
             th.style.fontSize = text.labelFontSize.value + "px";
             th.style.color = this.isHighContrast ? this.hcForeground : text.labelColor.value.value;
@@ -1034,7 +1266,8 @@ export class Visual implements IVisual {
             const tr = document.createElement("tr");
             const rowHeader = document.createElement("th");
             rowHeader.className = "dmh-row-header";
-            rowHeader.textContent = ys;
+            rowHeader.textContent = labelOf(ys, this.othersY.length);
+            this.subSelectable(rowHeader, "labels", this.texto("Visual_Sub_Labels", "Axis labels"), powerbi.visuals.SubSelectionStylesType.Text);
             rowHeader.style.fontFamily = text.labelFontFamily.value;
             rowHeader.style.fontSize = text.labelFontSize.value + "px";
             rowHeader.style.color = this.isHighContrast ? this.hcForeground : text.labelColor.value.value;
@@ -1060,20 +1293,19 @@ export class Visual implements IVisual {
                         td.style.borderColor = this.hcForeground;
                     } else {
                         const normalized = (dv - globalMin) / (globalMax - globalMin);
-                        td.style.backgroundColor = this.colorForValue(
-                            normalized,
-                            heatmap.minColor.value.value,
-                            heatmap.midColor.value.value,
-                            heatmap.maxColor.value.value
-                        );
-                        td.style.color = text.valueColor.value.value;
+                        const bg = ruleColor(dv) || this.colorForValue(normalized, cMin, cMid, cMax);
+                        td.style.backgroundColor = bg;
+                        td.style.color = autoText && lum(bg) < 0.32 ? "#FFFFFF" : text.valueColor.value.value;
                     }
+                    if (radius > 0) { td.style.borderRadius = radius + "px"; }
+                    if (gap > 0) { td.style.border = "none"; }
+                    this.subSelectable(td, "cells", this.texto("Visual_Sub_Values", "Cell values"), powerbi.visuals.SubSelectionStylesType.Text);
                     td.textContent = fmt.format(dv);
                     td.style.fontFamily = text.valueFontFamily.value;
                     td.style.fontSize = text.valueFontSize.value + "px";
 
                     if (this.selectedCells.size > 0) {
-                        const isSelected = this.selectedCells.has(key);
+                        const isSelected = this.cellSelected(xs, ys);
                         td.style.opacity = isSelected ? "1" : "0.3";
                         // Opacity alone is not a reliable cue in high contrast, so selection is
                         // also marked with a system-coloured outline.
@@ -1119,8 +1351,8 @@ export class Visual implements IVisual {
                         d3.select(td),
                         () => {
                             const items = [
-                                { displayName: xDim.name, value: xs },
-                                { displayName: yDim.name, value: ys },
+                                { displayName: xDim.name, value: labelOf(xs, this.othersX.length) },
+                                { displayName: yDim.name, value: labelOf(ys, this.othersY.length) },
                                 { displayName: activeValue.label, value: absFmt.format(rawAbs) }
                             ];
                             if (isPct) {
@@ -1156,7 +1388,7 @@ export class Visual implements IVisual {
             tr.className = "dmh-total-row";
             const th = document.createElement("th");
             th.className = "dmh-row-header dmh-total-header";
-            th.textContent = "Total";
+            th.textContent = this.texto("Visual_Total", "Total");
             th.style.fontFamily = text.labelFontFamily.value;
             th.style.fontSize = text.labelFontSize.value + "px";
             th.style.color = this.isHighContrast ? this.hcForeground : text.labelColor.value.value;
@@ -1191,6 +1423,106 @@ export class Visual implements IVisual {
 
         table.appendChild(tbody);
         this.scrollEl.appendChild(table);
+        // Aviso de categorías agrupadas, si no hay otro más importante en pantalla.
+        if (this.trimNotice && this.noticeEl.style.display === "none") {
+            this.noticeEl.textContent = this.trimNotice;
+            this.noticeEl.style.display = "block";
+        }
+    }
+
+    /** Una celda está seleccionada directamente o, si es de "Otros", por alguno de sus miembros. */
+    private cellSelected(xs: string, ys: string): boolean {
+        if (this.selectedCells.has(xs + KEY_SEP + ys)) { return true; }
+        if (xs !== OTH && ys !== OTH) { return false; }
+        const xsSet = xs === OTH ? this.othersX : [xs];
+        const ysSet = ys === OTH ? this.othersY : [ys];
+        for (const a of xsSet) { for (const b of ysSet) { if (this.selectedCells.has(a + KEY_SEP + b)) { return true; } } }
+        return false;
+    }
+
+    /** Aplica la plantilla de estilo a lo que el autor no ha tocado. */
+    private applyTemplate(objects: powerbi.DataViewObjects | undefined): void {
+        const name = (objects?.["style"]?.["template"] as string) || "classic";
+        const list = TEMPLATES[name] || [];
+        const cards: any[] = (this.formattingSettings as any).cards || [];
+        for (const [cardName, prop, val] of list) {
+            if (objects?.[cardName]?.[prop] !== undefined) { continue; }
+            const card = cards.find(c => c.name === cardName);
+            const slice = card?.slices?.find((s: any) => s.name === prop);
+            if (!slice) { continue; }
+            if (Array.isArray(slice.items)) { slice.value = slice.items.find((it: any) => it.value === val) || slice.value; }
+            else if (slice.value && typeof slice.value === "object" && "value" in slice.value) { slice.value = { value: val }; }
+            else { slice.value = val; }
+        }
+    }
+
+    // ── Formato sobre el lienzo ─────────────────────────────────────────────────────────────
+
+    private subSelectable(el: Element, objectName: string, displayName: string, type: powerbi.visuals.SubSelectionStylesType): void {
+        if (!this.formatMode) { return; }
+        el.classList.add(HtmlSubSelectableClass);
+        el.setAttribute(SubSelectableObjectNameAttribute, objectName);
+        el.setAttribute(SubSelectableDisplayNameAttribute, displayName);
+        el.setAttribute(SubSelectableTypeAttribute, String(type));
+    }
+
+    private getSubSelectionStyles(subs: powerbi.visuals.CustomVisualSubSelection[]): powerbi.visuals.SubSelectionStyles | undefined {
+        const name = subs[0]?.customVisualObjects[0]?.objectName;
+        const ref = (objectName: string, propertyName: string, label: string) => ({ reference: { objectName, propertyName }, label });
+        switch (name) {
+            case "cells":
+                return {
+                    type: powerbi.visuals.SubSelectionStylesType.Text,
+                    fontFamily: ref("text", "valueFontFamily", this.texto("Visual_ValueFont", "Value font")),
+                    fontSize: ref("text", "valueFontSize", this.texto("Visual_ValueSize", "Value size")),
+                    fontColor: ref("text", "valueColor", this.texto("Visual_ValueColor", "Value color")),
+                } as any;
+            case "labels":
+                return {
+                    type: powerbi.visuals.SubSelectionStylesType.Text,
+                    fontFamily: ref("text", "labelFontFamily", this.texto("Visual_AxisFont", "Axis label font")),
+                    fontSize: ref("text", "labelFontSize", this.texto("Visual_AxisSize", "Axis label size")),
+                    fontColor: ref("text", "labelColor", this.texto("Visual_AxisColor", "Axis label color")),
+                } as any;
+            case "controls":
+                return {
+                    type: powerbi.visuals.SubSelectionStylesType.Text,
+                    fontFamily: ref("text", "controlsFontFamily", this.texto("Visual_ControlsFont", "Controls label font")),
+                    fontSize: ref("text", "controlsFontSize", this.texto("Visual_ControlsSize", "Controls label size")),
+                    fontColor: ref("text", "controlsFontColor", this.texto("Visual_ControlsColor", "Controls label color")),
+                    background: ref("text", "controlsBackground", this.texto("Visual_ControlsBg", "Controls bar background")),
+                } as any;
+        }
+        return undefined;
+    }
+
+    private getSubSelectionShortcuts(subs: powerbi.visuals.CustomVisualSubSelection[]): powerbi.visuals.VisualSubSelectionShortcuts | undefined {
+        const name = subs[0]?.customVisualObjects[0]?.objectName;
+        const id = (objectName: string, propertyName: string) => ({ objectName, propertyName });
+        const nav = (card: string, label: string) => ({ type: powerbi.visuals.VisualShortcutType.Navigate, destinationInfo: { cardUid: "Visual-" + card + "-card" }, label });
+        switch (name) {
+            case "cells":
+                return [
+                    { type: powerbi.visuals.VisualShortcutType.Picker, ...id("heatmap", "scheme"), label: this.texto("Visual_Scheme", "Color scheme") },
+                    { type: powerbi.visuals.VisualShortcutType.Picker, ...id("style", "template"), label: this.texto("Visual_Template", "Template") },
+                    { type: powerbi.visuals.VisualShortcutType.Divider },
+                    { type: powerbi.visuals.VisualShortcutType.Reset, relatedResetFormattingIds: [id("text", "valueFontFamily"), id("text", "valueFontSize"), id("text", "valueColor")] },
+                    nav("heatmap", this.texto("Visual_Heatmap", "Heatmap colors")),
+                ] as any;
+            case "labels":
+                return [
+                    { type: powerbi.visuals.VisualShortcutType.Picker, ...id("layout", "columnHeaderOrientation"), label: this.texto("Visual_HeaderOrientation", "Column header orientation") },
+                    { type: powerbi.visuals.VisualShortcutType.Divider },
+                    { type: powerbi.visuals.VisualShortcutType.Reset, relatedResetFormattingIds: [id("text", "labelFontFamily"), id("text", "labelFontSize"), id("text", "labelColor")] },
+                    nav("text", this.texto("Visual_Text", "Text")),
+                ] as any;
+            case "controls":
+                return [
+                    { type: powerbi.visuals.VisualShortcutType.Reset, relatedResetFormattingIds: [id("text", "controlsFontFamily"), id("text", "controlsFontSize"), id("text", "controlsFontColor"), id("text", "controlsBackground")] },
+                    nav("text", this.texto("Visual_Text", "Text")),
+                ] as any;
+        }
+        return undefined;
     }
 
     /** Totals use the measure's own format in absolute mode, and a share of the grand total otherwise. */
@@ -1210,10 +1542,10 @@ export class Visual implements IVisual {
 
     private displayModeLabel(mode: string): string {
         switch (mode) {
-            case "pctRow":   return "% of row";
-            case "pctCol":   return "% of column";
-            case "pctTotal": return "% of grand total";
-            default:         return "Value";
+            case "pctRow":   return this.texto("Visual_Item_pctRow", "% of row");
+            case "pctCol":   return this.texto("Visual_Item_pctCol", "% of column");
+            case "pctTotal": return this.texto("Visual_Item_pctTotal", "% of grand total");
+            default:         return this.texto("Visual_Ctl_Value", "Value");
         }
     }
 
@@ -1267,7 +1599,10 @@ export class Visual implements IVisual {
         this.selectedCells.forEach(cellKey => {
             const parts = cellKey.split(KEY_SEP);
             if (parts.length !== 2) { return; }
-            values.push([{ value: parts[0] }, { value: parts[1] }]);
+            // "Otros" no existe en el modelo: se filtra por cada uno de sus miembros.
+            const xs = parts[0] === OTH ? this.othersX : [parts[0]];
+            const ys = parts[1] === OTH ? this.othersY : [parts[1]];
+            for (const a of xs) { for (const b of ys) { values.push([{ value: a }, { value: b }]); } }
         });
 
         const filter: ITupleFilter = {
@@ -1353,7 +1688,8 @@ export class Visual implements IVisual {
             if (!anySelected || !key) {
                 el.style.opacity = "1";
             } else {
-                el.style.opacity = this.selectedCells.has(key) ? "1" : "0.3";
+                const p = key.split(KEY_SEP);
+                el.style.opacity = (p.length === 2 ? this.cellSelected(p[0], p[1]) : this.selectedCells.has(key)) ? "1" : "0.3";
             }
         });
     }
@@ -1421,10 +1757,7 @@ export class Visual implements IVisual {
 
     private renderLandingPage(): void {
         this.clearAll();
-        this.showMessage(
-            "Add Dimensions (at least 2) plus a Measure or a \"Distinct count of\" field to build the dynamic matrix. " +
-            "Pro plan on Microsoft AppSource: up to 10 dimensions and 5 measures, distinct counts, percentage values and totals."
-        );
+        this.showMessage(this.texto("Visual_Landing", "Add Dimensions (at least 2) plus a Measure or a \"Distinct count of\" field to build the dynamic matrix. Pro plan on Microsoft AppSource: up to 10 dimensions and 5 measures, distinct counts, percentage values, totals and row groups."));
     }
 
     // ==========================================================================================
