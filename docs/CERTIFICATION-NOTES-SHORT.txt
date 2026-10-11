@@ -1,44 +1,45 @@
 Dynamic Matrix Heatmap 1.1.0.0 - GUID dynamicMatrixHeatmap790912782D2A48CE80E680D64C793458
-Full notes: docs/CERTIFICATION-NOTES.md, branch "certification":
-github.com/tinocallarisa-web/dynamic-matrix-heatmap
+
+SOURCE CODE
+github.com/tinocallarisa-web/dynamic-matrix-heatmap, branch "certification".
+PUBLIC: no credentials needed, none included here.
+Full notes in docs/CERTIFICATION-NOTES.md.
+
+TESTING THE PREMIUM FEATURES - NO KEY NEEDED
+There is no activation key: Pro is granted by the AppSource plan through
+IVisualLicenseManager, so none exists outside the marketplace. You do not need one.
+The submitted package already renders every premium feature: import this .pbiviz and
+open a report in EDIT mode without a licence. Each Pro capability is drawn WORKING
+under a "Pro preview" watermark naming it - same code, same data, nothing hidden or
+stubbed. Reading view shows the free result, so a published report never uses an
+unpaid feature.
+Without the watermark: npm install, then node build-test.js (isPro forced true, GUID +
+"_test") or --free. Neither build is ever submitted.
+
+WHAT TO CHECK
+Bind 4+ Dimensions, 3+ Measures and an ID column to Distinct count of.
+Editing, no licence: watermark, a banner naming the blocked feature, Upgrade about 10 s
+later, every Pro well rendering. Reading view: a note naming what was withheld, no
+watermark. Click a cell: other visuals filter. Bookmark, leave the page and return:
+filter and highlight come back. Right click: menu. Tab + Enter: same as click.
 
 WHAT CHANGED SINCE 1.0.1.0
-Mostly correctness in how values are combined: a counted field returned the number of row
-groups, a distinct count bound as a measure was added up, and averages can now be weighted
-through a new optional "Weights for averages" well. Numbers use cultureSelector, so separators
-follow the report locale. Purchase path: clearLicenseNotification, then notifyFeatureBlocked
-naming the feature, then notifyLicenseRequired ~10 s later, since Power BI shows one
-notification at a time and the last replaces the previous; the timer is cancelled in
-destroy(). Bookmarks: selection rebuilt from options.jsonFilters.
-hostCapabilities.allowInteractions honoured. stringResources en-US and es-ES. No new
-dependency, no new privilege.
-
-PRO PREVIEW (watermark, per the guidelines)
-Free user, edit mode, licence resolved, supported environment: Pro capabilities render under
-a "Pro preview" watermark naming them. Reading view, before the licence resolves, or where it
-cannot be read: free result, no watermark, nothing persisted.
+Correctness in how values combine across the dimensions not chosen for X and Y: a
+counted field returned the number of row groups, a distinct count bound as a measure
+was added up, and averages can be weighted through a new optional "Weights" well.
+Numbers follow the report locale. Bookmarks, allowInteractions, es-ES in the pane.
+No new dependency, no new privilege. Detail in CHANGELOG.md.
 
 PRIVACY
-No network calls, no telemetry, no storage. Only the dataView; the picked dimensions and
-value are persisted in the .pbix. privileges is []. The TupleFilter $schema is an identifier,
-not a requested URL. No innerHTML anywhere.
+No network calls, no telemetry, no storage. Only the dataView; the picked dimensions
+and value are persisted in the .pbix. privileges is []. The TupleFilter $schema is an
+identifier, not a requested URL. No innerHTML.
 
 FREE VS PRO
-Free: X/Y/Value dropdowns, heatmap, formatting, tooltips, cross-filter, context menu,
-keyboard, high contrast, weighted averages, 3 dimensions, 2 measures.
+Free: X/Y/Value dropdowns, heatmap, formatting, tooltips, cross-filter, menu, keyboard,
+high contrast, weighted averages, 3 dimensions, 2 measures.
 Pro: 10 dimensions, 5 measures, Distinct count of, Show value as %, totals.
 
-TEST - FREE (no plan)
-4+ Dimensions, 3+ Measures, an ID column in Distinct count of. Edit mode: watermark, banner
-naming the feature, Upgrade ~10 s later. Reading view: note naming what was withheld, no
-watermark. Click a cell: other visuals filter. Bookmark it, leave the page and return: filter
-and highlight come back. Right click: context menu. Tab + Enter: same as click.
-
-TEST - PRO (active plan)
-All wells work, no note, no watermark. node build-test.js forces Pro (GUID _test);
---free builds the free path (GUID _testfree).
-
-Rendering events on every update() path. eslint 0, npm audit 0.
-
+Rendering events on every update() path. eslint 0.
 Video https://www.youtube.com/watch?v=vobbf6405e4
 Support/privacy/terms: tinocallarisa-web.github.io/dynamic-matrix-heatmap/
