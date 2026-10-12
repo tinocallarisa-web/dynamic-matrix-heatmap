@@ -380,6 +380,26 @@
           "type": {
             "numeric": true
           }
+        },
+        "controlsPosition": {
+          "displayName": "Controls",
+          "displayNameKey": "Visual_ControlsPosition",
+          "type": {
+            "enumeration": [
+              {
+                "value": "left",
+                "displayName": "left"
+              },
+              {
+                "value": "top",
+                "displayName": "top"
+              },
+              {
+                "value": "hidden",
+                "displayName": "hidden"
+              }
+            ]
+          }
         }
       }
     },
@@ -421,6 +441,11 @@
           }
         },
         "collapsedGroups": {
+          "type": {
+            "text": true
+          }
+        },
+        "panel": {
           "type": {
             "text": true
           }

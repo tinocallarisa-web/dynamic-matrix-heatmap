@@ -92,6 +92,7 @@ are drawn working under a *Pro preview* watermark; reading view shows the free r
 
 - **Distinct count of → Detail (rows).** Fields already there stay.
 - **Weights for averages is gone.** Use an ID in Detail (rows) instead.
+- **Controls** now sit in a folding panel on the left (or a top bar, or hidden in reading view).
 - **Show value as** moved from the Format pane to **Show as** in the visual; reports keep their mode.
 
 ---

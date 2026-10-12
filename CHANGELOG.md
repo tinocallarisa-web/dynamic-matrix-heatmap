@@ -13,6 +13,7 @@ The matrix becomes a pivot table: the reader chooses how values are shown, group
 
 ### Added
 
+- **Controls in a side panel.** The dropdowns sit in a panel on the left, each with its label and its value in full; it folds to a thin strip, and starts folded on narrow visuals. Format → Layout → Controls moves them to a top bar (which now wraps and keeps every dropdown readable) or hides them in reading view.
 - **Show as, in the visual (Pro).** A dropdown next to Value switches the active measure between absolute, % of row, % of column and % of grand total, and each measure remembers its own. The reader can change it, like X and Y. The same measure no longer needs to be added twice — which did not work anyway: Power BI treats two copies of the same field as one, so renaming one renamed both.
 - **Group rows (Pro).** A third dimension groups the rows, with a subtotal row per group that opens and closes, and a button to open or close all. Each cell is computed from the rows of its own group, and clicking it filters by column, row and group.
 - **Order by similarity (Pro).** Rows or columns with the same pattern are placed together, by hierarchical clustering of their profiles.

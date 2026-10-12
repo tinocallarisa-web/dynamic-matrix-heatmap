@@ -224,6 +224,11 @@ export class Visual implements IVisual {
     /** "Show value as" del panel antiguo (hasta 1.1): modo por defecto de las medidas sin ajuste propio. */
     private legacyMode = "absolute";
     private modeSelect: HTMLSelectElement | null = null;
+    private mainEl: HTMLElement;
+    /** Panel lateral: null = automático (plegado si el visual es estrecho); si no, lo que eligió el usuario. */
+    private panelOpen: boolean | null = null;
+    private panelLoaded = false;
+    private vpWidth = 0;
     /** Aviso de medida no aditiva colapsada en el cliente. Solo se pinta en edicion. */
     private aggWarning: string = null;
     /** Que se ha retenido por el tier gratuito, en palabras, para el aviso. */
@@ -294,19 +299,23 @@ export class Visual implements IVisual {
         this.controlsEl = document.createElement("div");
         this.controlsEl.className = "dmh-controls";
         this.target.appendChild(this.controlsEl);
+        // Columna principal: avisos, mensajes y matriz. A su izquierda, el panel de controles.
+        this.mainEl = document.createElement("div");
+        this.mainEl.className = "dmh-main";
+        this.target.appendChild(this.mainEl);
 
         this.noticeEl = document.createElement("div");
         this.noticeEl.className = "dmh-notice";
         this.noticeEl.style.display = "none";
-        this.target.appendChild(this.noticeEl);
+        this.mainEl.appendChild(this.noticeEl);
 
         this.messageEl = document.createElement("div");
         this.messageEl.className = EMPTY_STATE_CLASS;
-        this.target.appendChild(this.messageEl);
+        this.mainEl.appendChild(this.messageEl);
 
         this.scrollEl = document.createElement("div");
         this.scrollEl.className = "dmh-scroll";
-        this.target.appendChild(this.scrollEl);
+        this.mainEl.appendChild(this.scrollEl);
 
         // Marca de agua de la vista previa Pro: solo sobre funciones de pago usadas sin licencia
         this.watermarkEl = document.createElement("div");
@@ -352,6 +361,7 @@ export class Visual implements IVisual {
             }
 
             this.formatMode = !!(options as any).formatMode;
+            this.vpWidth = options.viewport?.width || 0;
             this.subSelectionHelper.setFormatMode(this.formatMode);
             this.syncSelectionFromFilters(options);
             this.renderFromDataView(dataView);
@@ -396,6 +406,12 @@ export class Visual implements IVisual {
                 this.sortDir = st["sortDir"] === "asc" ? "asc" : "desc";
             }
             this.sortLoaded = true;
+        }
+        if (!this.panelLoaded) {
+            const st = dataView.metadata?.objects?.["selectionState"];
+            const v = st ? st["panel"] : undefined;
+            if (v === "open") { this.panelOpen = true; } else if (v === "closed") { this.panelOpen = false; }
+            this.panelLoaded = true;
         }
         if (!this.groupLoaded) {
             const st = dataView.metadata?.objects?.["selectionState"];
@@ -591,6 +607,50 @@ export class Visual implements IVisual {
             ? this.hcBackground
             : text.controlsBackground.value.value;
 
+        // Posición de los controles: panel a la izquierda (por defecto), barra arriba, u ocultos en
+        // lectura (vista fija que decide el autor; editando siguen visibles para poder elegirla).
+        const pos = (this.formattingSettings.layoutCard.controlsPosition.value.value as string) || "left";
+        const oculto = pos === "hidden" && !this.isEditing();
+        this.target.classList.toggle("dmh-pos-left", pos !== "top" && !oculto);
+        this.target.classList.toggle("dmh-pos-top", pos === "top");
+        this.controlsEl.style.display = oculto ? "none" : "";
+        if (oculto) { return; }
+        const izquierda = pos !== "top";
+        // Sin X o Y elegidos, el panel se abre: si no, no habría por dónde empezar.
+        const abierto = !this.selectedX || !this.selectedY ? true
+            : this.panelOpen === null ? this.vpWidth === 0 || this.vpWidth >= 420 : this.panelOpen;
+        this.controlsEl.classList.toggle("dmh-collapsed", izquierda && !abierto);
+        const fg = this.isHighContrast ? this.hcForeground : text.controlsFontColor.value.value;
+        if (izquierda) {
+            const head = document.createElement("div");
+            head.className = "dmh-panel-head";
+            const toggle = document.createElement("button");
+            toggle.className = "dmh-panel-toggle";
+            toggle.type = "button";
+            toggle.style.color = fg;
+            toggle.textContent = abierto ? "⚙ " + this.texto("Visual_Ctl_Title", "View") + "  «" : "⚙";
+            const etiqueta = abierto ? this.texto("Visual_Ctl_Hide", "Hide controls") : this.texto("Visual_Ctl_Show", "Show controls");
+            toggle.title = etiqueta;
+            toggle.setAttribute("aria-label", etiqueta);
+            toggle.setAttribute("aria-expanded", String(abierto));
+            toggle.addEventListener("click", () => {
+                this.panelOpen = !abierto;
+                this.persistSelection();
+                this.repaint();
+            });
+            head.appendChild(toggle);
+            this.controlsEl.appendChild(head);
+            if (!abierto) {
+                // Plegado: la matriz usa todo el ancho; los desplegables siguen existiendo para el
+                // estado, pero no se pintan.
+                this.xSelect = document.createElement("select");
+                this.ySelect = document.createElement("select");
+                this.valueSelect = document.createElement("select");
+                this.modeSelect = null;
+                return;
+            }
+        }
+
         const buildLabeledSelect = (labelText: string): HTMLSelectElement => {
             const wrap = document.createElement("label");
             wrap.className = "dmh-control";
@@ -742,6 +802,7 @@ export class Visual implements IVisual {
                     sortKey: this.sortKey || "",
                     sortDir: this.sortDir,
                     groupDimension: this.selectedG || "",
+                    panel: this.panelOpen === null ? "" : (this.panelOpen ? "open" : "closed"),
                     collapsedGroups: JSON.stringify(Array.from(this.collapsedGroups))
                 }
             }]

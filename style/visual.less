@@ -181,3 +181,88 @@
         height: var(--dmh-row-height, 28px);
     }
 }
+
+// ── Panel de controles a la izquierda (1.2) ────────────────────────────────────
+.dmh-main {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0%;
+    min-width: 0;
+    min-height: 0;
+}
+
+.dmh-root.dmh-pos-left {
+    flex-direction: row;
+
+    .dmh-controls {
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        gap: 10px;
+        width: 180px;
+        flex: 0 0 180px;
+        padding: 8px 10px;
+        border-bottom: none;
+        border-right: 1px solid #E1E1E1;
+        overflow-y: auto;
+        box-sizing: border-box;
+    }
+
+    .dmh-controls.dmh-collapsed {
+        width: 30px;
+        flex: 0 0 30px;
+        padding: 6px 2px;
+        align-items: center;
+    }
+
+    .dmh-control {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 3px;
+        flex: 0 0 auto;
+
+        span {
+            font-size: 11px;
+            opacity: 0.85;
+        }
+
+        select {
+            width: 100%;
+            flex: 0 0 auto;
+            padding: 3px 4px;
+            border: 1px solid #C8C6C4;
+            border-radius: 4px;
+            background: #FFFFFF;
+        }
+    }
+}
+
+.dmh-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dmh-panel-toggle {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font: 600 12px "Segoe UI", sans-serif;
+    padding: 2px 0;
+    text-align: left;
+    width: 100%;
+
+    &:focus-visible {
+        outline: 2px solid #1F4E80;
+        outline-offset: 1px;
+    }
+}
+
+// Barra arriba: salta de línea y cada desplegable conserva un ancho legible.
+.dmh-root.dmh-pos-top .dmh-control {
+    flex: 1 1 150px;
+
+    select {
+        min-width: 90px;
+    }
+}

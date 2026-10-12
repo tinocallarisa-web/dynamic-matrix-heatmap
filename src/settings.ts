@@ -307,10 +307,19 @@ class LayoutCardSettings extends FormattingSettingsCard {
     name: string = "layout";
     displayName: string = "Layout";
     displayNameKey: string = "Visual_Layout";
+    controlsPosition = new formattingSettings.ItemDropdown({
+        name: "controlsPosition", displayName: "Controls", displayNameKey: "Visual_ControlsPosition",
+        items: [
+            { value: "left", displayName: "Left panel" },
+            { value: "top", displayName: "Top bar" },
+            { value: "hidden", displayName: "Hidden in reading view" }
+        ],
+        value: { value: "left", displayName: "Left panel" }
+    });
     cellGap = new formattingSettings.NumUpDown({ name: "cellGap", displayName: "Space between cells (px)", displayNameKey: "Visual_CellGap", value: 0 });
     cellRadius = new formattingSettings.NumUpDown({ name: "cellRadius", displayName: "Cell corner radius (px)", displayNameKey: "Visual_CellRadius", value: 0 });
 
-    slices: Array<FormattingSettingsSlice> = [this.rowHeight, this.columnWidth, this.columnHeaderOrientation, this.cellGap, this.cellRadius];
+    slices: Array<FormattingSettingsSlice> = [this.controlsPosition, this.rowHeight, this.columnWidth, this.columnHeaderOrientation, this.cellGap, this.cellRadius];
 }
 
 /**
