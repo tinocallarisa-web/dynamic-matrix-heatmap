@@ -123,7 +123,8 @@ Center.
 
 | Asset | File | Notes |
 |---|---|---|
-| Offer screenshot | `docs/infographic.html` -> PNG | **1366x768 is mandatory.** To be regenerated for 1.2.0.0. |
+| Offer screenshot 1 | `assets/infographic.png` (from `docs/infographic.html`) | **1366x768 is mandatory.** General guide, 1.2.0.0. |
+| Offer screenshot 2 | `assets/infographic-styles.png` (from `docs/infographic-styles.html`) | 1366x768. Templates, schemes and colour rules, captured from the 1.2 build. |
 | Offer icon | `assets/icon_Matrix.png`, 300x300 | Uploaded by hand: it does not travel inside the package. |
 | Large logo | `assets/icon_216x216.png` | Partner Center's listing logo. |
 | Small logo | `assets/icon_48x48.png` | Generated with LANCZOS from the 300x300 master. |
@@ -168,5 +169,6 @@ Editing this file changes nothing in the offer. For 1.2.0.0:
 3. **Keywords** — `pivot table`, `cross tab`, `heatmap`.
 4. **Plan description** — if Partner Center allows editing it on the live plan.
 5. **Certification notes** — `docs/CERTIFICATION-NOTES-SHORT.txt`. Cleared on every resubmission.
-6. **Offer screenshot** — regenerate from `docs/infographic.html` and upload the 1366x768 PNG.
+6. **Offer screenshots** — upload `assets/infographic.png` and `assets/infographic-styles.png` (1366x768), replacing the 1.1 one.
+8. **Offer logo** — `assets/icon_Matrix.png` (300x300, new Nord style): it does not travel in the package.
 7. **Video** — `https://www.youtube.com/watch?v=pPf0Bu0H11U` (new for 1.2).
