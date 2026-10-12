@@ -1729,6 +1729,11 @@ export class Visual implements IVisual {
         }
 
         table.appendChild(tbody);
+        // Fondo de las cabeceras (filas, columnas, grupos, totales y esquina), salvo en alto contraste.
+        if (!this.isHighContrast) {
+            const fondo = text.labelBackground.value.value || "#FAFAFA";
+            table.querySelectorAll<HTMLElement>("th").forEach(th => { th.style.backgroundColor = fondo; });
+        }
         this.scrollEl.appendChild(table);
         // El aviso de medida no exacta se calcula aquí, después de pintar la barra de avisos:
         // sin esto salía un dibujo tarde, en la actualización siguiente.
@@ -1836,6 +1841,7 @@ export class Visual implements IVisual {
                     fontFamily: ref("text", "labelFontFamily", this.texto("Visual_AxisFont", "Axis label font")),
                     fontSize: ref("text", "labelFontSize", this.texto("Visual_AxisSize", "Axis label size")),
                     fontColor: ref("text", "labelColor", this.texto("Visual_AxisColor", "Axis label color")),
+                    background: ref("text", "labelBackground", this.texto("Visual_AxisBg", "Axis label background")),
                 } as any;
             case "controls":
                 return {
@@ -1866,7 +1872,7 @@ export class Visual implements IVisual {
                 return [
                     { type: powerbi.visuals.VisualShortcutType.Picker, ...id("layout", "columnHeaderOrientation"), label: this.texto("Visual_HeaderOrientation", "Column header orientation") },
                     { type: powerbi.visuals.VisualShortcutType.Divider },
-                    { type: powerbi.visuals.VisualShortcutType.Reset, relatedResetFormattingIds: [id("text", "labelFontFamily"), id("text", "labelFontSize"), id("text", "labelColor")] },
+                    { type: powerbi.visuals.VisualShortcutType.Reset, relatedResetFormattingIds: [id("text", "labelFontFamily"), id("text", "labelFontSize"), id("text", "labelColor"), id("text", "labelBackground")] },
                     nav("text", this.texto("Visual_Text", "Text")),
                 ] as any;
             case "controls":

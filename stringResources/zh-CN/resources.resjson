@@ -1,6 +1,7 @@
 {
   "Visual_Axes": "行和列",
   "Visual_Axes_Desc": "“自动”保持数据顺序，并将星期和月份按日历排序。超过最大数时，总计最小的类别归为“其他”，以保证总计正确。",
+  "Visual_AxisBg": "轴标签背景",
   "Visual_AxisColor": "轴标签颜色",
   "Visual_AxisFont": "轴标签字体",
   "Visual_AxisSize": "轴标签字号",

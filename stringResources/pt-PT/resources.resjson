@@ -1,6 +1,7 @@
 {
   "Visual_Axes": "Linhas e colunas",
   "Visual_Axes_Desc": "Automático mantém a ordem dos dados e coloca dias da semana e meses na ordem do calendário. Acima do máximo, as categorias com menor total são agrupadas em Outros para que os totais continuem corretos.",
+  "Visual_AxisBg": "Fundo dos etiquetas do eixo",
   "Visual_AxisColor": "Cor dos etiquetas do eixo",
   "Visual_AxisFont": "Fonte dos etiquetas do eixo",
   "Visual_AxisSize": "Tamanho dos etiquetas do eixo",

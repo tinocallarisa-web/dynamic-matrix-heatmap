@@ -329,6 +329,17 @@
               }
             }
           }
+        },
+        "labelBackground": {
+          "displayName": "Axis label background",
+          "displayNameKey": "Visual_AxisBg",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
         }
       }
     },

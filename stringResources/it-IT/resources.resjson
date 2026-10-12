@@ -1,6 +1,7 @@
 {
   "Visual_Axes": "Righe e colonne",
   "Visual_Axes_Desc": "Automatico mantiene l'ordine dei dati e mette giorni della settimana e mesi in ordine di calendario. Oltre il massimo, le categorie con il totale minore sono raggruppate in Altri così i totali tornano.",
+  "Visual_AxisBg": "Sfondo delle etichette degli assi",
   "Visual_AxisColor": "Colore delle etichette degli assi",
   "Visual_AxisFont": "Carattere delle etichette degli assi",
   "Visual_AxisSize": "Dimensione delle etichette degli assi",

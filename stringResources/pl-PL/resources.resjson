@@ -1,6 +1,7 @@
 {
   "Visual_Axes": "Wiersze i kolumny",
   "Visual_Axes_Desc": "Automatycznie zachowuje kolejność danych, a dni tygodnia i miesiące ustawia kalendarzowo. Powyżej maksimum kategorie o najmniejszych sumach są grupowane jako Inne, aby sumy się zgadzały.",
+  "Visual_AxisBg": "Tło etykiet osi",
   "Visual_AxisColor": "Kolor etykiet osi",
   "Visual_AxisFont": "Czcionka etykiet osi",
   "Visual_AxisSize": "Rozmiar etykiet osi",

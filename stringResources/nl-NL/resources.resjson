@@ -1,6 +1,7 @@
 {
   "Visual_Axes": "Rijen en kolommen",
   "Visual_Axes_Desc": "Automatisch houdt de gegevensvolgorde aan en zet weekdagen en maanden in kalendervolgorde. Boven het maximum worden de categorieën met de kleinste totalen gegroepeerd als Overige, zodat de totalen kloppen.",
+  "Visual_AxisBg": "Achtergrond aslabels",
   "Visual_AxisColor": "Kleur aslabels",
   "Visual_AxisFont": "Lettertype aslabels",
   "Visual_AxisSize": "Grootte aslabels",

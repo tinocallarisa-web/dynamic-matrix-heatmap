@@ -1,6 +1,7 @@
 {
   "Visual_Axes": "行と列",
   "Visual_Axes_Desc": "[自動] はデータの順序を保ち、曜日と月はカレンダー順に並べます。最大数を超えると、合計の小さいカテゴリは [その他] にまとめられ、合計は正しいままです。",
+  "Visual_AxisBg": "軸ラベルの背景",
   "Visual_AxisColor": "軸ラベルの色",
   "Visual_AxisFont": "軸ラベルのフォント",
   "Visual_AxisSize": "軸ラベルのサイズ",

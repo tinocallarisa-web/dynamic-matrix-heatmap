@@ -1,6 +1,7 @@
 {
   "Visual_Axes": "행과 열",
   "Visual_Axes_Desc": "[자동]은 데이터 순서를 유지하고 요일과 월은 달력 순서로 정렬합니다. 최대 수를 넘으면 합계가 가장 작은 범주를 [기타]로 묶어 합계가 맞게 유지됩니다.",
+  "Visual_AxisBg": "축 레이블 배경",
   "Visual_AxisColor": "축 레이블 색",
   "Visual_AxisFont": "축 레이블 글꼴",
   "Visual_AxisSize": "축 레이블 크기",

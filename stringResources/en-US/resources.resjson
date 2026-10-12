@@ -1,6 +1,7 @@
 {
   "Visual_Axes": "Rows and columns",
   "Visual_Axes_Desc": "Automatic keeps the data order, and puts days of the week and months in calendar order. Beyond the maximum, the categories with the smallest totals are grouped as Others so the totals still add up.",
+  "Visual_AxisBg": "Axis label background",
   "Visual_AxisColor": "Axis label color",
   "Visual_AxisFont": "Axis label font",
   "Visual_AxisSize": "Axis label size",

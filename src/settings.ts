@@ -215,6 +215,13 @@ class TextCardSettings extends FormattingSettingsCard {
         value: { value: "#252423" }
     });
 
+    labelBackground = new formattingSettings.ColorPicker({
+        name: "labelBackground",
+        displayName: "Axis label background",
+        displayNameKey: "Visual_AxisBg",
+        value: { value: "#FAFAFA" }
+    });
+
     valueFontFamily = new formattingSettings.FontPicker({
         name: "valueFontFamily",
         displayName: "Value font",
@@ -268,7 +275,7 @@ class TextCardSettings extends FormattingSettingsCard {
     displayName: string = "Text";
     displayNameKey: string = "Visual_Text";
     slices: Array<FormattingSettingsSlice> = [
-        this.labelFontFamily, this.labelFontSize, this.labelColor,
+        this.labelFontFamily, this.labelFontSize, this.labelColor, this.labelBackground,
         this.valueFontFamily, this.valueFontSize, this.valueColor,
         this.controlsBackground, this.controlsFontFamily, this.controlsFontSize, this.controlsFontColor
     ];

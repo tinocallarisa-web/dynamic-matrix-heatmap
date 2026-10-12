@@ -1,6 +1,7 @@
 {
   "Visual_Axes": "Lignes et colonnes",
   "Visual_Axes_Desc": "Automatique conserve l'ordre des données et met jours et mois dans l'ordre du calendrier. Au-delà du maximum, les catégories au total le plus faible sont regroupées dans Autres pour que les totaux restent justes.",
+  "Visual_AxisBg": "Arrière-plan des étiquettes d'axe",
   "Visual_AxisColor": "Couleur des étiquettes d'axe",
   "Visual_AxisFont": "Police des étiquettes d'axe",
   "Visual_AxisSize": "Taille des étiquettes d'axe",

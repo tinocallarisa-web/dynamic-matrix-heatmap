@@ -1,6 +1,7 @@
 {
   "Visual_Axes": "Zeilen und Spalten",
   "Visual_Axes_Desc": "Automatisch behält die Datenreihenfolge bei und ordnet Wochentage und Monate kalendarisch. Über dem Maximum werden die Kategorien mit den kleinsten Summen als Sonstige gruppiert, damit die Summen stimmen.",
+  "Visual_AxisBg": "Hintergrund der Achsenbeschriftung",
   "Visual_AxisColor": "Farbe der Achsenbeschriftung",
   "Visual_AxisFont": "Schriftart der Achsenbeschriftung",
   "Visual_AxisSize": "Größe der Achsenbeschriftung",

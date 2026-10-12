@@ -1,6 +1,7 @@
 {
   "Visual_Axes": "Filas y columnas",
   "Visual_Axes_Desc": "Automático mantiene el orden de los datos y pone los días de la semana y los meses en orden de calendario. Por encima del máximo, las categorías con menor total se agrupan en Otros para que los totales sigan cuadrando.",
+  "Visual_AxisBg": "Fondo de las etiquetas de eje",
   "Visual_AxisColor": "Color de las etiquetas de eje",
   "Visual_AxisFont": "Fuente de las etiquetas de eje",
   "Visual_AxisSize": "Tamaño de las etiquetas de eje",
