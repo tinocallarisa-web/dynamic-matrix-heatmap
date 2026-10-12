@@ -228,6 +228,8 @@ export class Visual implements IVisual {
     /** Panel lateral: null = automático (plegado si el visual es estrecho); si no, lo que eligió el usuario. */
     private panelOpen: boolean | null = null;
     private panelLoaded = false;
+    /** Totales elegidos por el lector en el panel; null = lo que diga el panel de formato. */
+    private totalsOn: boolean | null = null;
     private vpWidth = 0;
     /** Aviso de medida no aditiva colapsada en el cliente. Solo se pinta en edicion. */
     private aggWarning: string = null;
@@ -411,6 +413,8 @@ export class Visual implements IVisual {
             const st = dataView.metadata?.objects?.["selectionState"];
             const v = st ? st["panel"] : undefined;
             if (v === "open") { this.panelOpen = true; } else if (v === "closed") { this.panelOpen = false; }
+            const tt = st ? st["totals"] : undefined;
+            if (tt === "on") { this.totalsOn = true; } else if (tt === "off") { this.totalsOn = false; }
             this.panelLoaded = true;
         }
         if (!this.groupLoaded) {
@@ -461,7 +465,7 @@ export class Visual implements IVisual {
             const attempted: string[] = [];
             if (allDimensions.length > FREE_MAX_DIMENSIONS) { attempted.push("more than 3 dimensions"); }
             if (allMeasures.length > FREE_MAX_MEASURES) { attempted.push("more than 2 measures"); }
-            if (vc.showTotals.value) { attempted.push("totals"); }
+            if (this.wantTotals()) { attempted.push("totals"); }
             this.attemptedPro = this.isPro ? [] : attempted;
             this.updateWatermark();
 
@@ -698,6 +702,26 @@ export class Visual implements IVisual {
 
         fillDimensionOptions(this.xSelect, this.selectedY, this.selectedX);
         fillDimensionOptions(this.ySelect, this.selectedX, this.selectedY);
+        // Totales (Pro): una casilla en el panel, para el lector; el panel de formato da el valor inicial.
+        if (this.isProActive()) {
+            const wrap = document.createElement("label");
+            wrap.className = "dmh-control dmh-check";
+            const box = document.createElement("input");
+            box.type = "checkbox";
+            box.checked = this.wantTotals();
+            const span = document.createElement("span");
+            span.textContent = this.texto("Visual_Ctl_Totals", "Totals");
+            span.style.fontFamily = text.controlsFontFamily.value;
+            span.style.fontSize = text.controlsFontSize.value + "px";
+            span.style.color = this.isHighContrast ? this.hcForeground : text.controlsFontColor.value.value;
+            box.addEventListener("change", () => {
+                this.totalsOn = box.checked;
+                this.persistSelection();
+                this.repaint();
+            });
+            wrap.append(box, span);
+            this.controlsEl.appendChild(wrap);
+        }
         if (gSelect) {
             clearElement(gSelect);
             const none = document.createElement("option");
@@ -803,6 +827,7 @@ export class Visual implements IVisual {
                     sortDir: this.sortDir,
                     groupDimension: this.selectedG || "",
                     panel: this.panelOpen === null ? "" : (this.panelOpen ? "open" : "closed"),
+                    totals: this.totalsOn === null ? "" : (this.totalsOn ? "on" : "off"),
                     collapsedGroups: JSON.stringify(Array.from(this.collapsedGroups))
                 }
             }]
@@ -1374,7 +1399,7 @@ export class Visual implements IVisual {
         const text = this.formattingSettings.textCard;
         const layout = this.formattingSettings.layoutCard;
         // Totals are a Pro feature
-        const showTotals = this.isProActive() && this.formattingSettings.valuesCard.showTotals.value;
+        const showTotals = this.isProActive() && this.wantTotals();
 
         const rowHeight = Math.max(16, layout.rowHeight.value);
         const colWidth = Math.max(40, layout.columnWidth.value);
@@ -1712,6 +1737,11 @@ export class Visual implements IVisual {
             this.noticeEl.textContent = texto;
             this.noticeEl.style.display = texto ? "block" : "none";
         }
+    }
+
+    /** ¿Totales? Lo que eligió el lector en el panel o, si no ha tocado nada, el panel de formato. */
+    private wantTotals(): boolean {
+        return this.totalsOn !== null ? this.totalsOn : !!this.formattingSettings.valuesCard.showTotals.value;
     }
 
     /** Una celda está seleccionada directamente o, si es de "Otros", por alguno de sus miembros. */
