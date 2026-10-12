@@ -1694,6 +1694,21 @@ export class Visual implements IVisual {
                     }
                     if (radius > 0) { td.style.borderRadius = radius + "px"; }
                     if (gap > 0) { td.style.border = "none"; }
+                    // Clic en un subtotal: la columna entera dentro del grupo.
+                    const subKeys = yCats.filter(ys => gy.has(ys + KEY_SEP + gs)).map(ys => xs + KEY_SEP + ys + KEY_SEP + gs);
+                    if (v !== null && subKeys.length) {
+                        td.tabIndex = 0;
+                        td.setAttribute("data-sub-keys", JSON.stringify(subKeys));
+                        if (this.selectedCells.size > 0) {
+                            const sel = subKeys.every(k => { const q = k.split(KEY_SEP); return this.cellSelected(q[0], q[1], q[2]); });
+                            td.style.opacity = sel ? "1" : "0.3";
+                        }
+                        td.style.cursor = "pointer";
+                        td.addEventListener("click", (ev: MouseEvent) => this.onCellsClick(subKeys, xDim, yDim, ev.ctrlKey || ev.metaKey, gDim));
+                        td.addEventListener("keydown", (ev: KeyboardEvent) => {
+                            if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); this.onCellsClick(subKeys, xDim, yDim, ev.ctrlKey || ev.metaKey, gDim); }
+                        });
+                    }
                     gtr.appendChild(td);
                 });
                 if (showTotals) { totalCell(gtr, evaluate(gAll.get(gs) || []), " dmh-subtotal"); }
@@ -2020,23 +2035,30 @@ export class Visual implements IVisual {
 
     private onCellClick(cellKey: string, indices: number[], xDim: DimensionInfo, yDim: DimensionInfo, multiSelect: boolean, gDim: DimensionInfo | null = null): void {
         if (!indices.length) { return; }
+        this.onCellsClick([cellKey], xDim, yDim, multiSelect, gDim);
+    }
+
+    /**
+     * Selección de un conjunto de celdas: una sola, o todas las de un grupo en una columna (clic en
+     * un subtotal). Se guardan como celdas de detalle, así que el filtro tiene siempre las mismas
+     * columnas aunque se mezclen subtotales y celdas sueltas.
+     */
+    private onCellsClick(keys: string[], xDim: DimensionInfo, yDim: DimensionInfo, multiSelect: boolean, gDim: DimensionInfo | null = null): void {
+        if (!keys.length) { return; }
         // El autor del informe puede apagar las interacciones de este visual desde
         // "Editar interacciones". Ignorarlo filtraba el informe contra su decision.
         if (this.host.hostCapabilities?.allowInteractions === false) { return; }
 
+        const todas = keys.every(k => this.selectedCells.has(k));
         if (multiSelect) {
-            // Ctrl/Cmd+click toggles this cell in or out of the current set
-            if (this.selectedCells.has(cellKey)) {
-                this.selectedCells.delete(cellKey);
-            } else {
-                this.selectedCells.add(cellKey);
-            }
-        } else if (this.selectedCells.size === 1 && this.selectedCells.has(cellKey)) {
-            // Clicking the only selected cell clears the filter
+            // Ctrl/Cmd+click añade o quita estas celdas de la selección
+            if (todas) { keys.forEach(k => this.selectedCells.delete(k)); } else { keys.forEach(k => this.selectedCells.add(k)); }
+        } else if (todas && this.selectedCells.size === keys.length) {
+            // Clic sobre lo único seleccionado: se limpia
             this.selectedCells.clear();
         } else {
             this.selectedCells.clear();
-            this.selectedCells.add(cellKey);
+            keys.forEach(k => this.selectedCells.add(k));
         }
 
         this.applyCellFilter(xDim, yDim, gDim);
@@ -2081,6 +2103,12 @@ export class Visual implements IVisual {
         const anySelected = this.selectedCells.size > 0;
         this.scrollEl.querySelectorAll<HTMLElement>(".dmh-cell").forEach(el => {
             if (el.classList.contains("dmh-total-cell")) { return; }
+            const sub = el.getAttribute("data-sub-keys");
+            if (sub) {
+                const ks: string[] = JSON.parse(sub);
+                el.style.opacity = !anySelected || ks.every(k => { const q = k.split(KEY_SEP); return this.cellSelected(q[0], q[1], q[2]); }) ? "1" : "0.3";
+                return;
+            }
             const key = el.getAttribute("data-cell-key");
             if (!anySelected || !key) {
                 el.style.opacity = "1";
