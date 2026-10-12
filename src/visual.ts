@@ -482,12 +482,15 @@ export class Visual implements IVisual {
             // campo entraba en el pozo y no pasaba nada.
             const retenido: string[] = [];
             if (allDimensions.length > dimensions.length) {
-                retenido.push(`the first ${FREE_MAX_DIMENSIONS} of ${allDimensions.length} dimensions`);
+                retenido.push(this.texto("Visual_Limited_Dims", "the first {n} of {total} dimensions")
+                    .replace("{n}", String(FREE_MAX_DIMENSIONS)).replace("{total}", String(allDimensions.length)));
             }
             if (allMeasures.length > measures.length) {
-                retenido.push(`the first ${FREE_MAX_MEASURES} of ${allMeasures.length} measures`);
+                retenido.push(this.texto("Visual_Limited_Measures", "the first {n} of {total} measures")
+                    .replace("{n}", String(FREE_MAX_MEASURES)).replace("{total}", String(allMeasures.length)));
             }
-            this.limitedDetail = retenido.length ? "Showing " + retenido.join(", ") + "." : "";
+            this.limitedDetail = retenido.length
+                ? this.texto("Visual_Limited", "Showing {list}.").replace("{list}", retenido.join(", ")) : "";
 
             // ---- Validation ----------------------------------------------------------------
             if (dimensions.length === 0) {
