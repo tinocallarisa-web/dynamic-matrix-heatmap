@@ -99,7 +99,9 @@ const ES_LABELS: Record<string, string> = {
     "more than 2 measures":   "más de 2 medidas",
     "distinct counts":        "los recuentos distintos",
     "percentage values":      "los valores en porcentaje",
-    "totals":                 "los totales"
+    "totals":                 "los totales",
+    "row groups":             "los grupos de filas",
+    "similarity order":       "el orden por similitud"
 };
 
 const FREE_MAX_DIMENSIONS = 3;
@@ -254,6 +256,10 @@ export class Visual implements IVisual {
     private othersX: string[] = [];
     private othersY: string[] = [];
     private trimNotice = "";
+    /** Agrupar filas por una tercera dimensión (Pro), y qué grupos están cerrados. */
+    private selectedG: string | null = null;
+    private collapsedGroups: Set<string> = new Set<string>();
+    private groupLoaded = false;
     /** El aviso de datos parciales manda sobre los demás. */
     private partialShown = false;
     /** Lo retenido por el tier gratuito, para recomponer el aviso al final del dibujo. */
@@ -383,6 +389,14 @@ export class Visual implements IVisual {
             }
             this.sortLoaded = true;
         }
+        if (!this.groupLoaded) {
+            const st = dataView.metadata?.objects?.["selectionState"];
+            if (st && typeof st["groupDimension"] === "string" && st["groupDimension"]) { this.selectedG = st["groupDimension"] as string; }
+            if (st && typeof st["collapsedGroups"] === "string" && st["collapsedGroups"]) {
+                try { const a = JSON.parse(st["collapsedGroups"] as string); if (Array.isArray(a)) { this.collapsedGroups = new Set(a.map(String)); } } catch (_) { /* se ignora */ }
+            }
+            this.groupLoaded = true;
+        }
 
         {
             // ---- Segmented loading: pull additional windows of row-level data ----------------
@@ -502,6 +516,18 @@ export class Visual implements IVisual {
             if (this.selectedX !== null && dimNames.indexOf(this.selectedX) === -1) { this.selectedX = null; }
             if (this.selectedY !== null && dimNames.indexOf(this.selectedY) === -1) { this.selectedY = null; }
             if (this.selectedX !== null && this.selectedX === this.selectedY) { this.selectedY = null; }
+            if (this.selectedG !== null && (dimNames.indexOf(this.selectedG) === -1 || this.selectedG === this.selectedX || this.selectedG === this.selectedY)) {
+                this.selectedG = null;
+            }
+            if (this.selectedG && !this.isPro && this.attemptedPro.indexOf("row groups") < 0) {
+                this.attemptedPro = this.attemptedPro.concat(["row groups"]);
+                this.updateWatermark();
+            }
+            const ax = this.formattingSettings.axesCard;
+            if ((ax.clusterRows.value || ax.clusterCols.value) && !this.isPro && this.attemptedPro.indexOf("similarity order") < 0) {
+                this.attemptedPro = this.attemptedPro.concat(["similarity order"]);
+                this.updateWatermark();
+            }
             if (!valueOptions.some(v => v.key === this.selectedValueKey)) {
                 this.selectedValueKey = valueOptions[0].key;
             }
@@ -570,6 +596,11 @@ export class Visual implements IVisual {
         this.xSelect = buildLabeledSelect(this.texto("Visual_Ctl_X", "X axis"));
         this.ySelect = buildLabeledSelect(this.texto("Visual_Ctl_Y", "Y axis"));
         this.valueSelect = buildLabeledSelect(this.texto("Visual_Ctl_Value", "Value"));
+        // Agrupar filas (Pro): solo con una tercera dimensión, y en vista previa mientras se edita.
+        let gSelect: HTMLSelectElement | null = null;
+        if (dimensions.length >= 3 && this.isProActive()) {
+            gSelect = buildLabeledSelect(this.texto("Visual_Ctl_Group", "Group rows"));
+        }
         this.subSelectable(this.controlsEl, "controls", this.texto("Visual_Ctl_Bar", "Controls bar"), powerbi.visuals.SubSelectionStylesType.Text);
 
         const fillDimensionOptions = (select: HTMLSelectElement, excludeName: string | null, selectedName: string | null) => {
@@ -590,6 +621,25 @@ export class Visual implements IVisual {
 
         fillDimensionOptions(this.xSelect, this.selectedY, this.selectedX);
         fillDimensionOptions(this.ySelect, this.selectedX, this.selectedY);
+        if (gSelect) {
+            clearElement(gSelect);
+            const none = document.createElement("option");
+            none.value = "";
+            none.textContent = this.texto("Visual_Ctl_None", "(none)");
+            gSelect.appendChild(none);
+            dimensions.forEach(d => {
+                if (d.name === this.selectedX || d.name === this.selectedY) { return; }
+                const opt = document.createElement("option");
+                opt.value = d.name; opt.textContent = d.name;
+                if (d.name === this.selectedG) { opt.selected = true; }
+                gSelect.appendChild(opt);
+            });
+            gSelect.onchange = () => {
+                this.selectedG = gSelect.value || null;
+                this.collapsedGroups.clear();
+                this.persistSelection();
+            };
+        }
 
         clearElement(this.valueSelect);
         valueOptions.forEach(v => {
@@ -686,7 +736,9 @@ export class Visual implements IVisual {
                     valueKey: this.selectedValueKey || "",
                     perValue: JSON.stringify(this.perValue),
                     sortKey: this.sortKey || "",
-                    sortDir: this.sortDir
+                    sortDir: this.sortDir,
+                    groupDimension: this.selectedG || "",
+                    collapsedGroups: JSON.stringify(Array.from(this.collapsedGroups))
                 }
             }]
         };
@@ -893,6 +945,8 @@ export class Visual implements IVisual {
         const hasDetail = detailCols.length > 0;
         const xDim = dimensions.find(d => d.name === this.selectedX);
         const yDim = dimensions.find(d => d.name === this.selectedY);
+        // Agrupar filas: Pro, o vista previa mientras se edita.
+        const gDim = this.selectedG && this.isProActive() ? (dimensions.find(d => d.name === this.selectedG) || null) : null;
 
         const xValues = xDim.column.values;
         const yValues = yDim.column.values;
@@ -1184,6 +1238,67 @@ export class Visual implements IVisual {
             rest.forEach(k => yCats.push(k));
             if (others) { yCats.push(OTH); }
         }
+        // Orden por similitud (Pro): filas y columnas con perfiles parecidos quedan juntas.
+        const axc = this.formattingSettings.axesCard;
+        const similar = this.isProActive();
+        if (similar && axc.clusterRows.value && this.sortKey === null) {
+            const rest = yCats.filter(k => k !== OTH);
+            const ord = this.similarityOrder(rest, ys => xCats.map(xs => displayed.get(xs + KEY_SEP + ys) ?? 0));
+            const others = yCats.indexOf(OTH) >= 0;
+            yCats.length = 0; ord.forEach(k => yCats.push(k)); if (others) { yCats.push(OTH); }
+        }
+        if (similar && axc.clusterCols.value) {
+            const rest = xCats.filter(k => k !== OTH);
+            const ord = this.similarityOrder(rest, xs => yCats.map(ys => displayed.get(xs + KEY_SEP + ys) ?? 0));
+            const others = xCats.indexOf(OTH) >= 0;
+            xCats.length = 0; ord.forEach(k => xCats.push(k)); if (others) { xCats.push(OTH); }
+        }
+
+        // ---- Grupos de filas (Pro) ------------------------------------------------------------------
+        // Cada celda de un grupo se calcula con las filas de ESE grupo, no con las de toda la fila:
+        // "Bikes" bajo "Norte" no es "Bikes" de todas las regiones.
+        const G = gDim ? gDim.column.values : null;
+        const gOf = (i: number) => { const v = G[i]; return v === null || v === undefined ? "" : String(v); };
+        const gxy: Map<string, number[]> = new Map();
+        const gy: Map<string, number[]> = new Map();
+        const gx: Map<string, number[]> = new Map();
+        const gAll: Map<string, number[]> = new Map();
+        const groupOrder: string[] = [];
+        const push = (m: Map<string, number[]>, k: string, i: number) => { const a = m.get(k); if (a) { a.push(i); } else { m.set(k, [i]); } };
+        if (G) {
+            cellRows.forEach((idx, key) => {
+                const [xs, ys] = key.split(KEY_SEP);
+                for (const i of idx) {
+                    const gs = gOf(i);
+                    push(gxy, xs + KEY_SEP + ys + KEY_SEP + gs, i);
+                    push(gy, ys + KEY_SEP + gs, i);
+                    push(gx, xs + KEY_SEP + gs, i);
+                    if (!gAll.has(gs)) { groupOrder.push(gs); }
+                    push(gAll, gs, i);
+                }
+            });
+            // Orden de los grupos: el de las filas (nombre, total o automático con días y meses).
+            const ordered = order(groupOrder, axes.rowsOrder.value.value as string, gAll);
+            groupOrder.length = 0; ordered.forEach(g => groupOrder.push(g));
+            // La escala de color sale de las celdas que se ven dentro de los grupos.
+            displayed.clear(); globalMin = Infinity; globalMax = -Infinity;
+            gxy.forEach((idx, key) => {
+                const [xs, ys, gs] = key.split(KEY_SEP);
+                const raw = evaluate(idx);
+                let dv = raw;
+                if (raw !== null && displayMode !== "absolute") {
+                    const den = displayMode === "pctRow" ? evaluate(gy.get(ys + KEY_SEP + gs) || [])
+                        : displayMode === "pctCol" ? evaluate(colBucket.get(xs) || []) : grandTotal;
+                    dv = den ? raw / den : null;
+                }
+                if (dv === null || isNaN(dv)) { return; }
+                displayed.set(key, dv);
+                if (xs === OTH || ys === OTH) { return; }
+                if (dv < globalMin) { globalMin = dv; }
+                if (dv > globalMax) { globalMax = dv; }
+            });
+        }
+
         if (globalMin === Infinity) { globalMin = 0; globalMax = 0; }
         if (globalMin === globalMax) { globalMax = globalMin + 1; }
 
@@ -1239,6 +1354,18 @@ export class Visual implements IVisual {
         const headRow = document.createElement("tr");
         const corner = document.createElement("th");
         corner.className = "dmh-corner";
+        if (gDim) {
+            const allClosed = groupOrder.length > 0 && groupOrder.every(g => this.collapsedGroups.has(g));
+            const btn = document.createElement("button");
+            btn.className = "dmh-group-all";
+            btn.textContent = allClosed ? "⊞ " + this.texto("Visual_ExpandAll", "Expand all") : "⊟ " + this.texto("Visual_CollapseAll", "Collapse all");
+            btn.style.cssText = "border:none;background:transparent;cursor:pointer;font:11px 'Segoe UI',sans-serif;color:inherit;padding:0";
+            btn.addEventListener("click", () => {
+                if (allClosed) { this.collapsedGroups.clear(); } else { groupOrder.forEach(g => this.collapsedGroups.add(g)); }
+                this.persistSelection(); this.repaint();
+            });
+            corner.appendChild(btn);
+        }
         headRow.appendChild(corner);
         xCats.forEach(xv => {
             const th = document.createElement("th");
@@ -1289,126 +1416,188 @@ export class Visual implements IVisual {
 
         // ---- Body -------------------------------------------------------------------------------
         const tbody = document.createElement("tbody");
-        yCats.forEach(yv => {
-            const ys = String(yv);
-            const tr = document.createElement("tr");
-            const rowHeader = document.createElement("th");
-            rowHeader.className = "dmh-row-header";
-            rowHeader.textContent = labelOf(ys, this.othersY.length);
-            this.subSelectable(rowHeader, "labels", this.texto("Visual_Sub_Labels", "Axis labels"), powerbi.visuals.SubSelectionStylesType.Text);
-            rowHeader.style.fontFamily = text.labelFontFamily.value;
-            rowHeader.style.fontSize = text.labelFontSize.value + "px";
-            rowHeader.style.color = this.isHighContrast ? this.hcForeground : text.labelColor.value.value;
+
+        const styleHeader = (h: HTMLElement) => {
+            this.subSelectable(h, "labels", this.texto("Visual_Sub_Labels", "Axis labels"), powerbi.visuals.SubSelectionStylesType.Text);
+            h.style.fontFamily = text.labelFontFamily.value;
+            h.style.fontSize = text.labelFontSize.value + "px";
+            h.style.color = this.isHighContrast ? this.hcForeground : text.labelColor.value.value;
             if (this.isHighContrast) {
-                rowHeader.style.backgroundColor = this.hcBackground;
-                rowHeader.style.borderColor = this.hcForeground;
+                h.style.backgroundColor = this.hcBackground;
+                h.style.borderColor = this.hcForeground;
             }
-            tr.appendChild(rowHeader);
+        };
 
-            xCats.forEach(xv => {
-                const xs = String(xv);
-                const key = xs + KEY_SEP + ys;
-                const td = document.createElement("td");
-                td.className = "dmh-cell";
-                td.tabIndex = 0;
-                td.setAttribute("data-cell-key", key);
+        /** Una celda de datos: color, reglas, selección, clic, menú, teclado y tooltip. */
+        const fillCell = (td: HTMLElement, key: string, xs: string, ys: string, gs: string | null, indices: number[]) => {
+            td.className = "dmh-cell";
+            td.tabIndex = 0;
+            td.setAttribute("data-cell-key", key);
+            if (!displayed.has(key)) { this.applyEmptyCellStyle(td, emptyMode); return; }
+            const dv = displayed.get(key);
+            if (this.isHighContrast) {
+                td.style.backgroundColor = this.hcBackground;
+                td.style.color = this.hcForeground;
+                td.style.borderColor = this.hcForeground;
+            } else {
+                const normalized = (dv - globalMin) / (globalMax - globalMin);
+                const bg = ruleColor(dv) || this.colorForValue(normalized, cMin, cMid, cMax);
+                td.style.backgroundColor = bg;
+                td.style.color = autoText && lum(bg) < 0.32 ? "#FFFFFF" : text.valueColor.value.value;
+            }
+            if (radius > 0) { td.style.borderRadius = radius + "px"; }
+            if (gap > 0) { td.style.border = "none"; }
+            this.subSelectable(td, "cells", this.texto("Visual_Sub_Values", "Cell values"), powerbi.visuals.SubSelectionStylesType.Text);
+            td.textContent = fmt.format(dv);
+            td.style.fontFamily = text.valueFontFamily.value;
+            td.style.fontSize = text.valueFontSize.value + "px";
 
-                if (displayed.has(key)) {
-                    const dv = displayed.get(key);
-                    if (this.isHighContrast) {
-                        td.style.backgroundColor = this.hcBackground;
-                        td.style.color = this.hcForeground;
-                        td.style.borderColor = this.hcForeground;
-                    } else {
-                        const normalized = (dv - globalMin) / (globalMax - globalMin);
-                        const bg = ruleColor(dv) || this.colorForValue(normalized, cMin, cMid, cMax);
-                        td.style.backgroundColor = bg;
-                        td.style.color = autoText && lum(bg) < 0.32 ? "#FFFFFF" : text.valueColor.value.value;
+            if (this.selectedCells.size > 0) {
+                const isSelected = this.cellSelected(xs, ys, gs);
+                td.style.opacity = isSelected ? "1" : "0.3";
+                // Opacity alone is not a reliable cue in high contrast, so selection is
+                // also marked with a system-coloured outline.
+                if (this.isHighContrast && isSelected) {
+                    td.style.outline = "2px solid " + this.hcSelected;
+                    td.style.outlineOffset = "-2px";
+                }
+            } else if (hasAnyHighlight) {
+                const hl = indices.some(i => highlights[i] !== null && highlights[i] !== undefined);
+                td.style.opacity = hl ? "1" : "0.3";
+            }
+
+            td.addEventListener("click", (ev: MouseEvent) => {
+                this.onCellClick(key, indices, xDim, yDim, ev.ctrlKey || ev.metaKey, gDim);
+            });
+            // Native Power BI context menu (Include / Exclude / Drill through / ...)
+            td.addEventListener("contextmenu", (ev: MouseEvent) => {
+                ev.preventDefault();
+                ev.stopPropagation();
+                const anchor = indices.length
+                    ? this.host.createSelectionIdBuilder()
+                        .withCategory(xDim.column, indices[0])
+                        .withCategory(yDim.column, indices[0])
+                        .createSelectionId()
+                    : {};
+                this.selectionManager.showContextMenu(anchor, { x: ev.clientX, y: ev.clientY });
+            });
+            td.addEventListener("keydown", (ev: KeyboardEvent) => {
+                if (ev.key === "Enter" || ev.key === " ") {
+                    ev.preventDefault();
+                    this.onCellClick(key, indices, xDim, yDim, ev.ctrlKey || ev.metaKey, gDim);
+                }
+            });
+            // Tooltip always shows the absolute value alongside the displayed one
+            const rawAbs = evaluate(indices);
+            this.tooltipServiceWrapper.addTooltip(d3.select(td), () => {
+                const items = [
+                    { displayName: xDim.name, value: labelOf(xs, this.othersX.length) },
+                    { displayName: yDim.name, value: labelOf(ys, this.othersY.length) }
+                ];
+                if (gDim && gs !== null) { items.push({ displayName: gDim.name, value: gs }); }
+                items.push({ displayName: activeValue.label, value: absFmt.format(rawAbs) });
+                if (isPct) { items.push({ displayName: this.displayModeLabel(displayMode), value: fmt.format(dv) }); }
+                return items;
+            });
+        };
+
+        const totalCell = (tr: HTMLElement, value: number | null, extraClass = "") => {
+            const td = document.createElement("td");
+            td.className = "dmh-cell dmh-total-cell" + extraClass;
+            td.textContent = value === null ? "" : this.formatTotal(value, grandTotal, displayMode, fmt, absFmt);
+            td.style.fontFamily = text.valueFontFamily.value;
+            td.style.fontSize = text.valueFontSize.value + "px";
+            td.style.color = this.isHighContrast ? this.hcForeground : text.valueColor.value.value;
+            tr.appendChild(td);
+        };
+
+        if (!gDim) {
+            yCats.forEach(yv => {
+                const ys = String(yv);
+                const tr = document.createElement("tr");
+                const rowHeader = document.createElement("th");
+                rowHeader.className = "dmh-row-header";
+                rowHeader.textContent = labelOf(ys, this.othersY.length);
+                styleHeader(rowHeader);
+                tr.appendChild(rowHeader);
+                xCats.forEach(xv => {
+                    const xs = String(xv);
+                    const key = xs + KEY_SEP + ys;
+                    const td = document.createElement("td");
+                    fillCell(td, key, xs, ys, null, cellRows.get(key) || []);
+                    tr.appendChild(td);
+                });
+                if (showTotals) { totalCell(tr, evaluate(rowBucket.get(ys) || [])); }
+                tbody.appendChild(tr);
+            });
+        } else {
+            groupOrder.forEach(gs => {
+                const closed = this.collapsedGroups.has(gs);
+                // Fila del grupo: nombre, abrir/cerrar y subtotales por columna.
+                const gtr = document.createElement("tr");
+                gtr.className = "dmh-group-row";
+                const gth = document.createElement("th");
+                gth.className = "dmh-row-header dmh-group-header";
+                const nY = yCats.filter(ys => gy.has(ys + KEY_SEP + gs)).length;
+                gth.textContent = (closed ? "▸ " : "▾ ") + (gs || this.texto("Visual_Blank", "(Blank)")) + " (" + nY + ")";
+                gth.tabIndex = 0;
+                gth.setAttribute("role", "button");
+                gth.setAttribute("aria-expanded", String(!closed));
+                gth.style.cursor = "pointer";
+                gth.style.fontWeight = "700";
+                styleHeader(gth);
+                const toggle = () => {
+                    if (this.formatMode) { return; }
+                    if (this.collapsedGroups.has(gs)) { this.collapsedGroups.delete(gs); } else { this.collapsedGroups.add(gs); }
+                    this.persistSelection(); this.repaint();
+                };
+                gth.addEventListener("click", toggle);
+                gth.addEventListener("keydown", (ev: KeyboardEvent) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toggle(); } });
+                gtr.appendChild(gth);
+                xCats.forEach(xv => {
+                    const xs = String(xv);
+                    const idx = gx.get(xs + KEY_SEP + gs) || [];
+                    const raw = idx.length ? evaluate(idx) : null;
+                    let v: number | null = raw;
+                    if (raw !== null && displayMode !== "absolute") {
+                        const den = displayMode === "pctRow" ? evaluate(gAll.get(gs) || [])
+                            : displayMode === "pctCol" ? evaluate(colBucket.get(xs) || []) : grandTotal;
+                        v = den ? raw / den : null;
                     }
-                    if (radius > 0) { td.style.borderRadius = radius + "px"; }
-                    if (gap > 0) { td.style.border = "none"; }
-                    this.subSelectable(td, "cells", this.texto("Visual_Sub_Values", "Cell values"), powerbi.visuals.SubSelectionStylesType.Text);
-                    td.textContent = fmt.format(dv);
+                    const td = document.createElement("td");
+                    td.className = "dmh-cell dmh-total-cell dmh-subtotal";
+                    td.textContent = v === null ? "" : fmt.format(v);
+                    td.style.fontWeight = "600";
                     td.style.fontFamily = text.valueFontFamily.value;
                     td.style.fontSize = text.valueFontSize.value + "px";
-
-                    if (this.selectedCells.size > 0) {
-                        const isSelected = this.cellSelected(xs, ys);
-                        td.style.opacity = isSelected ? "1" : "0.3";
-                        // Opacity alone is not a reliable cue in high contrast, so selection is
-                        // also marked with a system-coloured outline.
-                        if (this.isHighContrast && isSelected) {
-                            td.style.outline = "2px solid " + this.hcSelected;
-                            td.style.outlineOffset = "-2px";
-                        }
-                    } else if (hasAnyHighlight) {
-                        td.style.opacity = cellHasHighlight.get(key) === true ? "1" : "0.3";
-                    }
-
-                    const indices = cellRows.get(key) || [];
-                    td.addEventListener("click", (ev: MouseEvent) => {
-                        this.onCellClick(key, indices, xDim, yDim, ev.ctrlKey || ev.metaKey);
+                    td.style.color = this.isHighContrast ? this.hcForeground : text.valueColor.value.value;
+                    gtr.appendChild(td);
+                });
+                if (showTotals) { totalCell(gtr, evaluate(gAll.get(gs) || []), " dmh-subtotal"); }
+                tbody.appendChild(gtr);
+                if (closed) { return; }
+                yCats.forEach(yv => {
+                    const ys = String(yv);
+                    if (!gy.has(ys + KEY_SEP + gs)) { return; }
+                    const tr = document.createElement("tr");
+                    const rowHeader = document.createElement("th");
+                    rowHeader.className = "dmh-row-header dmh-grouped";
+                    rowHeader.textContent = labelOf(ys, this.othersY.length);
+                    rowHeader.style.paddingLeft = "18px";
+                    styleHeader(rowHeader);
+                    tr.appendChild(rowHeader);
+                    xCats.forEach(xv => {
+                        const xs = String(xv);
+                        const key = xs + KEY_SEP + ys + KEY_SEP + gs;
+                        const td = document.createElement("td");
+                        fillCell(td, key, xs, ys, gs, gxy.get(key) || []);
+                        tr.appendChild(td);
                     });
-
-                    // Native Power BI context menu (Include / Exclude / Drill through / ...)
-                    td.addEventListener("contextmenu", (ev: MouseEvent) => {
-                        ev.preventDefault();
-                        ev.stopPropagation();
-                        // One anchor id is enough to give the menu its data context
-                        const anchor = indices.length
-                            ? this.host.createSelectionIdBuilder()
-                                .withCategory(xDim.column, indices[0])
-                                .withCategory(yDim.column, indices[0])
-                                .createSelectionId()
-                            : {};
-                        this.selectionManager.showContextMenu(anchor, { x: ev.clientX, y: ev.clientY });
-                    });
-
-                    // Keyboard activation for accessibility
-                    td.addEventListener("keydown", (ev: KeyboardEvent) => {
-                        if (ev.key === "Enter" || ev.key === " ") {
-                            ev.preventDefault();
-                            this.onCellClick(key, indices, xDim, yDim, ev.ctrlKey || ev.metaKey);
-                        }
-                    });
-
-                    // Tooltip always shows the absolute value alongside the displayed one
-                    const rawAbs = evaluate(cellRows.get(key));
-
-                    this.tooltipServiceWrapper.addTooltip(
-                        d3.select(td),
-                        () => {
-                            const items = [
-                                { displayName: xDim.name, value: labelOf(xs, this.othersX.length) },
-                                { displayName: yDim.name, value: labelOf(ys, this.othersY.length) },
-                                { displayName: activeValue.label, value: absFmt.format(rawAbs) }
-                            ];
-                            if (isPct) {
-                                items.push({ displayName: this.displayModeLabel(displayMode), value: fmt.format(dv) });
-                            }
-                            return items;
-                        }
-                    );
-                } else {
-                    this.applyEmptyCellStyle(td, emptyMode);
-                }
-
-                tr.appendChild(td);
+                    if (showTotals) { totalCell(tr, evaluate(gy.get(ys + KEY_SEP + gs) || [])); }
+                    tbody.appendChild(tr);
+                });
             });
-
-            if (showTotals) {
-                const totalTd = document.createElement("td");
-                totalTd.className = "dmh-cell dmh-total-cell";
-                const rowTotal = evaluate(rowBucket.get(ys) || []);
-                totalTd.textContent = rowTotal === null ? "" : this.formatTotal(rowTotal, grandTotal, displayMode, fmt, absFmt);
-                totalTd.style.fontFamily = text.valueFontFamily.value;
-                totalTd.style.fontSize = text.valueFontSize.value + "px";
-                totalTd.style.color = text.valueColor.value.value;
-                tr.appendChild(totalTd);
-            }
-
-            tbody.appendChild(tr);
-        });
+        }
 
         // ---- Totals row ---------------------------------------------------------------------------
         if (showTotals) {
@@ -1461,13 +1650,52 @@ export class Visual implements IVisual {
     }
 
     /** Una celda está seleccionada directamente o, si es de "Otros", por alguno de sus miembros. */
-    private cellSelected(xs: string, ys: string): boolean {
-        if (this.selectedCells.has(xs + KEY_SEP + ys)) { return true; }
+    private cellSelected(xs: string, ys: string, gs: string | null = null): boolean {
+        const tail = gs === null ? "" : KEY_SEP + gs;
+        if (this.selectedCells.has(xs + KEY_SEP + ys + tail)) { return true; }
         if (xs !== OTH && ys !== OTH) { return false; }
         const xsSet = xs === OTH ? this.othersX : [xs];
         const ysSet = ys === OTH ? this.othersY : [ys];
-        for (const a of xsSet) { for (const b of ysSet) { if (this.selectedCells.has(a + KEY_SEP + b)) { return true; } } }
+        for (const a of xsSet) { for (const b of ysSet) { if (this.selectedCells.has(a + KEY_SEP + b + tail)) { return true; } } }
         return false;
+    }
+
+    /**
+     * Orden por similitud: agrupación jerárquica (enlace medio) sobre los perfiles normalizados,
+     * leída en el orden de sus hojas. Filas o columnas con la misma forma quedan juntas.
+     */
+    private similarityOrder(keys: string[], vec: (k: string) => number[]): string[] {
+        const n = keys.length;
+        if (n < 3) { return keys.slice(); }
+        const v = keys.map(k => {
+            const a = vec(k);
+            const m = a.reduce((s, x) => s + x, 0) / (a.length || 1);
+            const sd = Math.sqrt(a.reduce((s, x) => s + (x - m) * (x - m), 0) / (a.length || 1)) || 1;
+            return a.map(x => (x - m) / sd);
+        });
+        const d = (i: number, j: number) => { let s = 0; for (let k = 0; k < v[i].length; k++) { const q = v[i][k] - v[j][k]; s += q * q; } return Math.sqrt(s); };
+        // Grupos: lista de índices; distancias medias entre grupos.
+        let clusters: number[][] = keys.map((_, i) => [i]);
+        const D: number[][] = keys.map((_, i) => keys.map((__, j) => d(i, j)));
+        while (clusters.length > 1) {
+            let bi = 0, bj = 1, best = Infinity;
+            for (let i = 0; i < clusters.length; i++) {
+                for (let j = i + 1; j < clusters.length; j++) {
+                    let s = 0;
+                    for (const p of clusters[i]) { for (const q of clusters[j]) { s += D[p][q]; } }
+                    const avg = s / (clusters[i].length * clusters[j].length);
+                    if (avg < best) { best = avg; bi = i; bj = j; }
+                }
+            }
+            // Unir orientando los extremos más cercanos, para que el orden de hojas fluya.
+            const A = clusters[bi], B = clusters[bj];
+            const opts = [[A, B], [A, B.slice().reverse()], [A.slice().reverse(), B], [A.slice().reverse(), B.slice().reverse()]];
+            let merged = opts[0][0].concat(opts[0][1]), mb = Infinity;
+            for (const [p, q] of opts) { const c = D[p[p.length - 1]][q[0]]; if (c < mb) { mb = c; merged = p.concat(q); } }
+            clusters = clusters.filter((_, i) => i !== bi && i !== bj);
+            clusters.push(merged);
+        }
+        return clusters[0].map(i => keys[i]);
     }
 
     /** Aplica la plantilla de estilo a lo que el autor no ha tocado. */
@@ -1616,11 +1844,12 @@ export class Visual implements IVisual {
      * cell holding five million rows is as cheap as one holding five. Power BI excludes the visual
      * that owns the filter, so the matrix keeps showing every category.
      */
-    private applyCellFilter(xDim: DimensionInfo, yDim: DimensionInfo): void {
+    private applyCellFilter(xDim: DimensionInfo, yDim: DimensionInfo, gDim: DimensionInfo | null = null): void {
         const xTarget = this.toFilterTarget(xDim.column);
         const yTarget = this.toFilterTarget(yDim.column);
+        const gTarget = gDim ? this.toFilterTarget(gDim.column) : null;
 
-        if (!xTarget || !yTarget || this.selectedCells.size === 0) {
+        if (!xTarget || !yTarget || (gDim && !gTarget) || this.selectedCells.size === 0) {
             this.host.applyJsonFilter(null, "general", "filter", powerbi.FilterAction.remove);
             return;
         }
@@ -1628,18 +1857,22 @@ export class Visual implements IVisual {
         const values: ITupleElementValue[][] = [];
         this.selectedCells.forEach(cellKey => {
             const parts = cellKey.split(KEY_SEP);
-            if (parts.length !== 2) { return; }
+            if (parts.length !== (gTarget ? 3 : 2)) { return; }
             // "Otros" no existe en el modelo: se filtra por cada uno de sus miembros.
             const xs = parts[0] === OTH ? this.othersX : [parts[0]];
             const ys = parts[1] === OTH ? this.othersY : [parts[1]];
-            for (const a of xs) { for (const b of ys) { values.push([{ value: a }, { value: b }]); } }
+            for (const a of xs) {
+                for (const b of ys) {
+                    values.push(gTarget ? [{ value: a }, { value: b }, { value: parts[2] }] : [{ value: a }, { value: b }]);
+                }
+            }
         });
 
         const filter: ITupleFilter = {
             $schema: TUPLE_FILTER_SCHEMA,
             filterType: FILTER_TYPE_TUPLE,
             operator: "In",
-            target: [xTarget, yTarget],
+            target: gTarget ? [xTarget, yTarget, gTarget] : [xTarget, yTarget],
             values: values
         };
 
@@ -1651,7 +1884,7 @@ export class Visual implements IVisual {
         );
     }
 
-    private onCellClick(cellKey: string, indices: number[], xDim: DimensionInfo, yDim: DimensionInfo, multiSelect: boolean): void {
+    private onCellClick(cellKey: string, indices: number[], xDim: DimensionInfo, yDim: DimensionInfo, multiSelect: boolean, gDim: DimensionInfo | null = null): void {
         if (!indices.length) { return; }
         // El autor del informe puede apagar las interacciones de este visual desde
         // "Editar interacciones". Ignorarlo filtraba el informe contra su decision.
@@ -1672,7 +1905,7 @@ export class Visual implements IVisual {
             this.selectedCells.add(cellKey);
         }
 
-        this.applyCellFilter(xDim, yDim);
+        this.applyCellFilter(xDim, yDim, gDim);
         this.applySelectionDimming();
     }
 
@@ -1695,14 +1928,14 @@ export class Visual implements IVisual {
 
         const mio = filtros.find(f =>
             f && f.filterType === FILTER_TYPE_TUPLE &&
-            Array.isArray(f.target) && f.target.length === 2 &&
+            Array.isArray(f.target) && (f.target.length === 2 || f.target.length === 3) &&
             Array.isArray(f.values));
 
         const restaurada = new Set<string>();
         if (mio) {
             mio.values.forEach(par => {
-                if (Array.isArray(par) && par.length === 2) {
-                    restaurada.add(String(par[0].value) + KEY_SEP + String(par[1].value));
+                if (Array.isArray(par) && (par.length === 2 || par.length === 3)) {
+                    restaurada.add(par.map(p => String(p.value)).join(KEY_SEP));
                 }
             });
         }
@@ -1719,7 +1952,7 @@ export class Visual implements IVisual {
                 el.style.opacity = "1";
             } else {
                 const p = key.split(KEY_SEP);
-                el.style.opacity = (p.length === 2 ? this.cellSelected(p[0], p[1]) : this.selectedCells.has(key)) ? "1" : "0.3";
+                el.style.opacity = (p.length >= 2 ? this.cellSelected(p[0], p[1], p.length === 3 ? p[2] : null) : this.selectedCells.has(key)) ? "1" : "0.3";
             }
         });
     }

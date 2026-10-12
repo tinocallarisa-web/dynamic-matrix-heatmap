@@ -414,6 +414,16 @@
           "type": {
             "text": true
           }
+        },
+        "groupDimension": {
+          "type": {
+            "text": true
+          }
+        },
+        "collapsedGroups": {
+          "type": {
+            "text": true
+          }
         }
       }
     },
@@ -657,6 +667,20 @@
         "others": {
           "displayName": "Group the rest as Others",
           "displayNameKey": "Visual_Others",
+          "type": {
+            "bool": true
+          }
+        },
+        "clusterRows": {
+          "displayName": "Order rows by similarity (Pro)",
+          "displayNameKey": "Visual_ClusterRows",
+          "type": {
+            "bool": true
+          }
+        },
+        "clusterCols": {
+          "displayName": "Order columns by similarity (Pro)",
+          "displayNameKey": "Visual_ClusterCols",
           "type": {
             "bool": true
           }

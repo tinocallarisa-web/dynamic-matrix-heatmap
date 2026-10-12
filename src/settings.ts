@@ -151,12 +151,14 @@ class AxesCardSettings extends FormattingSettingsCard {
     maxRows = new formattingSettings.NumUpDown({ name: "maxRows", displayName: "Maximum rows", displayNameKey: "Visual_MaxRows", value: 25 });
     maxCols = new formattingSettings.NumUpDown({ name: "maxCols", displayName: "Maximum columns", displayNameKey: "Visual_MaxCols", value: 25 });
     others = new formattingSettings.ToggleSwitch({ name: "others", displayName: "Group the rest as Others", displayNameKey: "Visual_Others", value: true });
+    clusterRows = new formattingSettings.ToggleSwitch({ name: "clusterRows", displayName: "Order rows by similarity (Pro)", displayNameKey: "Visual_ClusterRows", value: false });
+    clusterCols = new formattingSettings.ToggleSwitch({ name: "clusterCols", displayName: "Order columns by similarity (Pro)", displayNameKey: "Visual_ClusterCols", value: false });
     name: string = "axes";
     displayName: string = "Rows and columns";
     displayNameKey: string = "Visual_Axes";
     description: string = "Automatic keeps the data order, and puts days of the week and months in calendar order. Beyond the maximum, the categories with the smallest totals are grouped as Others so the totals still add up.";
     descriptionKey: string = "Visual_Axes_Desc";
-    slices: Array<FormattingSettingsSlice> = [this.rowsOrder, this.colsOrder, this.maxRows, this.maxCols, this.others];
+    slices: Array<FormattingSettingsSlice> = [this.rowsOrder, this.colsOrder, this.maxRows, this.maxCols, this.others, this.clusterRows, this.clusterCols];
 }
 
 /**
