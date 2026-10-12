@@ -9,7 +9,7 @@ Full documentation, with search: https://tinocallarisa-web.github.io/dynamic-mat
 ## Quick start
 
 1. Drag two or more fields into **Dimensions** and at least one into **Measures**.
-2. Pick the **X axis**, the **Y axis** and the **Value** in the bar at the top of the visual.
+2. Pick the **X axis**, the **Y axis** and the **Value** in the panel on the left of the visual (⚙ View).
 3. Showing an average? Put an ID in **Detail (rows)** — order, ticket or customer — and it is exact.
 
 > **The most common surprise:** an average that does not match the native matrix. Without Detail
@@ -28,13 +28,17 @@ Full documentation, with search: https://tinocallarisa-web.github.io/dynamic-mat
 
 ---
 
-## The bar in the visual
+## The panel in the visual
 
 - **X axis · Y axis · Value** — anyone reading the report can change them.
 - **Show as** *(Pro)* — absolute, % of row, % of column, % of grand total. Each measure remembers its own:
   never add the same measure twice (Power BI treats both copies as one).
 - **Group rows** *(Pro, with 3+ dimensions)* — a third dimension with subtotal rows that open and close;
   the corner button opens or closes all.
+- **Totals** *(Pro)* — a tick box that adds the total column and row; the Format pane sets how the report
+  opens.
+- The panel folds with **«** and starts folded on narrow visuals. **Format → Layout → Controls** moves it
+  to a top bar, or hides it in reading view so the author fixes the view.
 
 ---
 
@@ -61,7 +65,7 @@ Full documentation, with search: https://tinocallarisa-web.github.io/dynamic-mat
 ## Format pane
 
 - **Style template** — Classic, Clean, Tiles, Contrast, Compact; your own settings win.
-- **Values** — Show totals *(Pro)*.
+- **Values** — Show totals *(Pro)*: whether the report opens with totals.
 - **Heatmap colors** — 12 schemes (Viridis and Cividis are colour-blind safe) or Custom.
 - **Color rules** — up to three thresholds with their own color; percentages as fractions (0.25).
 - **Rows and columns** — order, maximums, Others, similarity.

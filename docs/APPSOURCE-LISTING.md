@@ -77,7 +77,7 @@ WORKS LIKE A NATIVE VISUAL
 • Tooltips, the native right-click menu and highlighting from other visuals
 • Format on the canvas: click values, headers or the dropdown bar to format them
 • Keyboard navigation and high contrast
-• Format pane and the bar in the visual in 12 languages
+• Format pane and the panel in the visual in 12 languages
 
 FREE AND PRO
 
@@ -92,7 +92,7 @@ The visual makes no network requests of any kind: no analytics, no telemetry, no
 GETTING STARTED
 
 1. Add two or more fields to Dimensions and at least one to Measures.
-2. Pick the rows, the columns and the value in the bar at the top of the visual.
+2. Pick the rows, the columns and the value in the panel on the left of the visual.
 3. Showing an average? Add an ID to Detail (rows) and it is exact.
 
 Documentation, video and FAQ: https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/support.html

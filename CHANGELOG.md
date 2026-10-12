@@ -25,7 +25,7 @@ The matrix becomes a pivot table: the reader chooses how values are shown, group
 - **Color rules.** Up to three rules paint the cells that meet a threshold, over the gradient.
 - **12 color schemes and 5 style templates** (Classic, Clean, Tiles, Contrast, Compact), space between cells and rounded corners. Text on dark cells turns white automatically.
 - **Format on the canvas.** Click the values, the headers or the dropdown bar in format mode to format them.
-- **12 languages.** The Format pane and the bar in the visual — which until now was always in English, together with the notes and the Total label.
+- **12 languages.** The Format pane and the panel in the visual — which until now was always in English, together with the notes and the Total label.
 
 ### Fixed
 
