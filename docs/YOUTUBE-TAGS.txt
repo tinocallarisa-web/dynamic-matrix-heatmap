@@ -1,30 +1,13 @@
-═══════════════════════════════════════════════════════════════
- MAIN TAG BLOCK — 487 characters, within YouTube's 500 limit
- Paste as-is into the Tags field.
-═══════════════════════════════════════════════════════════════
+=========================================================
+DYNAMIC MATRIX HEATMAP — YouTube Tags (v1.2.0.0)
+=========================================================
 
-power bi, powerbi, power bi visuals, power bi custom visual, power bi matrix, power bi pivot table, dynamic matrix, matrix heatmap, power bi heatmap, conditional formatting power bi, distinct count power bi, power bi crosstab, self service bi, power bi tutorial, power bi tips, data visualization, business intelligence, power bi dashboard, power bi report, power bi appsource, pivot table, crosstab, heatmap visual, power bi aggregation, tcviz
+--- MAIN TAG BLOCK (YouTube's limit is 500) ---
 
+power bi,power bi pivot table,pivot table,power bi matrix,interactive pivot table,power bi heatmap,heatmap,power bi custom visual,power bi crosstab,crosstab,percent of total power bi,power bi subtotals,power bi no dax,self service bi,excel pivot table in power bi,power bi visuals,data visualization,tcviz
 
-═══════════════════════════════════════════════════════════════
- VARIANT — if the video leans on the distinct count problem
-═══════════════════════════════════════════════════════════════
-
-power bi, powerbi, distinct count power bi, count distinct, power bi measure, dax distinct count, power bi aggregation, double counting, power bi matrix, power bi pivot table, dynamic matrix, matrix heatmap, power bi custom visual, power bi visuals, data accuracy, business intelligence, data visualization, power bi tutorial, power bi tips, self service bi, power bi dashboard, tcviz
-
-
-═══════════════════════════════════════════════════════════════
- VARIANT — if the video leans on self-service exploration
-═══════════════════════════════════════════════════════════════
-
-power bi, powerbi, self service bi, power bi field parameters, dynamic dimensions power bi, power bi slicer, interactive dashboard, power bi custom visual, dynamic matrix, power bi matrix, matrix heatmap, power bi pivot table, crosstab, data exploration, business intelligence, data visualization, power bi tutorial, power bi tips, power bi dashboard, power bi report, tcviz
-
-
-═══════════════════════════════════════════════════════════════
- NOTES
-═══════════════════════════════════════════════════════════════
-
-• YouTube counts the commas and spaces toward the 500 character limit.
-• Put the most specific tags first — they carry the most weight.
-• Keep "tcviz" last in every variant so the channel accumulates brand association.
-• Do not reuse all three blocks on the same video; pick the one matching its angle.
+Notes:
+- "power bi pivot table" and "pivot table" carry the search: whoever comes from Excel types it.
+- "power bi matrix" catches people unhappy with the native matrix, which is the comparison we make.
+- "percent of total power bi" and "power bi subtotals" are problem words with clear intent.
+- "excel pivot table in power bi" is the long-tail question this answers.
