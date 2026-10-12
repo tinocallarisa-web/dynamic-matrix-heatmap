@@ -161,12 +161,17 @@ interface ValueSettings {
 
 /** A selectable entry in the Measure dropdown: either a DAX measure or a client-side distinct count. */
 interface ValueOption {
-    /** "m:<index>" for a measure, "d:<index>" for a distinct-count field */
+    /** "m:<i>" medida, "d:<i>" recuento distinto de un campo de Detalle (filas), "e:<i>" de una dimensión */
     key: string;
     label: string;
     kind: "measure" | "distinct";
     index: number;
+    /** Columna cuyos valores distintos se cuentan (solo kind "distinct"). */
+    col?: DataViewCategoryColumn;
 }
+
+/** Un recuento distinto, en los nombres que le da Power BI en cada idioma. */
+const DISTINCT_RE = /distinct|distint|eindeutig|uniek|unikat|個別|非重复|고유/i;
 
 const EMPTY_STATE_CLASS = "dmh-empty-state";
 const KEY_SEP = "";
@@ -249,6 +254,10 @@ export class Visual implements IVisual {
     private othersX: string[] = [];
     private othersY: string[] = [];
     private trimNotice = "";
+    /** El aviso de datos parciales manda sobre los demás. */
+    private partialShown = false;
+    /** Lo retenido por el tier gratuito, para recomponer el aviso al final del dibujo. */
+    private lastLimitedText = "";
 
     public visualOnObjectFormatting: powerbi.extensibility.visual.VisualOnObjectFormatting;
     private subSelectionHelper: HtmlSubSelectionHelper;
@@ -396,25 +405,24 @@ export class Visual implements IVisual {
                 .filter(c => c.source.roles && c.source.roles["distinctFields"])
                 .map(c => ({ name: c.source.displayName, column: c }));
 
-            // El campo de pesos comparte el bloque de valores con las medidas, pero no es una de
-            // ellas: no debe salir en el desplegable ni contar para el tope del tier gratuito.
             const allMeasures: MeasureInfo[] = values
                 .filter(v => v.source.roles && v.source.roles["measures"])
                 .map(v => ({ name: v.source.displayName, column: v }));
-            const weightColumn = values.find(v => v.source.roles && v.source.roles["weights"]) || null;
 
             // ---- Free tier limits ------------------------------------------------------------
             const pro = this.isProActive();
             const dimensions = pro ? allDimensions : allDimensions.slice(0, FREE_MAX_DIMENSIONS);
             const measures = pro ? allMeasures : allMeasures.slice(0, FREE_MAX_MEASURES);
-            const distinctCols = pro ? allDistinctCols : [];
+            // Detalle (filas) es gratis: no añade una función, hace exactos los números que ya se ven.
+            // Su rol interno sigue llamándose distinctFields para que los informes publicados con un
+            // ID en el antiguo "Distinct count of" no pierdan el campo.
+            const detailCols = allDistinctCols;
 
             // Lo que el usuario ha pedido y el tier gratuito no da: alimenta el aviso y la marca.
             const vc = this.formattingSettings.valuesCard;
             const attempted: string[] = [];
             if (allDimensions.length > FREE_MAX_DIMENSIONS) { attempted.push("more than 3 dimensions"); }
             if (allMeasures.length > FREE_MAX_MEASURES) { attempted.push("more than 2 measures"); }
-            if (allDistinctCols.length > 0) { attempted.push("distinct counts"); }
             if (vc.showTotals.value) { attempted.push("totals"); }
             this.attemptedPro = this.isPro ? [] : attempted;
             this.updateWatermark();
@@ -422,8 +430,7 @@ export class Visual implements IVisual {
             // True only when something was actually withheld, so the notice never appears on Pro
             const limited =
                 allDimensions.length > dimensions.length ||
-                allMeasures.length > measures.length ||
-                allDistinctCols.length > distinctCols.length;
+                allMeasures.length > measures.length;
 
             // El aviso tiene que nombrar lo que se ha retenido. Decia siempre "las primeras 3
             // dimensiones y 2 medidas", asi que quien arrastraba un campo a "Distinct count of"
@@ -435,9 +442,6 @@ export class Visual implements IVisual {
             }
             if (allMeasures.length > measures.length) {
                 retenido.push(`the first ${FREE_MAX_MEASURES} of ${allMeasures.length} measures`);
-            }
-            if (allDistinctCols.length > distinctCols.length) {
-                retenido.push("no distinct counts, which are a Pro feature");
             }
             this.limitedDetail = retenido.length ? "Showing " + retenido.join(", ") + "." : "";
 
@@ -452,22 +456,28 @@ export class Visual implements IVisual {
                 this.clearAll();
                 return;
             }
-            if (measures.length === 0 && distinctCols.length === 0) {
-                this.showMessage(pro
-                    ? this.texto("Visual_Msg_AddMeasurePro", "Add a measure, or a raw ID column to \"Distinct count of\".")
-                    : this.texto("Visual_Msg_AddMeasure", "Add at least one measure."));
-                this.clearAll();
-                return;
-            }
-
             // ---- Build the list of selectable values ----------------------------------------
+            // Los recuentos distintos (Pro) salen solos: de cada campo de Detalle (filas) y de cada
+            // dimensión. Se cuentan sobre los valores que llegan, así que son exactos para cualquier
+            // par X/Y: no hace falta ningún campo aparte.
             const valueOptions: ValueOption[] = [];
             measures.forEach((m, i) => {
                 valueOptions.push({ key: "m:" + i, label: m.name, kind: "measure", index: i });
             });
-            distinctCols.forEach((d, i) => {
-                valueOptions.push({ key: "d:" + i, label: this.texto("Visual_DistinctPrefix", "Distinct") + " " + d.name, kind: "distinct", index: i });
-            });
+            if (pro) {
+                const pref = this.texto("Visual_DistinctPrefix", "Distinct");
+                detailCols.forEach((d, i) => {
+                    valueOptions.push({ key: "d:" + i, label: pref + " " + d.name, kind: "distinct", index: i, col: d.column });
+                });
+                dimensions.forEach((d, i) => {
+                    valueOptions.push({ key: "e:" + i, label: pref + " " + d.name, kind: "distinct", index: i, col: d.column });
+                });
+            }
+            if (valueOptions.length === 0) {
+                this.showMessage(this.texto("Visual_Msg_AddMeasure", "Add at least one measure."));
+                this.clearAll();
+                return;
+            }
 
             // ---- Restore persisted selection -------------------------------------------------
             const persisted = dataView.metadata && dataView.metadata.objects && dataView.metadata.objects["selectionState"];
@@ -510,6 +520,11 @@ export class Visual implements IVisual {
             // Los ajustes son de la medida, no del visual: hasta saber cual esta activa no se
             // puede decir si se ha pedido un porcentaje, que es Pro.
             const valueSettings = this.resolveValueSettings(activeValue);
+            if (!this.isPro && activeValue.kind === "distinct" &&
+                this.attemptedPro.indexOf("distinct counts") < 0) {
+                this.attemptedPro = this.attemptedPro.concat(["distinct counts"]);
+                this.updateWatermark();
+            }
             if (!this.isPro && valueSettings.mode !== "absolute" &&
                 this.attemptedPro.indexOf("percentage values") < 0) {
                 this.attemptedPro = this.attemptedPro.concat(["percentage values"]);
@@ -519,7 +534,7 @@ export class Visual implements IVisual {
                 ? (measures[activeValue.index].column.highlights || null)
                 : (measures.length > 0 ? (measures[0].column.highlights || null) : null);
 
-            this.renderMatrix(dimensions, measures, distinctCols, activeValue, highlightSource, valueSettings, weightColumn);
+            this.renderMatrix(dimensions, measures, detailCols, activeValue, highlightSource, valueSettings);
         }
     }
 
@@ -841,6 +856,9 @@ export class Visual implements IVisual {
     }
 
     private renderNotice(moreDataAvailable: boolean, fetchCount: number, limited: boolean): void {
+        this.partialShown = moreDataAvailable && fetchCount >= MAX_FETCHES;
+        this.lastLimitedText = limited ? (this.limitedDetail ||
+            ("Showing the first " + FREE_MAX_DIMENSIONS + " dimensions and " + FREE_MAX_MEASURES + " measures.")) : "";
         if (moreDataAvailable && fetchCount >= MAX_FETCHES) {
             this.noticeEl.textContent = this.texto("Visual_Notice_Partial", "Showing a partial dataset — the row limit was reached. Reduce the number of dimensions for exact values.");
             this.noticeEl.style.display = "block";
@@ -865,12 +883,14 @@ export class Visual implements IVisual {
     private renderMatrix(
         dimensions: DimensionInfo[],
         measures: MeasureInfo[],
-        distinctCols: DimensionInfo[],
+        detailCols: DimensionInfo[],
         activeValue: ValueOption,
         highlights: powerbi.PrimitiveValue[],
-        valueSettings: ValueSettings,
-        weightColumn: DataViewValueColumn
+        valueSettings: ValueSettings
     ): void {
+        // Con Detalle (filas) cada fila que llega es una fila de verdad: promedios, mínimos y
+        // máximos se calculan exactos sobre ellas, en vez de combinar lo que Power BI ya agregó.
+        const hasDetail = detailCols.length > 0;
         const xDim = dimensions.find(d => d.name === this.selectedX);
         const yDim = dimensions.find(d => d.name === this.selectedY);
 
@@ -885,8 +905,26 @@ export class Visual implements IVisual {
             ? this.resolveAggregation(measures[activeValue.index].column)
             : "sum";
         const measureValues = activeValue.kind === "measure" ? measures[activeValue.index].column.values : null;
-        const weightValues = weightColumn ? weightColumn.values : null;
-        const distinctValues = activeValue.kind === "distinct" ? distinctCols[activeValue.index].column.values : null;
+        // Una medida "Recuento (distintivo) de X" no se puede volver a agregar. Si la columna X está
+        // en Dimensiones o en Detalle (filas), sus valores llegan con los datos y el visual la cuenta
+        // él mismo, exacta. Si no está, salta el aviso de medida no aditiva.
+        let autoDistinct: DataViewCategoryColumn | null = null;
+        if (activeValue.kind === "measure") {
+            const src = measures[activeValue.index].column.source;
+            const esDistinto = DISTINCT_RE.test((src?.displayName || "") + " " + (src?.queryName || ""));
+            if (esDistinto) {
+                const ref = this.baseColumnRef(src?.queryName || "");
+                const pool = dimensions.concat(detailCols);
+                // Por la referencia de la consulta ("X(Tabla.Columna)") o, si no, por el nombre del
+                // campo al final de la etiqueta ("Count (Distinct) of Cliente").
+                const cand = (ref && pool.find(d => d.column.source?.queryName === ref)) ||
+                    pool.find(d => (src?.displayName || "").toLowerCase().endsWith(" " + (d.name || "").toLowerCase()));
+                if (cand) { autoDistinct = cand.column; }
+            }
+        }
+        const distinctValues = activeValue.kind === "distinct" && activeValue.col
+            ? activeValue.col.values
+            : (autoDistinct ? autoDistinct.values : null);
 
         // "count" solo puede venir ya del pozo: Power BI aplico Count al campo y cada fila que
         // llega ES un recuento parcial, asi que colapsar al par X/Y elegido es SUMARLOS. Antes se
@@ -911,11 +949,6 @@ export class Visual implements IVisual {
             let cnt = 0;
             let mn = Infinity;
             let mx = -Infinity;
-            // Promedio ponderado: la unica forma de colapsar promedios sin mentir. Power BI mando
-            // un promedio por combinacion; sin el peso de cada una, combinarlas hace que una
-            // combinacion de diez mil filas cuente lo mismo que una de una sola.
-            let sumaPond = 0;
-            let sumaPesos = 0;
             for (const i of indices) {
                 const v = measureValues[i] as number;
                 if (v === null || v === undefined || isNaN(v)) { continue; }
@@ -923,17 +956,12 @@ export class Visual implements IVisual {
                 cnt++;
                 if (v < mn) { mn = v; }
                 if (v > mx) { mx = v; }
-                if (weightValues) {
-                    const w = weightValues[i] as number;
-                    if (w !== null && w !== undefined && !isNaN(w) && w > 0) {
-                        sumaPond += v * w;
-                        sumaPesos += w;
-                    }
-                }
             }
             if (cnt === 0) { return null; }
             switch (aggMode) {
-                case "average": return sumaPesos > 0 ? sumaPond / sumaPesos : sum / cnt;
+                // Con Detalle (filas) es la media exacta de las filas; sin él, promedio de promedios
+                // (y el aviso lo dice).
+                case "average": return sum / cnt;
                 case "min":     return mn;
                 case "max":     return mx;
                 case "count":   return sum;  // parciales de Power BI: se suman
@@ -1072,19 +1100,19 @@ export class Visual implements IVisual {
         const detectada = activeValue.kind === "measure"
             ? this.detectNativeAggregation(measures[activeValue.index].column)
             : "sum";
-        const esDax = activeValue.kind === "measure" && detectada === null;
+        const esDax = activeValue.kind === "measure" && detectada === null && !autoDistinct;
         this.activeLabel = activeValue.label;
         // Promedio que puso Power BI, no el usuario: quien elige "Promedio" sobre un campo sumado
         // esta pidiendo la media por combinacion, que es una pregunta legitima.
-        // Con pesos el promedio ya sale ponderado, que es el numero correcto: no hay que avisar.
-        const promedioNativo = detectada === "average" && !weightColumn;
+        // Con Detalle (filas) el promedio es exacto: no hay que avisar.
+        const promedioNativo = detectada === "average" && !hasDetail;
 
         this.aggWarning = null;
         if (colapsa && this.isEditing()) {
             if (promedioNativo) {
-                this.aggWarning = this.texto("Visual_Notice_AvgOfAvg", "This is an average of averages. Power BI averaged the field at the grain of every bound dimension, and those averages are combined here, so each combination counts the same whether it holds one row or ten thousand. The weights are not in the data the visual receives, so it cannot correct for them. Bind only the dimensions you compare, use a measure that carries its own weighting, or add a field to Weights for averages.");
+                this.aggWarning = this.texto("Visual_Notice_AvgOfAvg", "This is an average of averages. Power BI averaged the field at the grain of every bound dimension, and those averages are combined here, so each combination counts the same whether it holds one row or ten thousand. The weights are not in the data the visual receives, so it cannot correct for them. Add an ID to Detail (rows) — the order, ticket or customer — and the visual computes the exact average.");
             } else if (esDax) {
-                this.aggWarning = this.texto("Visual_Notice_NonAdditive", "This measure is being collapsed in the visual: Power BI aggregated it at the grain of every bound dimension, and the rest is combined here. If the measure is not additive \u2014 a distinct count, a ratio, a percentage \u2014 the number may not be the one you expect. Bind only the dimensions you compare, or use an additive measure.");
+                this.aggWarning = this.texto("Visual_Notice_NonAdditive", "This measure is being collapsed in the visual: Power BI aggregated it at the grain of every bound dimension, and the rest is combined here. If the measure is not additive \u2014 a distinct count, a ratio, a percentage \u2014 the number may not be the one you expect. For a distinct count, put that column in Dimensions or Detail (rows) and it is counted exactly; otherwise bind only the dimensions you compare, or use an additive measure.");
             }
         }
 
@@ -1423,10 +1451,12 @@ export class Visual implements IVisual {
 
         table.appendChild(tbody);
         this.scrollEl.appendChild(table);
-        // Aviso de categorías agrupadas, si no hay otro más importante en pantalla.
-        if (this.trimNotice && this.noticeEl.style.display === "none") {
-            this.noticeEl.textContent = this.trimNotice;
-            this.noticeEl.style.display = "block";
+        // El aviso de medida no exacta se calcula aquí, después de pintar la barra de avisos:
+        // sin esto salía un dibujo tarde, en la actualización siguiente.
+        if (!this.partialShown) {
+            const texto = [this.aggWarning, this.lastLimitedText, this.trimNotice].filter(Boolean).join(" ");
+            this.noticeEl.textContent = texto;
+            this.noticeEl.style.display = texto ? "block" : "none";
         }
     }
 
@@ -1757,7 +1787,7 @@ export class Visual implements IVisual {
 
     private renderLandingPage(): void {
         this.clearAll();
-        this.showMessage(this.texto("Visual_Landing", "Add Dimensions (at least 2) plus a Measure or a \"Distinct count of\" field to build the dynamic matrix. Pro plan on Microsoft AppSource: up to 10 dimensions and 5 measures, distinct counts, percentage values, totals and row groups."));
+        this.showMessage(this.texto("Visual_Landing", "Add Dimensions (at least 2) and a Measure to build the dynamic matrix. Optional: an ID in Detail (rows) makes averages and distinct counts exact. Pro plan on Microsoft AppSource: up to 10 dimensions and 5 measures, distinct counts, percentage values, totals and row groups."));
     }
 
     // ==========================================================================================
@@ -1779,8 +1809,7 @@ export class Visual implements IVisual {
         // ninguna forma correcta de combinarlo, y salta el aviso de medida no aditiva. Para
         // contar distintos bien esta el pozo "Distinct count of", que cuenta sobre la columna
         // cruda y da el numero exacto para cualquier par X/Y.
-        const texto = ((src.displayName || "") + " " + (src.queryName || "")).toLowerCase();
-        if (texto.indexOf("distinct") >= 0) { return null; }
+        if (DISTINCT_RE.test((src.displayName || "") + " " + (src.queryName || ""))) { return null; }
 
         const map = (token: string): string | null => {
             switch (token.toLowerCase()) {

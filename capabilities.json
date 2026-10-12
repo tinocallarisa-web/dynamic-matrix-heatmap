@@ -12,21 +12,14 @@
       "displayNameKey": "Visual_Measures",
       "name": "measures",
       "kind": "Measure",
-      "description": "Pre-aggregated DAX measures. Re-aggregated with the mode selected in the Values card. Up to 5 (Free: 2)."
+      "description": "Measures or numeric columns, aggregated as set in the field well. Up to 5 (Free: 2)."
     },
     {
-      "name": "weights",
-      "kind": "Measure",
-      "displayName": "Weights for averages",
-      "displayNameKey": "Visual_Weights",
-      "description": "A row count, so averages can be combined correctly across the dimensions you did not pick for X and Y. Without it the visual can only average the averages Power BI sent, which weighs every combination the same."
-    },
-    {
-      "displayName": "Distinct count of (Pro)",
+      "displayName": "Detail (rows)",
       "displayNameKey": "Visual_DistinctFields",
       "name": "distinctFields",
       "kind": "Grouping",
-      "description": "Raw ID columns (e.g. customer_id). The visual counts unique values itself, so the result is always correct for any X/Y combination — unlike summing a DAX measure."
+      "description": "Optional. An ID that identifies each row: the order, ticket or customer. With it, averages and distinct counts are exact for any X/Y pair."
     }
   ],
   "dataViewMappings": [
@@ -40,10 +33,6 @@
           "measures": {
             "min": 0,
             "max": 5
-          },
-          "weights": {
-            "min": 0,
-            "max": 1
           },
           "distinctFields": {
             "min": 0,
@@ -76,11 +65,6 @@
             {
               "for": {
                 "in": "measures"
-              }
-            },
-            {
-              "for": {
-                "in": "weights"
               }
             }
           ]
