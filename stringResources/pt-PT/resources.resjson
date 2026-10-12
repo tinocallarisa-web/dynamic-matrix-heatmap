@@ -20,6 +20,7 @@
   "Visual_Ctl_Group": "Agrupar linhas",
   "Visual_Ctl_None": "(nenhum)",
   "Visual_Ctl_Select": "-- escolher --",
+  "Visual_Ctl_ShowAs": "Mostrar como",
   "Visual_Ctl_Value": "Valor",
   "Visual_Ctl_X": "Eixo X",
   "Visual_Ctl_Y": "Eixo Y",
@@ -97,7 +98,6 @@
   "Visual_Rules_Desc": "Uma regra pinta com sua cor as células que a cumprem, por cima do gradiente. Vence a primeira que se cumpre. Porcentagens se escrevem como fração: 0,25 para 25%.",
   "Visual_Scheme": "Esquema de cores",
   "Visual_ShowTotals": "Mostrar totais (Pro)",
-  "Visual_ShowValueAs": "Mostrar valor como (Pro)",
   "Visual_SortHint": "Clique para ordenar as linhas por esta coluna",
   "Visual_Style": "Modelo de estilo",
   "Visual_Sub_Labels": "Etiquetas do eixo",
@@ -109,5 +109,5 @@
   "Visual_ValueFont": "Fonte dos valores",
   "Visual_ValueSize": "Tamanho dos valores",
   "Visual_Values": "Valores",
-  "Visual_Values_Desc": "Mostrar valor como pertence à medida escolhida no visual, não ao visual inteiro. Troque de medida para ver a configuração dela. A agregação vem do painel de campos e o formato de número do modelo."
+  "Visual_Values_Desc": "Absoluto ou porcentagem é escolhido no próprio visual, na lista Mostrar como ao lado de Valor, e cada medida lembra o seu."
 }

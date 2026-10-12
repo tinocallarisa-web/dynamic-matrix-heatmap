@@ -20,6 +20,7 @@
   "Visual_Ctl_Group": "Group rows",
   "Visual_Ctl_None": "(none)",
   "Visual_Ctl_Select": "-- select --",
+  "Visual_Ctl_ShowAs": "Show as",
   "Visual_Ctl_Value": "Value",
   "Visual_Ctl_X": "X axis",
   "Visual_Ctl_Y": "Y axis",
@@ -97,7 +98,6 @@
   "Visual_Rules_Desc": "A rule paints the cells that meet it with its own color, over the gradient. The first rule that matches wins. Percentages are written as fractions: 0.25 for 25%.",
   "Visual_Scheme": "Color scheme",
   "Visual_ShowTotals": "Show totals (Pro)",
-  "Visual_ShowValueAs": "Show value as (Pro)",
   "Visual_SortHint": "Click to sort the rows by this column",
   "Visual_Style": "Style template",
   "Visual_Sub_Labels": "Axis labels",
@@ -109,5 +109,5 @@
   "Visual_ValueFont": "Value font",
   "Visual_ValueSize": "Value size",
   "Visual_Values": "Values",
-  "Visual_Values_Desc": "Show value as belongs to the measure selected in the visual, not to the whole visual. Switch measure and it shows that measure's own setting. Aggregation comes from the field well, number format from the model."
+  "Visual_Values_Desc": "Absolute or percentage is chosen in the visual itself, with the Show as dropdown next to Value, and each measure remembers its own."
 }

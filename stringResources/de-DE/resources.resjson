@@ -20,6 +20,7 @@
   "Visual_Ctl_Group": "Zeilen gruppieren",
   "Visual_Ctl_None": "(keine)",
   "Visual_Ctl_Select": "-- auswählen --",
+  "Visual_Ctl_ShowAs": "Anzeigen als",
   "Visual_Ctl_Value": "Wert",
   "Visual_Ctl_X": "X-Achse",
   "Visual_Ctl_Y": "Y-Achse",
@@ -97,7 +98,6 @@
   "Visual_Rules_Desc": "Eine Regel färbt die Zellen, die sie erfüllen, über dem Verlauf. Die erste zutreffende Regel gewinnt. Prozentsätze werden als Bruch eingegeben: 0,25 für 25 %.",
   "Visual_Scheme": "Farbschema",
   "Visual_ShowTotals": "Summen anzeigen (Pro)",
-  "Visual_ShowValueAs": "Wert anzeigen als (Pro)",
   "Visual_SortHint": "Klicken, um die Zeilen nach dieser Spalte zu sortieren",
   "Visual_Style": "Stilvorlage",
   "Visual_Sub_Labels": "Achsenbeschriftungen",
@@ -109,5 +109,5 @@
   "Visual_ValueFont": "Schriftart der Werte",
   "Visual_ValueSize": "Größe der Werte",
   "Visual_Values": "Werte",
-  "Visual_Values_Desc": "„Wert anzeigen als“ gehört zum im Visual gewählten Measure, nicht zum ganzen Visual. Wechseln Sie das Measure, um dessen Einstellung zu sehen. Die Aggregation kommt aus dem Feldbereich, das Zahlenformat aus dem Modell."
+  "Visual_Values_Desc": "Absolut oder Prozent wählen Sie im Visual selbst, mit der Liste „Anzeigen als“ neben Wert, und jedes Measure merkt sich seine Wahl."
 }

@@ -20,6 +20,7 @@
   "Visual_Ctl_Group": "행 그룹화",
   "Visual_Ctl_None": "(없음)",
   "Visual_Ctl_Select": "-- 선택 --",
+  "Visual_Ctl_ShowAs": "표시 형식",
   "Visual_Ctl_Value": "값",
   "Visual_Ctl_X": "X축",
   "Visual_Ctl_Y": "Y축",
@@ -97,7 +98,6 @@
   "Visual_Rules_Desc": "규칙은 조건을 만족하는 셀을 그라데이션보다 우선해 지정한 색으로 칠합니다. 처음 일치한 규칙이 적용됩니다. 백분율은 소수로 입력합니다(25%는 0.25).",
   "Visual_Scheme": "색 구성표",
   "Visual_ShowTotals": "합계 표시(Pro)",
-  "Visual_ShowValueAs": "값 표시 방법(Pro)",
   "Visual_SortHint": "클릭하면 이 열로 행을 정렬합니다",
   "Visual_Style": "스타일 템플릿",
   "Visual_Sub_Labels": "축 레이블",
@@ -109,5 +109,5 @@
   "Visual_ValueFont": "값 글꼴",
   "Visual_ValueSize": "값 크기",
   "Visual_Values": "값",
-  "Visual_Values_Desc": "[값 표시 방법]은 시각적 개체 전체가 아니라 선택한 측정값에 속합니다. 측정값을 바꾸면 해당 설정이 표시됩니다. 집계는 필드 웰에서, 숫자 서식은 모델에서 가져옵니다."
+  "Visual_Values_Desc": "절대값 또는 백분율은 시각적 개체의 [값] 옆 [표시 형식] 목록에서 고르며, 각 측정값이 선택을 기억합니다."
 }

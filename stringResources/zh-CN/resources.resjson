@@ -20,6 +20,7 @@
   "Visual_Ctl_Group": "行分组",
   "Visual_Ctl_None": "(无)",
   "Visual_Ctl_Select": "-- 选择 --",
+  "Visual_Ctl_ShowAs": "显示为",
   "Visual_Ctl_Value": "值",
   "Visual_Ctl_X": "X 轴",
   "Visual_Ctl_Y": "Y 轴",
@@ -97,7 +98,6 @@
   "Visual_Rules_Desc": "规则会用其颜色覆盖满足条件的单元格（优先于渐变）。第一条满足的规则生效。百分比按小数输入：25% 写作 0.25。",
   "Visual_Scheme": "配色方案",
   "Visual_ShowTotals": "显示总计 (Pro)",
-  "Visual_ShowValueAs": "值显示方式 (Pro)",
   "Visual_SortHint": "单击按此列对行排序",
   "Visual_Style": "样式模板",
   "Visual_Sub_Labels": "轴标签",
@@ -109,5 +109,5 @@
   "Visual_ValueFont": "值字体",
   "Visual_ValueSize": "值字号",
   "Visual_Values": "值",
-  "Visual_Values_Desc": "“值显示方式”属于在视觉对象中所选的度量值，而不是整个视觉对象。切换度量值可查看其自己的设置。聚合来自字段井，数字格式来自模型。"
+  "Visual_Values_Desc": "绝对值还是百分比在视觉对象中“值”旁边的“显示为”列表里选择，每个度量值都会记住自己的选择。"
 }

@@ -10,19 +10,6 @@ import FormattingSettingsModel = formattingSettings.Model;
  * How cell values are computed and displayed
  */
 class ValuesCardSettings extends FormattingSettingsCard {
-    displayMode = new formattingSettings.ItemDropdown({
-        name: "displayMode",
-        displayName: "Show value as (Pro)",
-        displayNameKey: "Visual_ShowValueAs",
-        items: [
-            { value: "absolute", displayName: "Absolute" },
-            { value: "pctRow", displayName: "% of row" },
-            { value: "pctCol", displayName: "% of column" },
-            { value: "pctTotal", displayName: "% of grand total" }
-        ],
-        value: { value: "absolute", displayName: "Absolute" }
-    });
-
     showTotals = new formattingSettings.ToggleSwitch({
         name: "showTotals",
         displayName: "Show totals (Pro)",
@@ -35,11 +22,9 @@ class ValuesCardSettings extends FormattingSettingsCard {
     displayNameKey: string = "Visual_Values";
     // Sin esto el usuario sigue leyendo la tarjeta como global, que es justo el malentendido
     // que el reparto por medida viene a quitar.
-    description: string = "Show value as belongs to the measure selected in the visual, not to the whole visual. Switch measure and it shows that measure's own setting. Aggregation comes from the field well, number format from the model.";
+    description: string = "Absolute or percentage is chosen in the visual itself, with the Show as dropdown next to Value, and each measure remembers its own.";
     descriptionKey: string = "Visual_Values_Desc";
-    slices: Array<FormattingSettingsSlice> = [
-        this.displayMode, this.showTotals
-    ];
+    slices: Array<FormattingSettingsSlice> = [this.showTotals];
 }
 
 /**

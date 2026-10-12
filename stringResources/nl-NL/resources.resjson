@@ -20,6 +20,7 @@
   "Visual_Ctl_Group": "Rijen groeperen",
   "Visual_Ctl_None": "(geen)",
   "Visual_Ctl_Select": "-- kiezen --",
+  "Visual_Ctl_ShowAs": "Weergeven als",
   "Visual_Ctl_Value": "Waarde",
   "Visual_Ctl_X": "X-as",
   "Visual_Ctl_Y": "Y-as",
@@ -97,7 +98,6 @@
   "Visual_Rules_Desc": "Een regel kleurt de cellen die eraan voldoen, boven het verloop. De eerste regel die klopt, wint. Percentages schrijft u als breuk: 0,25 voor 25%.",
   "Visual_Scheme": "Kleurenschema",
   "Visual_ShowTotals": "Totalen weergeven (Pro)",
-  "Visual_ShowValueAs": "Waarde weergeven als (Pro)",
   "Visual_SortHint": "Klik om de rijen op deze kolom te sorteren",
   "Visual_Style": "Stijlsjabloon",
   "Visual_Sub_Labels": "Aslabels",
@@ -109,5 +109,5 @@
   "Visual_ValueFont": "Lettertype waarden",
   "Visual_ValueSize": "Grootte waarden",
   "Visual_Values": "Waarden",
-  "Visual_Values_Desc": "Waarde weergeven als hoort bij de meting die in de visual is gekozen, niet bij de hele visual. Wissel van meting om haar eigen instelling te zien. De aggregatie komt uit het veldenvenster, de getalnotatie uit het model."
+  "Visual_Values_Desc": "Absoluut of percentage kiest u in de visual zelf, met de lijst Weergeven als naast Waarde, en elke meting onthoudt haar keuze."
 }

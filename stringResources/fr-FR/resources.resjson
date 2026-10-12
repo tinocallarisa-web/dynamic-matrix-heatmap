@@ -20,6 +20,7 @@
   "Visual_Ctl_Group": "Grouper les lignes",
   "Visual_Ctl_None": "(aucun)",
   "Visual_Ctl_Select": "-- choisir --",
+  "Visual_Ctl_ShowAs": "Afficher comme",
   "Visual_Ctl_Value": "Valeur",
   "Visual_Ctl_X": "Axe X",
   "Visual_Ctl_Y": "Axe Y",
@@ -97,7 +98,6 @@
   "Visual_Rules_Desc": "Une règle colore les cellules qui la respectent, par-dessus le dégradé. La première règle satisfaite l'emporte. Les pourcentages s'écrivent en fraction : 0,25 pour 25 %.",
   "Visual_Scheme": "Palette de couleurs",
   "Visual_ShowTotals": "Afficher les totaux (Pro)",
-  "Visual_ShowValueAs": "Afficher la valeur comme (Pro)",
   "Visual_SortHint": "Cliquez pour trier les lignes par cette colonne",
   "Visual_Style": "Modèle de style",
   "Visual_Sub_Labels": "Étiquettes d'axe",
@@ -109,5 +109,5 @@
   "Visual_ValueFont": "Police des valeurs",
   "Visual_ValueSize": "Taille des valeurs",
   "Visual_Values": "Valeurs",
-  "Visual_Values_Desc": "Afficher la valeur comme appartient à la mesure choisie dans le visuel, pas à tout le visuel. Changez de mesure pour voir son propre réglage. L'agrégation vient du volet des champs, le format numérique du modèle."
+  "Visual_Values_Desc": "Absolu ou pourcentage se choisit dans le visuel lui-même, avec la liste Afficher comme à côté de Valeur, et chaque mesure garde le sien."
 }

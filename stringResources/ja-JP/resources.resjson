@@ -20,6 +20,7 @@
   "Visual_Ctl_Group": "行のグループ化",
   "Visual_Ctl_None": "(なし)",
   "Visual_Ctl_Select": "-- 選択 --",
+  "Visual_Ctl_ShowAs": "表示形式",
   "Visual_Ctl_Value": "値",
   "Visual_Ctl_X": "X 軸",
   "Visual_Ctl_Y": "Y 軸",
@@ -97,7 +98,6 @@
   "Visual_Rules_Desc": "ルールは条件を満たすセルを、グラデーションより優先して指定の色で塗ります。最初に一致したルールが優先されます。割合は小数で入力します (25% は 0.25)。",
   "Visual_Scheme": "配色",
   "Visual_ShowTotals": "合計を表示 (Pro)",
-  "Visual_ShowValueAs": "値の表示方法 (Pro)",
   "Visual_SortHint": "クリックするとこの列で行を並べ替えます",
   "Visual_Style": "スタイル テンプレート",
   "Visual_Sub_Labels": "軸ラベル",
@@ -109,5 +109,5 @@
   "Visual_ValueFont": "値のフォント",
   "Visual_ValueSize": "値のサイズ",
   "Visual_Values": "値",
-  "Visual_Values_Desc": "[値の表示方法] はビジュアル全体ではなく、ビジュアルで選んだメジャーに属します。メジャーを切り替えるとその設定が表示されます。集計はフィールド ウェル、数値の書式はモデルから取得されます。"
+  "Visual_Values_Desc": "絶対値か割合かはビジュアル内の [値] の横にある [表示形式] で選び、各メジャーがその選択を記憶します。"
 }

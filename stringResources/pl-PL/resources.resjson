@@ -20,6 +20,7 @@
   "Visual_Ctl_Group": "Grupuj wiersze",
   "Visual_Ctl_None": "(brak)",
   "Visual_Ctl_Select": "-- wybierz --",
+  "Visual_Ctl_ShowAs": "Pokaż jako",
   "Visual_Ctl_Value": "Wartość",
   "Visual_Ctl_X": "Oś X",
   "Visual_Ctl_Y": "Oś Y",
@@ -97,7 +98,6 @@
   "Visual_Rules_Desc": "Reguła koloruje spełniające ją komórki, ponad gradientem. Wygrywa pierwsza spełniona reguła. Procenty wpisuje się jako ułamek: 0,25 dla 25%.",
   "Visual_Scheme": "Schemat kolorów",
   "Visual_ShowTotals": "Pokaż sumy (Pro)",
-  "Visual_ShowValueAs": "Pokaż wartość jako (Pro)",
   "Visual_SortHint": "Kliknij, aby posortować wiersze według tej kolumny",
   "Visual_Style": "Szablon stylu",
   "Visual_Sub_Labels": "Etykiety osi",
@@ -109,5 +109,5 @@
   "Visual_ValueFont": "Czcionka wartości",
   "Visual_ValueSize": "Rozmiar wartości",
   "Visual_Values": "Wartości",
-  "Visual_Values_Desc": "Pokaż wartość jako należy do miary wybranej w wizualizacji, a nie do całej wizualizacji. Zmień miarę, aby zobaczyć jej ustawienie. Agregacja pochodzi z panelu pól, format liczb z modelu."
+  "Visual_Values_Desc": "Wartość bezwzględną lub procent wybiera się w samej wizualizacji, na liście Pokaż jako obok Wartość, a każda miara pamięta swój wybór."
 }

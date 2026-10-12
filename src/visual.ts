@@ -220,7 +220,10 @@ export class Visual implements IVisual {
     /** Ajustes por medida, indexados por su etiqueta, que es lo que el usuario ve y elige. */
     private perValue: { [label: string]: ValueSettings } = {};
     /** La medida que el panel estaba editando en el render anterior. */
-    private lastActiveLabel: string = null;
+    private perValueLoaded = false;
+    /** "Show value as" del panel antiguo (hasta 1.1): modo por defecto de las medidas sin ajuste propio. */
+    private legacyMode = "absolute";
+    private modeSelect: HTMLSelectElement | null = null;
     /** Aviso de medida no aditiva colapsada en el cliente. Solo se pinta en edicion. */
     private aggWarning: string = null;
     /** Que se ha retenido por el tier gratuito, en palabras, para el aviso. */
@@ -514,12 +517,15 @@ export class Visual implements IVisual {
             if (persisted && typeof persisted["valueKey"] === "string" && persisted["valueKey"]) {
                 this.selectedValueKey = persisted["valueKey"] as string;
             }
-            if (this.lastActiveLabel === null && persisted && typeof persisted["perValue"] === "string" && persisted["perValue"]) {
+            const legado = dataView.metadata?.objects?.["values"]?.["displayMode"];
+            if (typeof legado === "string" && legado) { this.legacyMode = legado; }
+            if (!this.perValueLoaded && persisted && typeof persisted["perValue"] === "string" && persisted["perValue"]) {
                 try {
                     const leido = JSON.parse(persisted["perValue"] as string);
                     if (leido && typeof leido === "object") { this.perValue = leido; }
-                } catch (_) { /* un mapa ilegible se descarta: se vuelve a lo del panel */ }
+                } catch (_) { /* un mapa ilegible se descarta */ }
             }
+            this.perValueLoaded = true;
 
             // Invalidate stale selections
             if (this.selectedX !== null && dimNames.indexOf(this.selectedX) === -1) { this.selectedX = null; }
@@ -605,6 +611,8 @@ export class Visual implements IVisual {
         this.xSelect = buildLabeledSelect(this.texto("Visual_Ctl_X", "X axis"));
         this.ySelect = buildLabeledSelect(this.texto("Visual_Ctl_Y", "Y axis"));
         this.valueSelect = buildLabeledSelect(this.texto("Visual_Ctl_Value", "Value"));
+        // Show as (Pro): absoluto o porcentaje, por medida, elegido en el lienzo.
+        this.modeSelect = this.isProActive() ? buildLabeledSelect(this.texto("Visual_Ctl_ShowAs", "Show as")) : null;
         // Agrupar filas (Pro): solo con una tercera dimensión, y en vista previa mientras se edita.
         let gSelect: HTMLSelectElement | null = null;
         if (dimensions.length >= 3 && this.isProActive()) {
@@ -673,6 +681,24 @@ export class Visual implements IVisual {
             this.selectedValueKey = this.valueSelect.value;
             this.persistSelection();
         };
+        const activa = valueOptions.find(v => v.key === this.selectedValueKey);
+        if (this.modeSelect && activa) {
+            const ms = this.modeSelect;
+            clearElement(ms);
+            const actual = this.resolveValueSettings(activa).mode;
+            for (const m of ["absolute", "pctRow", "pctCol", "pctTotal"]) {
+                const opt = document.createElement("option");
+                opt.value = m;
+                opt.textContent = m === "absolute" ? this.texto("Visual_Item_absolute", "Absolute") : this.displayModeLabel(m);
+                if (m === actual) { opt.selected = true; }
+                ms.appendChild(opt);
+            }
+            ms.onchange = () => {
+                this.perValue[activa.settingsKey] = { mode: ms.value };
+                this.persistSelection();
+                this.repaint();
+            };
+        }
     }
 
     /**
@@ -688,54 +714,19 @@ export class Visual implements IVisual {
      * La escritura al panel provoca otro update, pero en ese ya coinciden los dos lados y no se
      * vuelve a escribir: no hay bucle.
      */
+    /**
+     * Cómo se muestra la medida activa: lo elige el lector en el desplegable "Show as" del visual
+     * y cada medida lo recuerda. Antes lo decidía el panel de formato, que tiene un solo juego de
+     * controles: para ver la misma medida en absoluto y en % había que poner el campo dos veces,
+     * y Power BI trata dos veces el mismo campo como uno solo (renombrar uno renombra el otro).
+     */
     private resolveValueSettings(activeValue: ValueOption): ValueSettings {
-        const vc = this.formattingSettings.valuesCard;
-        const panel: ValueSettings = { mode: vc.displayMode.value.value as string };
-        const distintos = (a: ValueSettings, b: ValueSettings) => !a || a.mode !== b.mode;
-
-        const label = activeValue.settingsKey;
+        const key = activeValue.settingsKey;
         // Informes guardados antes de 1.2: el ajuste estaba bajo el nombre visible.
-        if (!this.perValue[label] && this.perValue[activeValue.label]) {
-            this.perValue[label] = this.perValue[activeValue.label];
+        if (!this.perValue[key] && this.perValue[activeValue.label]) {
+            this.perValue[key] = this.perValue[activeValue.label];
         }
-        const guardado = this.perValue[label];
-
-        // Nada de esto se escribe en vista de lectura. Ahi no hay panel que poner al dia ni ajuste
-        // que aprender: el consumidor solo cambia de medida en el desplegable del visual, y lo que
-        // toca es LEER lo que dejo quien hizo el informe. Escribir seria tocarle el informe a otro
-        // por un panel que no tiene abierto.
-        const editando = this.isEditing();
-
-        if (this.lastActiveLabel === label) {
-            if (editando && distintos(guardado, panel)) {
-                this.perValue[label] = panel;
-                this.persistSelection();
-            }
-            return editando ? panel : (guardado || panel);
-        }
-
-        this.lastActiveLabel = label;
-        if (!guardado) {
-            // Medida vista por primera vez: hereda lo que muestre el panel y se queda con ello.
-            if (editando) {
-                this.perValue[label] = panel;
-                this.persistSelection();
-            }
-            return panel;
-        }
-        if (editando && distintos(guardado, panel)) { this.pushValueSettingsToPane(guardado); }
-        return guardado;
-    }
-
-    /** Deja el panel mostrando los ajustes de la medida recien seleccionada. */
-    private pushValueSettingsToPane(s: ValueSettings): void {
-        this.host.persistProperties({
-            merge: [{
-                objectName: "values",
-                selector: undefined,
-                properties: { displayMode: s.mode }
-            }]
-        } as VisualObjectInstancesToPersist);
+        return this.perValue[key] || { mode: this.legacyMode };
     }
 
     private persistSelection(): void {
@@ -2219,19 +2210,6 @@ export class Visual implements IVisual {
 
     public getFormattingModel(): powerbi.visuals.FormattingModel {
         this.localizeDropdownItems();
-        // La tarjeta edita la medida activa, y con el panel abierto no se ve cual es: el selector
-        // esta en el visual, detras. Sin el nombre en el titulo, "a cual aplica esto" es una
-        // pregunta legitima cada vez que se abre el panel.
-        const card = this.formattingSettings.valuesCard as any;
-        const base = this.texto("Visual_Values", "Values");
-        if (this.activeLabel) {
-            card.displayName = base + " — " + this.activeLabel;
-            // displayNameKey ganaria al displayName, asi que hay que quitarlo para este render.
-            card.displayNameKey = undefined;
-        } else {
-            card.displayName = base;
-            card.displayNameKey = undefined;
-        }
         return this.formattingSettingsService.buildFormattingModel(this.formattingSettings);
     }
 }

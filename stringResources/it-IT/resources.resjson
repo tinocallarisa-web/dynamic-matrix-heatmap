@@ -20,6 +20,7 @@
   "Visual_Ctl_Group": "Raggruppa righe",
   "Visual_Ctl_None": "(nessuno)",
   "Visual_Ctl_Select": "-- scegli --",
+  "Visual_Ctl_ShowAs": "Mostra come",
   "Visual_Ctl_Value": "Valore",
   "Visual_Ctl_X": "Asse X",
   "Visual_Ctl_Y": "Asse Y",
@@ -97,7 +98,6 @@
   "Visual_Rules_Desc": "Una regola colora le celle che la soddisfano, sopra il gradiente. Vince la prima regola soddisfatta. Le percentuali si scrivono come frazione: 0,25 per il 25%.",
   "Visual_Scheme": "Combinazione di colori",
   "Visual_ShowTotals": "Mostra i totali (Pro)",
-  "Visual_ShowValueAs": "Mostra valore come (Pro)",
   "Visual_SortHint": "Fai clic per ordinare le righe per questa colonna",
   "Visual_Style": "Modello di stile",
   "Visual_Sub_Labels": "Etichette degli assi",
@@ -109,5 +109,5 @@
   "Visual_ValueFont": "Carattere dei valori",
   "Visual_ValueSize": "Dimensione dei valori",
   "Visual_Values": "Valori",
-  "Visual_Values_Desc": "Mostra valore come appartiene alla misura scelta nel visual, non all'intero visual. Cambia misura per vedere la sua impostazione. L'aggregazione viene dal riquadro dei campi, il formato numerico dal modello."
+  "Visual_Values_Desc": "Assoluto o percentuale si sceglie nel visual stesso, con l’elenco Mostra come accanto a Valore, e ogni misura ricorda il suo."
 }
