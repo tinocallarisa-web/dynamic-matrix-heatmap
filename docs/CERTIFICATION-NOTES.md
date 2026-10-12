@@ -46,7 +46,7 @@
 | Support &amp; documentation | https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/support.html |
 | Privacy policy | https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/privacy.html |
 | Terms &amp; licence | https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/terms.html |
-| Demo video | https://www.youtube.com/watch?v=vobbf6405e4 |
+| Demo video | https://www.youtube.com/watch?v=pPf0Bu0H11U |
 | Issue tracker | https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/issues |
 | Changelog | https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/blob/main/CHANGELOG.md |
 

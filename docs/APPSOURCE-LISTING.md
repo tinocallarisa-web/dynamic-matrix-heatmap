@@ -113,7 +113,7 @@ The matrix becomes a pivot table: Show as in the visual, row groups with subtota
 | Support / documentation | https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/support.html |
 | Privacy policy | https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/privacy.html |
 | Terms / licence | https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/terms.html |
-| Video | https://www.youtube.com/watch?v=vobbf6405e4 (1.1 — a 1.2 video is pending) |
+| Video | https://www.youtube.com/watch?v=pPf0Bu0H11U |
 
 Canonical YouTube URL only (policy 100.3.3.3). Shorteners, `/shorts/` and `/embed/` are rejected.
 **Correcting it here does not correct the offer** — the field Microsoft reviews is only in Partner
@@ -169,4 +169,4 @@ Editing this file changes nothing in the offer. For 1.2.0.0:
 4. **Plan description** — if Partner Center allows editing it on the live plan.
 5. **Certification notes** — `docs/CERTIFICATION-NOTES-SHORT.txt`. Cleared on every resubmission.
 6. **Offer screenshot** — regenerate from `docs/infographic.html` and upload the 1366x768 PNG.
-7. **Video** — the canonical `watch?v=` form; replace when the 1.2 video exists.
+7. **Video** — `https://www.youtube.com/watch?v=pPf0Bu0H11U` (new for 1.2).

@@ -1,7 +1,7 @@
 # Dynamic Matrix Heatmap — Product Page Content
 
 **Version 1.1.0.0 · TCViz**
-Video: https://www.youtube.com/watch?v=vobbf6405e4
+Video: https://www.youtube.com/watch?v=pPf0Bu0H11U
 
 Content for the four tabs of the product page on the TCViz website.
 

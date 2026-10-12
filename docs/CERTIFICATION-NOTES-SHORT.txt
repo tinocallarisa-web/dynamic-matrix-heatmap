@@ -38,5 +38,5 @@ TupleFilter $schema is an identifier, not a requested URL. No innerHTML.
 
 Rendering events: one started/finished pair per update(); sorting, group toggles and
 licence repaints redraw without calling update(). eslint 0.
-Video https://www.youtube.com/watch?v=vobbf6405e4
+Video https://www.youtube.com/watch?v=pPf0Bu0H11U
 Support/privacy/terms: tinocallarisa-web.github.io/dynamic-matrix-heatmap/
