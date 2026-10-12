@@ -170,6 +170,11 @@ interface ValueOption {
     index: number;
     /** Columna cuyos valores distintos se cuentan (solo kind "distinct"). */
     col?: DataViewCategoryColumn;
+    /**
+     * Identidad estable para guardar sus ajustes: el campo (queryName) y qué aparición es.
+     * Por nombre, dos "Sum of Sales" compartían el ajuste y renombrar una lo dejaba colgado.
+     */
+    settingsKey: string;
 }
 
 /** Un recuento distinto, en los nombres que le da Power BI en cada idioma. */
@@ -474,8 +479,11 @@ export class Visual implements IVisual {
             // Recuentos distintos (Pro) de los campos de Detalle (filas): se cuentan sobre los valores
             // que llegan, así que son exactos para cualquier par X/Y.
             const valueOptions: ValueOption[] = [];
+            const vistos: Record<string, number> = {};
             measures.forEach((m, i) => {
-                valueOptions.push({ key: "m:" + i, label: m.name, kind: "measure", index: i });
+                const q = m.column.source?.queryName || m.name;
+                vistos[q] = (vistos[q] || 0) + 1;
+                valueOptions.push({ key: "m:" + i, label: m.name, kind: "measure", index: i, settingsKey: q + "#" + vistos[q] });
             });
             if (pro) {
                 const pref = this.texto("Visual_DistinctPrefix", "Distinct");
@@ -484,7 +492,8 @@ export class Visual implements IVisual {
                 // dimensión, lo natural es la medida "Recuento (distintivo)" del pozo, que se cuenta
                 // exacta sola.
                 detailCols.forEach((d, i) => {
-                    valueOptions.push({ key: "d:" + i, label: pref + " " + d.name, kind: "distinct", index: i, col: d.column });
+                    valueOptions.push({ key: "d:" + i, label: pref + " " + d.name, kind: "distinct", index: i, col: d.column,
+                        settingsKey: "distinct:" + (d.column.source?.queryName || d.name) });
                 });
             }
             if (valueOptions.length === 0) {
@@ -684,7 +693,11 @@ export class Visual implements IVisual {
         const panel: ValueSettings = { mode: vc.displayMode.value.value as string };
         const distintos = (a: ValueSettings, b: ValueSettings) => !a || a.mode !== b.mode;
 
-        const label = activeValue.label;
+        const label = activeValue.settingsKey;
+        // Informes guardados antes de 1.2: el ajuste estaba bajo el nombre visible.
+        if (!this.perValue[label] && this.perValue[activeValue.label]) {
+            this.perValue[label] = this.perValue[activeValue.label];
+        }
         const guardado = this.perValue[label];
 
         // Nada de esto se escribe en vista de lectura. Ahi no hay panel que poner al dia ni ajuste
