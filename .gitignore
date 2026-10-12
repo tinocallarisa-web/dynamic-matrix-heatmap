@@ -18,3 +18,6 @@ Thumbs.db
 
 # Paquetes archivados de cada envio (recuperables desde el tag)
 _releases/
+
+# Modelos de prueba: se quedan en local (el repo es público)
+*.pbix
