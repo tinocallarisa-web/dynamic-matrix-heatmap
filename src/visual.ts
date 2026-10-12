@@ -632,6 +632,9 @@ export class Visual implements IVisual {
             toggle.className = "dmh-panel-toggle";
             toggle.type = "button";
             toggle.style.color = fg;
+            // Sigue el formato de los controles, como el resto del panel.
+            toggle.style.fontFamily = text.controlsFontFamily.value;
+            toggle.style.fontSize = text.controlsFontSize.value + "px";
             toggle.textContent = abierto ? "⚙ " + this.texto("Visual_Ctl_Title", "View") + "  «" : "⚙";
             const etiqueta = abierto ? this.texto("Visual_Ctl_Hide", "Hide controls") : this.texto("Visual_Ctl_Show", "Show controls");
             toggle.title = etiqueta;
@@ -666,6 +669,9 @@ export class Visual implements IVisual {
             wrap.appendChild(span);
             const select = document.createElement("select");
             select.tabIndex = 0;
+            // El valor elegido también sigue la fuente de los controles, no solo la etiqueta.
+            select.style.fontFamily = text.controlsFontFamily.value;
+            select.style.fontSize = text.controlsFontSize.value + "px";
             select.setAttribute("aria-label", labelText);
             wrap.appendChild(select);
             this.controlsEl.appendChild(wrap);
@@ -1449,7 +1455,13 @@ export class Visual implements IVisual {
             const btn = document.createElement("button");
             btn.className = "dmh-group-all";
             btn.textContent = allClosed ? "⊞ " + this.texto("Visual_ExpandAll", "Expand all") : "⊟ " + this.texto("Visual_CollapseAll", "Collapse all");
-            btn.style.cssText = "border:none;background:transparent;cursor:pointer;font:11px 'Segoe UI',sans-serif;color:inherit;padding:0";
+            // Sigue el formato de las cabeceras: es una de ellas.
+            btn.style.cssText = "border:none;background:transparent;cursor:pointer;padding:0;font-weight:600";
+            btn.style.fontFamily = text.labelFontFamily.value;
+            btn.style.fontSize = text.labelFontSize.value + "px";
+            btn.style.color = this.isHighContrast ? this.hcForeground : text.labelColor.value.value;
+            btn.setAttribute("aria-label", btn.textContent);
+            this.subSelectable(btn, "labels", this.texto("Visual_Sub_Labels", "Axis labels"), powerbi.visuals.SubSelectionStylesType.Text);
             btn.addEventListener("click", () => {
                 if (allClosed) { this.collapsedGroups.clear(); } else { groupOrder.forEach(g => this.collapsedGroups.add(g)); }
                 this.persistSelection(); this.repaint();
