@@ -163,7 +163,7 @@ interface ValueSettings {
 
 /** A selectable entry in the Measure dropdown: either a DAX measure or a client-side distinct count. */
 interface ValueOption {
-    /** "m:<i>" medida, "d:<i>" recuento distinto de un campo de Detalle (filas), "e:<i>" de una dimensión */
+    /** "m:<i>" medida, "d:<i>" recuento distinto de un campo de Detalle (filas) */
     key: string;
     label: string;
     kind: "measure" | "distinct";
@@ -471,20 +471,20 @@ export class Visual implements IVisual {
                 return;
             }
             // ---- Build the list of selectable values ----------------------------------------
-            // Los recuentos distintos (Pro) salen solos: de cada campo de Detalle (filas) y de cada
-            // dimensión. Se cuentan sobre los valores que llegan, así que son exactos para cualquier
-            // par X/Y: no hace falta ningún campo aparte.
+            // Recuentos distintos (Pro) de los campos de Detalle (filas): se cuentan sobre los valores
+            // que llegan, así que son exactos para cualquier par X/Y.
             const valueOptions: ValueOption[] = [];
             measures.forEach((m, i) => {
                 valueOptions.push({ key: "m:" + i, label: m.name, kind: "measure", index: i });
             });
             if (pro) {
                 const pref = this.texto("Visual_DistinctPrefix", "Distinct");
+                // Solo de lo que el autor puso en Detalle (filas): una opción por dimensión llenaba el
+                // desplegable de recuentos que nadie había pedido. Para contar distintos de una
+                // dimensión, lo natural es la medida "Recuento (distintivo)" del pozo, que se cuenta
+                // exacta sola.
                 detailCols.forEach((d, i) => {
                     valueOptions.push({ key: "d:" + i, label: pref + " " + d.name, kind: "distinct", index: i, col: d.column });
-                });
-                dimensions.forEach((d, i) => {
-                    valueOptions.push({ key: "e:" + i, label: pref + " " + d.name, kind: "distinct", index: i, col: d.column });
                 });
             }
             if (valueOptions.length === 0) {
