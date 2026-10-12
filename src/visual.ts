@@ -231,6 +231,8 @@ export class Visual implements IVisual {
     /** Totales elegidos por el lector en el panel; null = lo que diga el panel de formato. */
     private totalsOn: boolean | null = null;
     private vpWidth = 0;
+    /** Firma de lo que muestra la barra de controles, para no reconstruirla sin motivo. */
+    private controlsSig = "";
     /** Aviso de medida no aditiva colapsada en el cliente. Solo se pinta en edicion. */
     private aggWarning: string = null;
     /** Que se ha retenido por el tier gratuito, en palabras, para el aviso. */
@@ -604,9 +606,21 @@ export class Visual implements IVisual {
     // ==========================================================================================
 
     private renderControls(dimensions: DimensionInfo[], valueOptions: ValueOption[]): void {
-        clearElement(this.controlsEl);
-
         const text = this.formattingSettings.textCard;
+        // Power BI manda una actualización al hacer clic en el visual (lo selecciona). Si aquí se
+        // reconstruía la barra, el desplegable que el usuario acababa de abrir desaparecía y había
+        // que hacer clic dos veces. Solo se reconstruye si cambia algo de lo que muestra.
+        const activaSig = valueOptions.find(v => v.key === this.selectedValueKey);
+        const sig = JSON.stringify([
+            dimensions.map(d => d.name), valueOptions.map(v => v.key + v.label), this.selectedX, this.selectedY,
+            this.selectedValueKey, this.selectedG, activaSig ? this.resolveValueSettings(activaSig).mode : "",
+            this.wantTotals(), this.isProActive(), this.isEditing(), this.panelOpen, this.vpWidth >= 420, this.formatMode,
+            this.isHighContrast, this.formattingSettings.layoutCard.controlsPosition.value.value,
+            text.controlsBackground.value.value, text.controlsFontFamily.value, text.controlsFontSize.value, text.controlsFontColor.value.value
+        ]);
+        if (sig === this.controlsSig && this.controlsEl.childNodes.length) { return; }
+        this.controlsSig = sig;
+        clearElement(this.controlsEl);
         this.controlsEl.style.backgroundColor = this.isHighContrast
             ? this.hcBackground
             : text.controlsBackground.value.value;
@@ -2175,6 +2189,7 @@ export class Visual implements IVisual {
 
     private clearAll(): void {
         clearElement(this.controlsEl);
+        this.controlsSig = "";
         clearElement(this.scrollEl);
         this.noticeEl.style.display = "none";
         this.watermarkEl.style.display = "none";
