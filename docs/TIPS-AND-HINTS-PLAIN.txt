@@ -1,200 +1,88 @@
-DYNAMIC MATRIX HEATMAP — TIPS & HINTS
-Version 1.1.0.0 · TCViz
-Video walkthrough: https://www.youtube.com/watch?v=vobbf6405e4
+DYNAMIC MATRIX HEATMAP -- TIPS & HINTS (V1.2.0.0)
+=================================================
 
-Paste-ready for Power BI text boxes. No markdown tables, so formatting survives copy and paste.
+A pivot table with a heatmap that the reader turns: rows, columns, the value and how it is shown are
+chosen inside the visual. This page is the short version of everything worth knowing.
+Full documentation, with search: https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/support.html
 
-═══════════════════════════════════════════════════════════════
+QUICK START
+-----------
 
-GETTING STARTED
+1. Drag two or more fields into Dimensions and at least one into Measures.
+2. Pick the X axis, the Y axis and the Value in the bar at the top of the visual.
+3. Showing an average? Put an ID in Detail (rows) — order, ticket or customer — and it is exact.
 
-  1 .... Drop the visual on the canvas
-  2 .... Drag two or more fields into DIMENSIONS — these fill the X and Y dropdowns
-  3 .... Drag at least one measure into MEASURES
-  4 .... Pick an X axis and a Y axis inside the visual — the matrix appears
-  5 .... Optional (Pro): drag a raw ID column into DISTINCT COUNT OF
-
-Your selection is saved with the report and survives closing and reopening.
-
-═══════════════════════════════════════════════════════════════
+The most common surprise: an average that does not match the native matrix. Without Detail
+(rows), Power BI sends averages at the grain of every bound dimension and the visual can only combine
+them. One ID in Detail (rows) fixes it; a note says so while you edit.
 
 FIELD WELLS
+-----------
 
-  Dimensions .......... Any grouping field
-                        Limit: 3 Free / 10 Pro
-                        Fills the X and Y dropdowns
+- Well | Limit | What it does
+- Dimensions | 10 (Free: 3) | Fields offered in X axis, Y axis and Group rows.
+- Measures | 5 (Free: 2) | Aggregated as set in the field well; the model's format is used.
+- Detail (rows) | 3, optional | An ID per row: exact averages, and distinct counts of these fields in Value (Pro).
 
-  Measures ............ Measures or numeric columns
-                        Limit: 2 Free / 5 Pro
-                        Values shown in the cells
+THE BAR IN THE VISUAL
+---------------------
 
-  Distinct count of ... Raw ID columns
-                        Limit: 3 (Pro only)
-                        Exact unique counts, computed by the visual
+- X axis · Y axis · Value — anyone reading the report can change them.
+- Show as (Pro) — absolute, % of row, % of column, % of grand total. Each measure remembers its own:
+  never add the same measure twice (Power BI treats both copies as one).
+- Group rows (Pro, with 3+ dimensions) — a third dimension with subtotal rows that open and close;
+  the corner button opens or closes all.
 
-  Aim for roughly 20–25 distinct values per dimension.
-  Up to 25 are rendered per axis.
+EXACT NUMBERS
+-------------
 
-═══════════════════════════════════════════════════════════════
+- Sum, Min, Max, Count — always exact.
+- Average — exact with Detail (rows).
+- Count (Distinct) — choose it in the field well; exact when the same column is also in Dimensions
+  or Detail (rows).
+- Ratios and non-additive DAX — flagged with a note; bind only the dimensions you compare.
+
+SORTING AND OTHERS
+------------------
+
+- Click a column header to sort the rows by it: highest first, lowest first, off.
+- Automatic order keeps the data order and puts days and months in calendar order.
+- Others (N) groups the smallest categories beyond Maximum rows / columns (25 by default, up to 200)
+  so totals still add up; it does not stretch the color scale.
+- Order by similarity (Pro) puts rows or columns with the same pattern together.
 
 FORMAT PANE
+-----------
 
-  VALUES
-    Show value as ..... Absolute · % of row · % of column · % of grand total   (PRO)
-                        Set per measure: the card names the one it is editing
-    Show totals ....... Total row and column, exact distinct counts            (PRO)
+- Style template — Classic, Clean, Tiles, Contrast, Compact; your own settings win.
+- Values — Show totals (Pro).
+- Heatmap colors — 12 schemes (Viridis and Cividis are colour-blind safe) or Custom.
+- Color rules — up to three thresholds with their own color; percentages as fractions (0.25).
+- Rows and columns — order, maximums, Others, similarity.
+- Empty cells, Text, Layout (row height, column width, header orientation, cell gap and radius).
+- Text on dark cells turns white automatically unless you set the value color.
 
-  HEATMAP COLORS
-    Minimum ........... Colour for the lowest visible value
-    Middle ............ Colour for the midpoint
-    Maximum ........... Colour for the highest visible value
-                        The scale is global across every visible cell
+FILTERING
+---------
 
-  EMPTY CELLS
-    Display as ........ Blank · Dash (-) · Zero (0) · Grey fill
+- Click a cell to filter the page; click again to clear; Ctrl+click to add.
+- With row groups, a cell filters by column, row and group.
+- A cell in Others filters by all of its categories.
+- Bookmarks restore the selected cells.
 
-  TEXT
-    Axis labels ....... Font, size and colour
-    Values ............ Font, size and colour
-    Controls bar ...... Background colour and label font
+FREE AND PRO
+------------
 
-  LAYOUT
-    Row height ........ Minimum row height in pixels
-    Column width ...... Column width in pixels
-    Header orientation  Horizontal · Vertical (90°) · Diagonal (45°)
+Free is a correct pivot, not a cut-down one: 3 dimensions and 2 measures, heatmap, rules, templates,
+Others, sorting and exact averages. Pro adds 10 dimensions and 5 measures, Show as, totals, row groups,
+order by similarity and distinct counts of Detail fields. While editing without a licence, Pro features
+are drawn working under a Pro preview watermark; reading view shows the free result.
 
-═══════════════════════════════════════════════════════════════
+WHAT CHANGED IN 1.2
+-------------------
 
-FREE VS PRO
+- Distinct count of → Detail (rows). Fields already there stay.
+- Weights for averages is gone. Use an ID in Detail (rows) instead.
+- Show value as moved from the Format pane to Show as in the visual; reports keep their mode.
 
-  Included in both:
-    • Matrix with in-canvas X / Y / Value dropdowns
-    • Global three-colour heatmap scale
-    • All formatting options
-    • Cross-filtering, tooltips, context menu, keyboard navigation
-    • High contrast support
-
-  Free limits:
-    • Up to 3 dimensions
-    • Up to 2 measures
-
-  Pro adds:
-    • Up to 10 dimensions and 5 measures
-    • DISTINCT COUNT OF — exact unique counts for any X/Y combination
-    • SHOW VALUE AS — % of row, % of column, % of grand total
-    • ROW AND COLUMN TOTALS with exact distinct counts
-
-  Nothing is watermarked or time limited.
-
-═══════════════════════════════════════════════════════════════
-
-TIPS AND BEST PRACTICES
-
-  PUT THE HIGH-CARDINALITY DIMENSION ON Y
-  Rows scroll comfortably. Columns run out of width fast.
-
-  USE DIAGONAL HEADERS FOR LONG LABELS
-  Keeps columns narrow without truncating text.
-
-  KEEP DIMENSIONS LEAN
-  Every field multiplies the combinations Power BI must compute. Three or four
-  well-chosen dimensions outperform ten, and the dropdowns stay usable.
-
-  WATCH FOR OUTLIERS
-  The colour scale is global, so one extreme cell flattens everything else.
-  If a single cell dominates, consider filtering it out.
-
-  EMPTY IS NOT ZERO
-  Use Dash when absence of data means something different from a real zero.
-  They are easy to confuse in a dense matrix.
-
-═══════════════════════════════════════════════════════════════
-
-PRO FEATURES IN PRACTICE
-
-  DISTINCT COUNT OF — the reason the visual exists
-
-  Drag customer_id (the raw column, NOT a measure) into this well. The visual
-  counts unique values itself, so the figure is exact for every X/Y combination.
-  Verify against a card with Count (Distinct): the grand totals match.
-
-  Why a DAX measure cannot do this: Power BI computes the measure across all the
-  fields in the visual. A customer appearing under two categories is counted in
-  both, so recombining into a two-dimensional view double counts. Counting from
-  the raw column avoids the problem entirely.
-
-  SHOW VALUE AS
-  % of grand total answers "where is the mass of this data?" at a glance.
-  % of row and % of column answer "how does this row split?".
-
-  TOTALS
-  With distinct counts the margins are genuine distinct counts across the whole
-  row or column, not the sum of the cells. That is correct — and it is why a row
-  total is usually smaller than adding its cells across.
-
-═══════════════════════════════════════════════════════════════
-
-EXAMPLE CONFIGURATIONS
-
-  CUSTOMER COVERAGE BY SERVICE LEVEL
-    X ......... picking type
-    Y ......... delivery distance
-    Value ..... Distinct customer_id
-    Totals .... on
-    Answers ... how many distinct customers fall in each service combination
-
-  REVENUE CONCENTRATION
-    X ......... channel
-    Y ......... quarter
-    Value ..... Sum of sales
-    Show as ... % of grand total
-    Answers ... which channel and quarter carry the business
-
-  QUALITY SCORES
-    X ......... route
-    Y ......... complexity
-    Value ..... Average of score
-    Answers ... mean score per intersection; row totals give the row mean
-
-═══════════════════════════════════════════════════════════════
-
-TROUBLESHOOTING
-
-  NUMBERS DO NOT MATCH MY CARD
-  For counts of things appearing in more than one category, use Distinct count of
-  with the raw column rather than a DAX measure.
-
-  A FIELD SHOWS AS A PERCENTAGE WHEN IT SHOULD NOT
-  Happens when the same field is added twice, once normally and once with
-  Show value as → Percent of grand total: Power BI marks the underlying column as
-  a percentage and it reaches both instances. The visual detects and corrects this.
-  If it persists, check the column's format in your model: the visual uses the
-  model's format string, in your report's locale.
-
-  AN AVERAGE IS NOT THE NUMBER THE NATIVE MATRIX SHOWS
-  X and Y are chosen inside the visual, so Power BI cannot aggregate to that pair:
-  it aggregates at the grain of every bound dimension and the visual combines the
-  rest. Sums, minimums, maximums and counts survive that; an average does not,
-  because every combination would count the same whether it holds one row or ten
-  thousand. Bind a row count to the Weights for averages well and the visual uses
-  the weighted average.
-
-  A DISTINCT COUNT IS TOO HIGH
-  Do not bind Count (Distinct) as a measure: a customer buying in two regions sits
-  in two combinations and gets counted twice. Use the Distinct count of well with
-  the raw ID column, which the visual counts per cell.
-
-  "SHOWING A PARTIAL DATASET"
-  Too many dimension combinations. Remove a dimension or two.
-
-  CLICKING DOES NOT FILTER ANOTHER TABLE
-  In Model view, set the relationship's cross-filter direction to Both.
-
-═══════════════════════════════════════════════════════════════
-
-  Support ... https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/support.html
-  Issues .... https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/issues
-  Privacy ... https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/privacy.html
-  Terms ..... https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/terms.html
-
-  © 2026 TCViz
+Questions: https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/discussions · support@tcviz.com

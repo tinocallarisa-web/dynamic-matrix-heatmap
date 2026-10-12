@@ -23,12 +23,41 @@
 </head>
 <body>
   <h1>Changelog — Dynamic Matrix Heatmap</h1>
-  <p class="meta">Current version <strong>1.1.0.0</strong> &nbsp;|&nbsp;
+  <p class="meta">Current version <strong>1.2.0.0</strong> &nbsp;|&nbsp;
     <a href="support.html">Support</a> &nbsp;|&nbsp;
     <a href="mailto:support@tcviz.com">support@tcviz.com</a></p>
 
   <p>All notable changes to Dynamic Matrix Heatmap are documented here.</p>
   <p>This project follows <a href="https://keepachangelog.com/en/1.1.0/" target="_blank" rel="noopener">Keep a Changelog</a> and the Power BI four-part version scheme (<code>major.minor.patch.build</code>).</p>
+  <h2 id="v1.2.0.0">1.2.0.0 <span class="date">2026-10-12</span></h2>
+  <p>The matrix becomes a pivot table: the reader chooses how values are shown, groups rows with subtotals, and sorts.</p>
+  <h3 class="kind kind-added">Added</h3>
+  <ul>
+    <li><strong>Show as, in the visual (Pro).</strong> A dropdown next to Value switches the active measure between absolute, % of row, % of column and % of grand total, and each measure remembers its own. The reader can change it, like X and Y. The same measure no longer needs to be added twice — which did not work anyway: Power BI treats two copies of the same field as one, so renaming one renamed both.</li>
+    <li><strong>Group rows (Pro).</strong> A third dimension groups the rows, with a subtotal row per group that opens and closes, and a button to open or close all. Each cell is computed from the rows of its own group, and clicking it filters by column, row and group.</li>
+    <li><strong>Order by similarity (Pro).</strong> Rows or columns with the same pattern are placed together, by hierarchical clustering of their profiles.</li>
+    <li><strong>Detail (rows).</strong> One optional ID — order, ticket, customer — makes averages exact for any X/Y pair. Free.</li>
+    <li><strong>Exact distinct counts without a separate well.</strong> A measure set to Count (Distinct) in the field well is counted exactly when that column is also in Dimensions or Detail (rows).</li>
+    <li><strong>Others.</strong> Beyond Maximum rows or columns (default 25, up to 200), the categories with the smallest totals are grouped in one Others row or column, so totals still add up, and a note says how many. Others is drawn last and does not stretch the color scale.</li>
+    <li><strong>Sorting.</strong> Row and column order by name or total; click a column header to sort the rows by it; days of the week and months in calendar order in six languages.</li>
+    <li><strong>Color rules.</strong> Up to three rules paint the cells that meet a threshold, over the gradient.</li>
+    <li><strong>12 color schemes and 5 style templates</strong> (Classic, Clean, Tiles, Contrast, Compact), space between cells and rounded corners. Text on dark cells turns white automatically.</li>
+    <li><strong>Format on the canvas.</strong> Click the values, the headers or the dropdown bar in format mode to format them.</li>
+    <li><strong>12 languages.</strong> The Format pane and the bar in the visual — which until now was always in English, together with the notes and the Total label.</li>
+  </ul>
+  <h3 class="kind kind-fixed">Fixed</h3>
+  <ul>
+    <li><strong>Only the first 25 categories of an axis were shown, and totals left the rest out without saying so.</strong> Replaced by Others, with a note.</li>
+    <li><strong>The note that an average or a non-additive measure is not exact appeared one render late.</strong> It now appears with the matrix it refers to.</li>
+    <li><strong>Two copies of the same measure shared their percentage setting, and renaming one left it behind.</strong> Settings are now kept per field and position.</li>
+  </ul>
+  <h3 class="kind kind-changed">Changed</h3>
+  <ul>
+    <li><strong>Distinct count of is now Detail (rows).</strong> Same well, new meaning: fields already in it stay, and are still offered as distinct counts (Pro).</li>
+    <li><strong>Weights for averages is removed.</strong> Detail (rows) makes averages exact without a weight. A field left in it is no longer used; reports that relied on it show an average of averages, with the note, until an ID is added to Detail (rows).</li>
+    <li><strong>Show value as is no longer in the Format pane;</strong> it is the Show as dropdown in the visual. Reports keep the mode they had.</li>
+    <li><strong>The Values card description</strong> no longer mentions Aggregation and Number format, removed in 1.1.0.0.</li>
+  </ul>
   <h2 id="v1.1.0.0">1.1.0.0 <span class="date">2026-09-28</span></h2>
   <h3 class="kind kind-fixed">Fixed</h3>
   <ul>

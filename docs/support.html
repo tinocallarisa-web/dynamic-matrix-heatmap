@@ -1,194 +1,530 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Support &amp; Documentation — Dynamic Matrix Heatmap by TCViz</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dynamic Matrix Heatmap – Support</title>
 <style>
-  :root{--bg:#FAF9F5;--bg2:#EDE9DE;--line:#DAD9D4;
-        --t1:#3D3929;--t2:#535146;--t3:#83827D;--acc:#C96442;--accd:#B05730;
-        --acc2:#9C87F5;--acc2l:#DBD3F0}
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--t1);
-       font-family:'Segoe UI',system-ui,-apple-system,sans-serif;line-height:1.65}
-  .wrap{max-width:900px;margin:0 auto;padding:48px 24px 80px}
-  header{border-bottom:3px solid var(--acc);padding-bottom:20px;margin-bottom:36px}
-  h1{margin:0 0 6px;font-size:32px;letter-spacing:-.5px}
-  h2{margin:40px 0 12px;font-size:22px;color:var(--accd)}
-  h3{margin:26px 0 8px;font-size:16px}
-  .sub{color:var(--t3);font-size:14px;margin:0}
-  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
-  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
-  th{background:var(--bg2);font-weight:600}
-  code{background:var(--bg2);padding:2px 6px;border-radius:4px;font-size:13px}
-  .note{background:var(--bg2);border-left:4px solid var(--acc);padding:16px 20px;
-        border-radius:0 8px 8px 0;margin:20px 0}
-  .pro{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;
-       background:var(--acc2l);color:#4A3B8C;border:1px solid var(--acc2);
-       text-transform:uppercase;letter-spacing:.4px}
-  .steps{counter-reset:s;list-style:none;padding:0}
-  .steps li{counter-increment:s;position:relative;padding:0 0 14px 40px;margin:0}
-  .steps li::before{content:counter(s);position:absolute;left:0;top:0;width:26px;height:26px;
-    border-radius:50%;background:var(--acc);color:#fff;font-weight:700;font-size:13px;
-    display:flex;align-items:center;justify-content:center}
-  .video{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;
-    border-radius:10px;border:1px solid var(--line);margin:20px 0}
-  .video iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
-  details{background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin:10px 0}
-  summary{cursor:pointer;font-weight:600}
-  ul{padding-left:22px}li{margin:6px 0}
-  a{color:var(--accd)}
-  footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);
-         color:var(--t3);font-size:13px;display:flex;gap:18px;flex-wrap:wrap}
+  :root {
+    --bg: #FAF9F5; --bg2: #EDE9DE; --bd: #F5F3ED; --line: #DAD9D4;
+    --t1: #3D3929; --t2: #535146; --t3: #83827D;
+    --acc: #2B6CB0; --accd: #1F4E80; --acc2: #3E9C5B;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--t1); line-height: 1.65; }
+
+  /* ── Header ── */
+  header { background: var(--t1); color: #fff; padding: 28px 48px; display: flex; align-items: center; gap: 20px; }
+  header svg { flex-shrink: 0; }
+  header .title { font-size: 22px; font-weight: 700; }
+  header .sub   { font-size: 13px; color: #b5b3aa; margin-top: 2px; }
+
+  /* ── Nav ── */
+  nav { background: var(--bg2); border-bottom: 1px solid var(--line); padding: 0 48px; display: flex; gap: 0; overflow-x: auto; }
+  nav a { display: block; padding: 14px 14px; white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--t2);
+          text-decoration: none; border-bottom: 3px solid transparent; transition: color .2s, border-color .2s; }
+  nav a:hover, nav a.active { color: var(--acc); border-bottom-color: var(--acc); }
+
+  /* ── Layout ── */
+  .wrap { max-width: 900px; margin: 0 auto; padding: 48px 24px 80px; }
+  h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+  h2 { font-size: 17px; font-weight: 700; color: var(--t1); margin: 40px 0 12px; padding-bottom: 8px;
+       border-bottom: 2px solid var(--acc); display: inline-block; }
+  h3 { font-size: 14px; font-weight: 700; color: var(--t1); margin: 18px 0 6px; }
+  p  { font-size: 14px; color: var(--t2); margin-bottom: 10px; }
+  ul { font-size: 14px; color: var(--t2); padding-left: 20px; margin-bottom: 10px; }
+  li { margin-bottom: 5px; }
+  code { font-family: monospace; background: var(--bg2); padding: 1px 6px; border-radius: 4px;
+         font-size: 12px; color: var(--acc); }
+
+  /* ── Cards ── */
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 24px 28px; margin-bottom: 16px; }
+
+  /* ── Badges ── */
+  .badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px;
+           text-transform: uppercase; letter-spacing: .5px; vertical-align: middle; margin-left: 6px; }
+  .badge-pro  { background: var(--acc2); color: #fff; }
+  .badge-free { background: var(--acc);  color: #fff; }
+
+  /* ── Field wells table ── */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px; }
+  th { background: var(--bg2); color: var(--t1); font-weight: 700; padding: 10px 14px; text-align: left;
+       border-bottom: 2px solid var(--line); }
+  td { padding: 9px 14px; border-bottom: 1px solid var(--bd); color: var(--t2); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+
+  /* ── FAQ ── */
+  details { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 10px; background: #fff; }
+  summary { padding: 14px 18px; font-size: 14px; font-weight: 600; cursor: pointer; list-style: none;
+            display: flex; align-items: center; justify-content: space-between; color: var(--t1); }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '+'; font-size: 18px; font-weight: 300; color: var(--acc); transition: transform .2s; }
+  details[open] summary::after { content: '−'; }
+  details[open] summary { border-bottom: 1px solid var(--line); }
+  .faq-body { padding: 14px 18px; font-size: 14px; color: var(--t2); }
+  .faq-body p { margin-bottom: 6px; }
+  .faq-body ul { margin-top: 6px; }
+
+  /* ── Contact box ── */
+  .contact-box { background: var(--acc); color: #fff; border-radius: 10px; padding: 24px 28px;
+                  display: flex; align-items: center; gap: 20px; }
+  .contact-box .icon { font-size: 36px; flex-shrink: 0; }
+  .contact-box h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; color: #fff; }
+  .contact-box p  { font-size: 13px; color: rgba(255,255,255,.85); margin: 0; }
+  .contact-box a  { color: #fff; font-weight: 700; text-decoration: underline; }
+
+  /* ── Video embed ── */
+  .video-wrap { position: relative; padding-bottom: 56.25%; height: 0; border-radius: 10px; overflow: hidden;
+                border: 1px solid var(--line); margin-bottom: 20px; }
+  .video-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+
+  /* ── CTA strip ── */
+  .cta { display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0; }
+  .btn { display: inline-block; padding: 10px 22px; border-radius: 6px; font-size: 13px; font-weight: 700;
+          text-decoration: none; transition: background .2s; }
+  .btn-primary { background: var(--acc); color: #fff; }
+  .btn-primary:hover { background: var(--accd); }
+  .btn-outline { background: transparent; color: var(--acc); border: 2px solid var(--acc); }
+  .btn-outline:hover { background: var(--acc); color: #fff; }
+
+  /* ── Search ── */
+  .searchbar { background: var(--bg2); border-bottom: 1px solid var(--line); padding: 14px 48px 16px; }
+  .searchbox { position: relative; max-width: 900px; margin: 0 auto; display: flex; align-items: center;
+               gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 0 12px; }
+  .searchbox:focus-within { border-color: var(--acc); box-shadow: 0 0 0 3px rgba(43,108,176,.16); }
+  .searchbox svg { color: var(--t3); flex-shrink: 0; }
+  .searchbox input { flex: 1; border: none; outline: none; background: transparent; font: inherit;
+                     font-size: 14px; color: var(--t1); padding: 11px 0; }
+  .searchbox input::placeholder { color: var(--t3); }
+  .searchbox button { border: none; background: transparent; color: var(--t3); font-size: 20px;
+                      line-height: 1; cursor: pointer; padding: 0 2px; }
+  .searchbox button:hover { color: var(--acc); }
+  .search-status { max-width: 900px; margin: 8px auto 0; font-size: 12px; color: var(--t3); min-height: 16px; }
+  mark { background: #FCE8A8; color: var(--t1); border-radius: 2px; padding: 0 2px; }
+  .is-hidden { display: none !important; }
+
+  /* ── Version pill ── */
+  .verpill { display: block; width: fit-content; font-size: 11px; font-weight: 700; letter-spacing: .4px;
+             background: var(--bg2); color: var(--t2); border: 1px solid var(--line);
+             padding: 3px 10px; border-radius: 20px; margin-bottom: 14px; }
+  .verpill a { color: var(--acc); text-decoration: none; }
+  .lead { font-size: 14px; line-height: 1.6; color: var(--t2); margin: 0 0 22px; }
+  .lead a { color: var(--acc); }
+
+  /* ── Footer ── */
+  footer { background: var(--t1); color: var(--t3); text-align: center; padding: 24px 48px; font-size: 12px; }
+  footer a { color: #b5b3aa; text-decoration: none; margin: 0 8px; }
+  footer a:hover { color: #fff; }
 </style>
 </head>
 <body>
-<div class="wrap">
 
+<!-- Header -->
 <header>
-  <h1>Support &amp; Documentation</h1>
-  <p class="sub">Dynamic Matrix Heatmap — a Power BI custom visual by TCViz · Version 1.1.0.0 · Last updated: 15 September 2026</p>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 828 362" width="90" height="40">
+    <defs><linearGradient id="g" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#1F4E80"/>
+      <stop offset=".55" stop-color="#2B6CB0"/>
+      <stop offset="1" stop-color="#3E9C5B"/>
+    </linearGradient></defs>
+    <g transform="translate(40,46)">
+      <rect x="22" y="20" width="150" height="150" rx="30" fill="none" stroke="url(#g)" stroke-width="11"/>
+      <g fill="url(#g)">
+        <rect x="42" y="110" width="20" height="58" rx="5"/>
+        <rect x="70" y="86" width="20" height="82" rx="5"/>
+        <rect x="98" y="62" width="20" height="106" rx="5"/>
+        <rect x="126" y="38" width="20" height="130" rx="5"/>
+      </g>
+    </g>
+    <text x="258" y="246" font-family="Poppins,sans-serif" font-weight="700" font-size="196" letter-spacing="-4">
+      <tspan fill="url(#g)">tc</tspan><tspan fill="#fff">viz</tspan>
+    </text>
+    <text x="264" y="306" font-family="Poppins,sans-serif" font-weight="500" font-size="31" letter-spacing="6.5" fill="#83827D">VISUALS TO POWER BI</text>
+  </svg>
+  <div>
+    <div class="title">Dynamic Matrix Heatmap</div>
+    <div class="sub">Support &amp; Documentation</div>
+  </div>
 </header>
 
-<p>Dynamic Matrix Heatmap lets the people reading your report choose their own crosstab. Instead of
-you building one matrix per combination, they pick the X dimension, the Y dimension and the value
-from dropdowns inside the visual — no edit rights, no request to a developer.</p>
+<!-- Nav -->
+<nav>
+  <a href="#quickstart" class="active">Quick Start</a>
+  <a href="#fields">Field Wells</a>
+  <a href="#format">Format Pane</a>
+  <a href="#bar">The bar</a>
+  <a href="#exact">Exact numbers</a>
+  <a href="#sorting">Sorting</a>
+  <a href="#interaction">Selection</a>
+  <a href="#accessibility">Accessibility</a>
+  <a href="#performance">Performance</a>
+  <a href="#free-pro">Free vs Pro</a>
+  <a href="#troubleshooting">Troubleshooting</a>
+  <a href="#faq">FAQ</a>
+  <a href="changelog.html">Changelog</a>
+  <a href="#contact">Contact</a>
+</nav>
 
-<h2>Video walkthrough</h2>
-<div class="video">
-  <iframe src="https://www.youtube-nocookie.com/embed/vobbf6405e4"
-          title="Dynamic Matrix Heatmap — walkthrough"
-          allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen loading="lazy"></iframe>
+<!-- Search -->
+<div class="searchbar">
+  <div class="searchbox">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="docsearch" type="search" placeholder="Search the documentation — try &quot;average&quot;, &quot;Others&quot;, &quot;Show as&quot;…"
+           autocomplete="off" aria-label="Search the documentation">
+    <button id="searchclear" type="button" aria-label="Clear search" hidden>&times;</button>
+  </div>
+  <div id="searchstatus" class="search-status" role="status" aria-live="polite"></div>
 </div>
 
-<h2>Quick start</h2>
-<ol class="steps">
-  <li>Drop the visual on the canvas.</li>
-  <li>Drag two or more fields into <strong>Dimensions</strong>. These populate the X and Y dropdowns.</li>
-  <li>Drag at least one measure into <strong>Measures</strong>.</li>
-  <li>In the visual, pick an <strong>X axis</strong> and a <strong>Y axis</strong>. The matrix appears.</li>
-  <li>Optional: drag a raw ID column (such as <code>customer_id</code>) into <strong>Distinct count of</strong> <span class="pro">Pro</span> to count unique values exactly.</li>
-</ol>
+<div class="wrap">
 
-<h2>Field wells</h2>
-<table>
-  <tr><th>Well</th><th>Accepts</th><th>Limit</th><th>Purpose</th></tr>
-  <tr><td>Dimensions</td><td>Any grouping field</td><td>3 Free / 10 Pro</td><td>Populates the X and Y dropdowns. Keep cardinality around 20–25 values per field.</td></tr>
-  <tr><td>Measures</td><td>Measures or numeric columns</td><td>2 Free / 5 Pro</td><td>Values shown in the cells.</td></tr>
-  <tr><td>Weights for averages</td><td>A row count</td><td>1, optional</td><td>Lets the visual weight an average when it combines across the dimensions you did not pick. Without it the average is unweighted and the visual says so while you edit.</td></tr>
-  <tr><td>Distinct count of</td><td>Raw ID columns</td><td>3 <span class="pro">Pro</span></td><td>The visual counts unique values itself, so the result is exact for every X/Y combination.</td></tr>
-</table>
+  <div class="verpill">Visual v1.2.0.0 &nbsp;·&nbsp; docs updated 12 Oct 2026 &nbsp;·&nbsp; <a href="changelog.html">what's new</a></div>
 
-<h2>Why distinct counts are different here</h2>
-<div class="note">
-  Power BI computes a measure at the granularity of <em>all</em> the fields in the visual. When you
-  display only two of them, the other values have to be combined. Sums, minimums, maximums and
-  counts recombine exactly — but a distinct count does not, because a customer appearing under two
-  different pickings would be counted twice.
-  <br><br>
-  That is what the <strong>Distinct count of</strong> well solves: give the visual the raw ID column
-  and it counts unique values itself, in memory, for whichever pair of dimensions is on screen. The
-  grand total matches your card visual exactly.
+  <p class="lead"><strong>An interactive pivot table with a heatmap.</strong> The people reading your report pick the
+  rows, the columns, the value and how it is shown — from dropdowns inside the visual, without edit rights.
+  Supported Power BI features: cross-filtering by cell (and by group), Ctrl+click multi-select, highlighting ·
+  <strong>bookmarks</strong> · tooltips · context menu · <strong>custom color rules</strong> ·
+  <strong>format on the canvas</strong> (on-object) · keyboard navigation · high contrast ·
+  <strong>number formats from the model</strong> · <strong>12 panel languages</strong> · data loaded in segments
+  past 30,000 rows. Pivot: <strong>Show as</strong> absolute or % in the visual, <strong>row groups with subtotals</strong>
+  that open and close, <strong>Others</strong> so totals always add up, sorting by name, total or any column,
+  days and months in calendar order, <strong>order by similarity</strong>, exact averages and distinct counts with
+  <strong>Detail (rows)</strong>, 12 color schemes and 5 style templates.</p>
+
+  <!-- Video -->
+  <div class="video-wrap">
+    <iframe src="https://www.youtube.com/embed/vobbf6405e4" title="Dynamic Matrix Heatmap walkthrough"
+            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  </div>
+
+  <!-- Quick Start -->
+  <h2 id="quickstart">Quick Start</h2>
+  <div class="card">
+    <h3>1. Add the visual to your report</h3>
+    <p>In Power BI Desktop, go to the Visualizations pane → click the three dots → <strong>Get more visuals</strong> → search for <em>Dynamic Matrix Heatmap</em>.</p>
+    <h3>2. Give it the fields to pivot</h3>
+    <p>Drag two or more fields into <strong>Dimensions</strong> — region, product, month, channel… — and at least one value into <strong>Measures</strong>.</p>
+    <h3>3. Pick rows and columns in the visual</h3>
+    <p>Choose the <strong>X axis</strong>, the <strong>Y axis</strong> and the <strong>Value</strong> in the bar at the top. Anyone reading the report can change them, and the matrix follows.</p>
+    <h3>4. Optional: exact averages</h3>
+    <p>Put an ID that identifies each row — the order, the ticket, the customer — in <strong>Detail (rows)</strong>. Averages and distinct counts are then exact for any X/Y pair.</p>
+  </div>
+
+  <!-- Field wells -->
+  <h2 id="fields">Field Wells</h2>
+  <table>
+    <tr><th>Well</th><th>Accepts</th><th>What it does</th></tr>
+    <tr><td><strong>Dimensions</strong></td><td>Up to 10 fields (Free: 3)</td><td>The fields offered in the X axis, Y axis and Group rows dropdowns.</td></tr>
+    <tr><td><strong>Measures</strong></td><td>Up to 5 (Free: 2)</td><td>Measures or numeric columns, aggregated as set in the field well (Sum, Average, Min, Max, Count, Count (Distinct)). The model's number format is used, in the report's locale.</td></tr>
+    <tr><td><strong>Detail (rows)</strong></td><td>Optional, up to 3</td><td>An ID that identifies each row. With it, the visual receives every row and computes averages exactly; each field here is also offered in Value as a distinct count (Pro).</td></tr>
+  </table>
+  <p>Power BI sends rows in blocks of 30,000; the visual asks for more blocks automatically, up to 20.</p>
+
+  <!-- The bar -->
+  <h2 id="bar">The bar in the visual</h2>
+  <table>
+    <tr><th>Dropdown</th><th>What it does</th></tr>
+    <tr><td><strong>X axis</strong> · <strong>Y axis</strong></td><td>The dimensions in the columns and in the rows.</td></tr>
+    <tr><td><strong>Value</strong></td><td>The measure shown in the cells (and the distinct counts of Detail fields, Pro).</td></tr>
+    <tr><td><strong>Show as</strong> <span class="badge badge-pro">Pro</span></td><td>Absolute, % of row, % of column or % of grand total. Each measure remembers its own, so the same measure never needs to be added twice.</td></tr>
+    <tr><td><strong>Group rows</strong> <span class="badge badge-pro">Pro</span></td><td>A third dimension that groups the rows, with a subtotal row per group. Click a group to open or close it; the corner button opens or closes all. Appears with three or more dimensions.</td></tr>
+  </table>
+
+  <!-- Exact numbers -->
+  <h2 id="exact">Exact numbers</h2>
+  <div class="card">
+    <p>Because rows and columns are chosen inside the visual, Power BI cannot aggregate to the pair you see: it sends the values at the grain of <em>every</em> dimension you bound, and the visual combines the rest.</p>
+    <ul>
+      <li><strong>Sum, Min, Max and Count</strong> combine exactly. Always.</li>
+      <li><strong>Average</strong> needs <strong>Detail (rows)</strong> to be exact. Without it the visual combines averages, and a note says so while you edit.</li>
+      <li><strong>Count (Distinct)</strong> — set it in the field well as usual. If that column is also in Dimensions or Detail (rows), the visual counts it exactly for any X/Y pair. If not, a note says the number may not be exact and how to fix it.</li>
+      <li><strong>Ratios and DAX measures</strong> that are not additive are flagged the same way: bind only the dimensions you compare, or use an additive measure.</li>
+    </ul>
+  </div>
+
+  <!-- Format pane -->
+  <h2 id="format">Format Pane</h2>
+  <div class="card">
+    <h3>Style template</h3>
+    <p><strong>Classic</strong>, <strong>Clean</strong> (blues, spaced rounded cells), <strong>Tiles</strong> (GitHub-style activity tiles), <strong>Contrast</strong> (red–yellow–green), <strong>Compact</strong> (small rows and text). A template only fills in what you have not set yourself.</p>
+  </div>
+  <div class="card">
+    <table>
+      <tr><th>Card</th><th>Settings</th></tr>
+      <tr><td>Values</td><td>Show totals <span class="badge badge-pro">Pro</span> — a total column and row.</td></tr>
+      <tr><td>Heatmap colors</td><td>12 color schemes — Orange, Blues, Greens, Purples, Greys, Red–yellow–green, Green–yellow–red, Blue–white–red, Viridis and Cividis (colour-blind safe), Activity — or Custom with your own minimum, middle and maximum colors.</td></tr>
+      <tr><td>Color rules</td><td>Up to three rules: <em>greater than or equal to</em> or <em>less than or equal to</em> a value paints the cell with its own color, over the gradient. The first rule that matches wins. Percentages are written as fractions (0.25 for 25%).</td></tr>
+      <tr><td>Rows and columns</td><td>Row order and column order (Automatic, name A–Z or Z–A, total high–low or low–high); Maximum rows and Maximum columns (default 25, up to 200); Group the rest as Others; Order rows / columns by similarity <span class="badge badge-pro">Pro</span>.</td></tr>
+      <tr><td>Empty cells</td><td>Blank, dash, zero or grey fill.</td></tr>
+      <tr><td>Text</td><td>Font, size and color of axis labels, of values and of the dropdown bar.</td></tr>
+      <tr><td>Layout</td><td>Row height, column width, column header orientation (horizontal, vertical, diagonal), space between cells, cell corner radius.</td></tr>
+    </table>
+    <p>Text on dark cells turns white automatically, unless you set the value color yourself.</p>
+  </div>
+  <div class="card">
+    <h3>Format on the canvas</h3>
+    <p>In format mode, click the cell values, the row or column headers or the dropdown bar to change font, size and color without opening the Format pane.</p>
+  </div>
+
+  <!-- Sorting and Others -->
+  <h2 id="sorting">Sorting, Others and similarity</h2>
+  <div class="card">
+    <ul>
+      <li><strong>Click a column header</strong> to sort the rows by that column: highest first, then lowest first, then back to the chosen order. The arrow shows the direction; the order is saved with the report.</li>
+      <li><strong>Automatic</strong> keeps the order of the data, and puts days of the week and months in calendar order (English, Spanish, Portuguese, French, German, Italian; full or short names).</li>
+      <li><strong>Others</strong>: beyond Maximum rows or columns, the categories with the smallest totals are grouped in one <em>Others (N)</em> row or column, so totals still add up. A note says how many were grouped. Turn it off to leave them out — the note then says they are out of the totals too. Others is drawn last and does not stretch the color scale.</li>
+      <li><strong>Order by similarity</strong> <span class="badge badge-pro">Pro</span> puts rows (or columns) with the same pattern next to each other — weekday-heavy regions together, weekend-heavy ones together.</li>
+    </ul>
+  </div>
+
+  <!-- Interaction -->
+  <h2 id="interaction">Selection &amp; filtering</h2>
+  <div class="card">
+    <ul>
+      <li><strong>Click a cell</strong> to filter the rest of the page to that intersection; <strong>click it again</strong> to clear; <strong>Ctrl+click</strong> to add cells.</li>
+      <li>With <strong>Group rows</strong>, a cell filters by its column, its row and its group — <em>Bikes</em> in <em>North</em>, not Bikes everywhere.</li>
+      <li>A cell in <strong>Others</strong> filters by every category it groups.</li>
+      <li><strong>Bookmarks</strong> keep the selected cells and restore them.</li>
+      <li>Selections in other visuals <strong>highlight</strong> the cells they touch and dim the rest.</li>
+      <li>Right-click a cell for the Power BI context menu (Include, Exclude, Drill through).</li>
+    </ul>
+  </div>
+
+  <!-- Accessibility -->
+  <h2 id="accessibility">Accessibility</h2>
+  <div class="card">
+    <ul>
+      <li><strong>Keyboard:</strong> Tab through the dropdowns, headers and cells; <code>Enter</code> or <code>Space</code> selects a cell (<code>Ctrl</code> to add), sorts by a column header or opens and closes a group.</li>
+      <li><strong>Screen readers:</strong> column headers announce their sort order; groups announce whether they are open.</li>
+      <li><strong>High contrast:</strong> with a Windows high-contrast theme the color scale gives way to the system colors, and selected cells get a system-colored outline.</li>
+      <li>Two colour-blind safe schemes: Viridis and Cividis.</li>
+    </ul>
+  </div>
+
+  <!-- Free / Pro -->
+  <h2 id="free-pro">Free, Pro and the Pro preview</h2>
+  <table>
+    <tr><th>Capability</th><th>Free</th><th>Pro</th></tr>
+    <tr><td>Pivot with X / Y / Value dropdowns, heatmap, color schemes and rules, templates</td><td>✓</td><td>✓</td></tr>
+    <tr><td>Others, sorting, calendar order, Detail (rows) for exact averages</td><td>✓</td><td>✓</td></tr>
+    <tr><td>Cross-filtering, bookmarks, tooltips, keyboard, high contrast, format on the canvas, 12 languages</td><td>✓</td><td>✓</td></tr>
+    <tr><td>Dimensions · Measures</td><td>3 · 2</td><td>10 · 5</td></tr>
+    <tr><td>Show as % of row, column or grand total</td><td>—</td><td>✓</td></tr>
+    <tr><td>Totals · Group rows with subtotals · Order by similarity</td><td>—</td><td>✓</td></tr>
+    <tr><td>Distinct counts of Detail (rows) fields in Value</td><td>—</td><td>✓</td></tr>
+  </table>
+  <div class="card">
+    <ul>
+      <li>While you <strong>edit</strong> a report without a licence, the Pro capabilities you use are shown working under a <em>Pro preview</em> watermark, and Power BI shows how to get a licence.</li>
+      <li>In <strong>reading view</strong> the free result is shown: the first 3 dimensions and 2 measures, absolute values, no totals or groups — with a short note and no watermark.</li>
+      <li>Where Power BI cannot check licences (Publish to Web, embedding, PDF or PowerPoint export) the free result is shown.</li>
+    </ul>
+  </div>
+
+  <!-- Troubleshooting -->
+  <h2 id="troubleshooting">Troubleshooting</h2>
+  <table>
+    <tr><th>What you see</th><th>Why</th><th>What to do</th></tr>
+    <tr><td>An average differs from the native matrix</td><td>Without Detail (rows), the visual can only combine the averages Power BI sent.</td><td>Put an ID in Detail (rows): order, ticket or customer.</td></tr>
+    <tr><td>A distinct count is too high</td><td>Count (Distinct) cannot be combined unless the visual has the column's values.</td><td>Add that column to Dimensions or Detail (rows) as well.</td></tr>
+    <tr><td><em>Others (N)</em> appears</td><td>The axis has more categories than Maximum rows or columns.</td><td>Raise the maximum in Rows and columns, or keep Others so totals add up.</td></tr>
+    <tr><td>“Showing a partial dataset”</td><td>Power BI would send more rows than 20 blocks of 30,000.</td><td>Remove a dimension or a Detail field you do not need.</td></tr>
+    <tr><td>Renaming one copy of a measure renames the other</td><td>Power BI treats the same field with the same aggregation, added twice, as one.</td><td>Add it once and use <strong>Show as</strong> in the visual.</td></tr>
+    <tr><td>Clicking a cell does not filter a table</td><td>The relationship filters in one direction only.</td><td>In Model view, set the cross-filter direction to Both where needed.</td></tr>
+    <tr><td>Pro is not active after buying</td><td>Microsoft can take up to an hour to recognise a new licence.</td><td>Refresh the browser or reopen Power BI Desktop; a licence is per user.</td></tr>
+  </table>
+
+  <!-- FAQ -->
+  <h2 id="faq">FAQ</h2>
+  <details><summary>How is this different from the Power BI matrix?</summary><div class="faq-body"><p>In the native matrix the author fixes the rows and columns. Here the reader chooses them — and the value, and how it is shown — from the visual itself, without edit rights. It works like a pivot table with a heatmap.</p></div></details>
+  <details><summary>Do I need DAX?</summary><div class="faq-body"><p>No. Drag fields, choose the aggregation in the field well, and switch between absolute and percentages with <strong>Show as</strong> in the visual.</p></div></details>
+  <details><summary>Can I show the same measure as a value and as a percentage?</summary><div class="faq-body"><p>Add it once and use <strong>Show as</strong> (Pro). Each measure remembers its own choice. Adding the same field twice does not help: Power BI treats both copies as one, so renaming one renames the other.</p></div></details>
+  <details><summary>When do I need Detail (rows)?</summary><div class="faq-body"><p>When you show averages, or want distinct counts that are exact for any pair. Sums, minimums, maximums and counts are exact without it.</p></div></details>
+  <details><summary>How do I count distinct customers?</summary><div class="faq-body"><p>Add the customer column to Measures and choose <em>Count (Distinct)</em> in its menu, and add the same column to Dimensions or Detail (rows). The visual then counts unique customers per cell, exactly. With Pro, a Detail field is also offered directly in Value.</p></div></details>
+  <details><summary>Why do percentages of a row not add up to 100 with distinct counts?</summary><div class="faq-body"><p>A customer who appears in several columns is counted once in each. That is how distinct counting works, not a defect.</p></div></details>
+  <details><summary>What is Others?</summary><div class="faq-body"><p>When an axis has more categories than the maximum, the smallest are grouped in one Others row or column so the totals stay true. Clicking an Others cell filters by all of them.</p></div></details>
+  <details><summary>Can the reader sort?</summary><div class="faq-body"><p>Yes: clicking a column header sorts the rows by it. The author sets the default order in Rows and columns.</p></div></details>
+  <details><summary>What does Order by similarity do?</summary><div class="faq-body"><p>It reorders rows (or columns) so that those with the same shape sit together — a hierarchical clustering of their profiles. Patterns hidden in alphabetical order become blocks you can see.</p></div></details>
+  <details><summary>Do bookmarks work?</summary><div class="faq-body"><p>Yes. A bookmark keeps the selected cells and restores them. The X, Y, value, group and sort are saved with the report.</p></div></details>
+  <details><summary>Where did Weights for averages and Distinct count of go?</summary><div class="faq-body"><p>Version 1.2 replaces both with <strong>Detail (rows)</strong>: one optional ID makes averages and distinct counts exact. Fields that were in Distinct count of stay where they are — it is the same well with its new name. A field in Weights for averages is no longer used; add an ID to Detail (rows) instead.</p></div></details>
+  <details><summary>Which languages is the visual in?</summary><div class="faq-body"><p>English, Spanish, French, German, Italian, Portuguese (Brazil and Portugal), Dutch, Polish, Japanese, Simplified Chinese and Korean — the Format pane and the bar in the visual. It follows the language of Power BI.</p></div></details>
+  <details><summary>Does my data leave Power BI?</summary><div class="faq-body"><p>No. The visual has no network permission; everything is computed inside the report. See <a href="privacy.html">Privacy</a>.</p></div></details>
+
+  <!-- Contact -->
+  <h2 id="contact">Contact &amp; Support</h2>
+  <div class="contact-box">
+    <div class="icon">✉️</div>
+    <div>
+      <h3>support@tcviz.com</h3>
+      <p>Questions, ideas or a bug? Email <a href="mailto:support@tcviz.com">support@tcviz.com</a>, ask in
+      <a href="https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/discussions" target="_blank">GitHub Discussions</a> or
+      <a href="https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/issues/new/choose" target="_blank">open an issue</a>.
+      Licensing questions: include your AppSource order reference.</p>
+    </div>
+  </div>
+  <div class="cta">
+    <a class="btn btn-outline" href="changelog.html">Changelog</a>
+    <a class="btn btn-outline" href="terms.html">Terms and Free / Pro</a>
+  </div>
+
 </div>
-
-<h2>Format pane</h2>
-<table>
-  <tr><th>Card</th><th>Setting</th><th>What it does</th></tr>
-  <tr><td rowspan="2">Values</td><td>Show value as <span class="pro">Pro</span></td><td>Absolute, % of row, % of column, % of grand total. Set per measure: the card names the one it is editing, and each measure keeps its own.</td></tr>
-  <tr><td>Show totals <span class="pro">Pro</span></td><td>Adds a total row and column, with exact distinct counts in the margins.</td></tr>
-  <tr><td>Heatmap colors</td><td>Minimum / Middle / Maximum</td><td>Three-point colour scale, applied globally across every visible cell.</td></tr>
-  <tr><td>Empty cells</td><td>Display as</td><td>Blank, dash, zero or grey fill.</td></tr>
-  <tr><td rowspan="2">Text</td><td>Axis labels, values</td><td>Font, size and colour, set separately.</td></tr>
-  <tr><td>Controls bar</td><td>Background colour and label font for the dropdown bar.</td></tr>
-  <tr><td rowspan="3">Layout</td><td>Row height</td><td>Minimum row height in pixels.</td></tr>
-  <tr><td>Column width</td><td>Column width in pixels.</td></tr>
-  <tr><td>Column header orientation</td><td>Horizontal, vertical (90°) or diagonal (45°).</td></tr>
-</table>
-
-<h2>Free, Pro and the Pro preview</h2>
-<p>Paid settings and field wells are marked <strong>(Pro)</strong> in Power BI. Without a licence:</p>
-<ul>
-  <li><strong>While you edit a report</strong>, Pro capabilities you use are shown working under a
-      <strong>Pro preview</strong> watermark, and Power BI shows how to get a licence.</li>
-  <li><strong>In reading view and published reports</strong>, the free result is shown — the first 3
-      dimensions and 2 measures, absolute values, no totals — with a short note and no watermark.</li>
-  <li>Where Power BI cannot check licences (Publish to Web, embedding, PDF/PowerPoint export) the free
-      result is shown, even for Pro customers.</li>
-</ul>
-
-<h2>Interaction</h2>
-<ul>
-  <li><strong>Click a cell</strong> — filters the rest of the page to that X/Y intersection.</li>
-  <li><strong>Click it again</strong> — clears the filter.</li>
-  <li><strong>Ctrl / Cmd + click</strong> — adds cells to the selection.</li>
-  <li><strong>Right click</strong> — the standard Power BI menu (Include, Exclude, Drill through).</li>
-  <li><strong>Tab and Enter</strong> — keyboard navigation across cells.</li>
-</ul>
-
-<h2>Troubleshooting</h2>
-
-<details><summary>The values do not match my card visual</summary>
-<p>If you are showing a count of something that can appear in more than one category, use the
-<strong>Distinct count of</strong> well with the raw ID column rather than a DAX measure. A distinct
-count computed at a finer grain cannot be recombined correctly by any client.</p></details>
-
-<details><summary>A field shows as a percentage when it should not</summary>
-<p>This happens when the same field is added twice, once normally and once with "Show value as →
-Percent of grand total": Power BI marks the underlying column as a percentage and the mark reaches
-both instances. The visual detects and corrects this automatically. If it persists, check the column's
-format in your model — the visual uses the model's format string, in your report's locale.</p></details>
-
-<details><summary>An average is not the number the native matrix shows</summary>
-<p>Because X and Y are chosen inside the visual, Power BI cannot aggregate to that pair: it aggregates
-at the grain of every bound dimension and the visual combines the rest. Sums, minimums, maximums and
-counts survive that; an average does not, because every combination would count the same whether it
-holds one row or ten thousand. Bind a row count to the <strong>Weights for averages</strong> field well
-and the visual uses the weighted average, which is the number the native matrix shows. Without it, a
-note while you edit tells you the average is unweighted.</p></details>
-
-<details><summary>A distinct count is too high</summary>
-<p>Do not bind <em>Count (Distinct)</em> as a measure. Power BI computes it at the grain of every bound
-dimension, and a distinct count cannot be combined: a customer who buys in two regions sits in two
-combinations and would be counted twice. Put the raw ID column in the <strong>Distinct count of</strong>
-field well instead — the visual counts unique values per cell, which is exact for any X/Y pair.</p></details>
-
-<details><summary>"Showing a partial dataset"</summary>
-<p>The row limit was reached. The visual loads row-level detail in segments to keep distinct counts
-exact; with many dimensions at once the combinations exceed what Power BI will deliver. Remove a
-dimension or two.</p></details>
-
-<details><summary>Clicking a cell does not filter another table</summary>
-<p>Check the relationship between the tables in Model view. Filtering from a fact table to a
-dimension table needs the cross-filter direction set to <strong>Both</strong>.</p></details>
-
-<details><summary>Pro features are not active after purchasing</summary>
-<p>The visual detects the licence when the report is opened or refreshed. Microsoft notes it can take
-up to an hour for a new licence to be recognised: refresh the browser (F5) or close and reopen Power BI
-Desktop. A licence is required per user. If it persists, open an issue with your AppSource order
-reference.</p></details>
-
-<h2>Limits and known behaviour</h2>
-<ul>
-  <li>Up to 25 distinct values are shown per axis; beyond that, the rest are omitted.</li>
-  <li><strong>Average is an unweighted approximation</strong> when extra dimensions are loaded. Sum, minimum, maximum and count are exact.</li>
-  <li>With distinct counts, percentages of a row need not add to 100 — an entity present in several columns is counted in each. That is inherent to distinct counting, not a defect.</li>
-</ul>
-
-<h2>Getting help</h2>
-<ul>
-  <li><a href="mailto:support@tcviz.com?subject=Dynamic%20Matrix%20Heatmap%20bug%20report">Report a bug or request a feature</a></li>
-  <li><a href="changelog.html">Changelog</a></li>
-  <li>Licensing questions: <a href="mailto:support@tcviz.com">support@tcviz.com</a></li>
-</ul>
 
 <footer>
-  <span>© 2026 TCViz</span>
-  <a href="privacy.html">Privacy</a>
-  <a href="terms.html">Terms</a>
-  <a href="changelog.html">Changelog</a>
+  <div style="margin-bottom:10px;">
+    <a href="https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/privacy.html">Privacy Policy</a>
+    <a href="https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/terms.html">Terms of Service</a>
+    <a href="changelog.html">Changelog</a>
+    <a href="https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/discussions" target="_blank">Discussions</a>
+    <a href="https://github.com/tinocallarisa-web/dynamic-matrix-heatmap" target="_blank">GitHub</a>
+    <a href="https://tcviz.com" target="_blank">tcviz.com</a>
+  </div>
+  <p>© 2026 TCViz · Dynamic Matrix Heatmap · <a href="mailto:support@tcviz.com">support@tcviz.com</a></p>
 </footer>
 
-</div>
+<script>
+(function () {
+  'use strict';
+
+  // ── Nav highlight (in-page anchors only) ────────────────────────────────────
+  document.querySelectorAll('nav a[href^="#"]').forEach(function (a) {
+    a.addEventListener('click', function () {
+      document.querySelectorAll('nav a').forEach(function (x) { x.classList.remove('active'); });
+      a.classList.add('active');
+    });
+  });
+
+  // ── Documentation search ────────────────────────────────────────────────────
+  var input  = document.getElementById('docsearch');
+  var clear  = document.getElementById('searchclear');
+  var status = document.getElementById('searchstatus');
+  var wrap   = document.querySelector('.wrap');
+  if (!input || !wrap) { return; }
+
+  var HIDE = 'is-hidden';
+
+  // Atomic searchable units: one FAQ entry, one table row, one card.
+  var units = [];
+  function add(el) {
+    if (units.some(function (u) { return u.el === el; })) { return; }
+    units.push({ el: el, html: el.innerHTML, text: (el.textContent || '').toLowerCase() });
+  }
+  wrap.querySelectorAll('details').forEach(add);
+  wrap.querySelectorAll('table tr').forEach(function (tr) {
+    if (tr.querySelector('th')) { return; }   // header rows follow their table
+    add(tr);
+  });
+  wrap.querySelectorAll('.card, .contact-box').forEach(add);
+
+  // Sections: an <h2> plus every sibling up to the next <h2>.
+  var sections = [];
+  var current = null;
+  Array.prototype.forEach.call(wrap.children, function (el) {
+    if (el.tagName === 'H2') {
+      current = { head: el, body: [] };
+      sections.push(current);
+    } else if (current) {
+      current.body.push(el);
+    }
+  });
+  // Each body element remembers which units live inside it.
+  sections.forEach(function (sec) {
+    sec.body.forEach(function (b) {
+      b._units = units.filter(function (u) { return b === u.el || b.contains(u.el); });
+      if (!b._units.length) { b._html = b.innerHTML; }
+    });
+  });
+
+  function escapeRe(t) { return t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function escapeHtml(t) {
+    return t.replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; });
+  }
+
+  function highlight(el, terms) {
+    var re = new RegExp('(' + terms.map(escapeRe).join('|') + ')', 'gi');
+    var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    var nodes = [], n;
+    while ((n = walker.nextNode())) { nodes.push(n); }
+    nodes.forEach(function (node) {
+      var txt = node.nodeValue;
+      re.lastIndex = 0;
+      if (!re.test(txt)) { return; }
+      re.lastIndex = 0;
+      var span = document.createElement('span');
+      span.innerHTML = escapeHtml(txt).replace(re, '<mark>$1</mark>');
+      node.parentNode.replaceChild(span, node);
+    });
+  }
+
+  function showAll() {
+    units.forEach(function (u) { u.el.classList.remove(HIDE); u.el.innerHTML = u.html; });
+    sections.forEach(function (sec) {
+      sec.head.classList.remove(HIDE);
+      sec.body.forEach(function (b) {
+        b.classList.remove(HIDE);
+        if (b._html !== undefined) { b.innerHTML = b._html; }
+      });
+    });
+    status.textContent = '';
+    clear.hidden = true;
+  }
+
+  function run(q) {
+    q = (q || '').trim();
+    if (q.length < 2) { showAll(); return; }
+    clear.hidden = false;
+
+    var terms = q.toLowerCase().split(/\s+/).filter(Boolean);
+    var hits = 0;
+
+    units.forEach(function (u) {
+      u.el.innerHTML = u.html;
+      var match = terms.every(function (t) { return u.text.indexOf(t) !== -1; });
+      u.el.classList.toggle(HIDE, !match);
+      if (match) {
+        hits++;
+        highlight(u.el, terms);
+        if (u.el.tagName === 'DETAILS') { u.el.open = true; }
+      }
+    });
+
+    sections.forEach(function (sec) {
+      var anyVisible = false;
+      sec.body.forEach(function (b) {
+        var visible;
+        if (b._units.length) {
+          visible = b._units.some(function (u) { return !u.el.classList.contains(HIDE); });
+        } else {
+          b.innerHTML = b._html;
+          var txt = (b.textContent || '').toLowerCase();
+          visible = terms.every(function (t) { return txt.indexOf(t) !== -1; });
+          if (visible) { highlight(b, terms); }
+        }
+        b.classList.toggle(HIDE, !visible);
+        if (visible) { anyVisible = true; }
+      });
+      sec.head.classList.toggle(HIDE, !anyVisible);
+    });
+
+    status.textContent = hits
+      ? hits + ' result' + (hits === 1 ? '' : 's') + ' for “' + q + '”'
+      : 'No results for “' + q + '”. Try a Format pane setting name, or email support@tcviz.com.';
+  }
+
+  var timer;
+  input.addEventListener('input', function () {
+    clearTimeout(timer);
+    timer = setTimeout(function () { run(input.value); }, 120);
+  });
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { input.value = ''; showAll(); }
+  });
+  clear.addEventListener('click', function () { input.value = ''; showAll(); input.focus(); });
+
+  // Deep link: support.html?q=license
+  var qp = new URLSearchParams(location.search).get('q');
+  if (qp) { input.value = qp; run(qp); }
+})();
+</script>
 </body>
 </html>

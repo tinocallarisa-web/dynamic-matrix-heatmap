@@ -1,10 +1,30 @@
 # Certification Notes — Dynamic Matrix Heatmap
 
-**Version 1.1.0.0 · TCViz**
+**Version 1.2.0.0 · TCViz**
 
 > The text to paste into *Notes for certification* is `docs/CERTIFICATION-NOTES-SHORT.txt`: that field
 > truncates at 2,500 characters without warning. This file is the full reference, reached through the
 > `certification` branch.
+
+---
+
+## 1.2.0.0 — what changed for review
+
+- **Show as in the visual.** The per-measure "Show value as" setting moved from the format pane to a
+  dropdown in the visual's own bar (Pro, previewed while editing). The old property is still read so
+  existing reports keep their mode.
+- **Group rows (Pro).** A fourth dropdown picks a third dimension; rows are grouped with subtotal rows
+  that open and close. Clicking a cell applies a TupleFilter over three targets (X, Y, group).
+- **Order by similarity (Pro)**, **Others** (smallest categories grouped so totals add up), sorting by
+  header click, colour rules, colour schemes, style templates, on-object formatting
+  (powerbi-visuals-utils-onobjectutils), 12 locales including the in-visual bar.
+- **Roles.** `distinctFields` is renamed "Detail (rows)" (same role name, so bound fields survive);
+  the `weights` role is removed. Averages are exact with Detail (rows); a Count (Distinct) measure is
+  counted exactly when its column is bound.
+- **persistProperties** stores the view: fields picked, Show as per measure, sort column and
+  direction, closed groups. No new privilege; no network access.
+- **Rendering events**: one started/finished-or-failed pair per update(); sort, group toggles and the
+  licence repaint redraw outside update() without emitting events.
 
 ---
 

@@ -7,6 +7,39 @@ four-part version scheme (`major.minor.patch.build`).
 
 ---
 
+## [1.2.0.0] — 2026-10-12
+
+The matrix becomes a pivot table: the reader chooses how values are shown, groups rows with subtotals, and sorts.
+
+### Added
+
+- **Show as, in the visual (Pro).** A dropdown next to Value switches the active measure between absolute, % of row, % of column and % of grand total, and each measure remembers its own. The reader can change it, like X and Y. The same measure no longer needs to be added twice — which did not work anyway: Power BI treats two copies of the same field as one, so renaming one renamed both.
+- **Group rows (Pro).** A third dimension groups the rows, with a subtotal row per group that opens and closes, and a button to open or close all. Each cell is computed from the rows of its own group, and clicking it filters by column, row and group.
+- **Order by similarity (Pro).** Rows or columns with the same pattern are placed together, by hierarchical clustering of their profiles.
+- **Detail (rows).** One optional ID — order, ticket, customer — makes averages exact for any X/Y pair. Free.
+- **Exact distinct counts without a separate well.** A measure set to Count (Distinct) in the field well is counted exactly when that column is also in Dimensions or Detail (rows).
+- **Others.** Beyond Maximum rows or columns (default 25, up to 200), the categories with the smallest totals are grouped in one Others row or column, so totals still add up, and a note says how many. Others is drawn last and does not stretch the color scale.
+- **Sorting.** Row and column order by name or total; click a column header to sort the rows by it; days of the week and months in calendar order in six languages.
+- **Color rules.** Up to three rules paint the cells that meet a threshold, over the gradient.
+- **12 color schemes and 5 style templates** (Classic, Clean, Tiles, Contrast, Compact), space between cells and rounded corners. Text on dark cells turns white automatically.
+- **Format on the canvas.** Click the values, the headers or the dropdown bar in format mode to format them.
+- **12 languages.** The Format pane and the bar in the visual — which until now was always in English, together with the notes and the Total label.
+
+### Fixed
+
+- **Only the first 25 categories of an axis were shown, and totals left the rest out without saying so.** Replaced by Others, with a note.
+- **The note that an average or a non-additive measure is not exact appeared one render late.** It now appears with the matrix it refers to.
+- **Two copies of the same measure shared their percentage setting, and renaming one left it behind.** Settings are now kept per field and position.
+
+### Changed
+
+- **Distinct count of is now Detail (rows).** Same well, new meaning: fields already in it stay, and are still offered as distinct counts (Pro).
+- **Weights for averages is removed.** Detail (rows) makes averages exact without a weight. A field left in it is no longer used; reports that relied on it show an average of averages, with the note, until an ID is added to Detail (rows).
+- **Show value as is no longer in the Format pane;** it is the Show as dropdown in the visual. Reports keep the mode they had.
+- **The Values card description** no longer mentions Aggregation and Number format, removed in 1.1.0.0.
+
+---
+
 ## [1.1.0.0] — 2026-09-28
 
 ### Fixed

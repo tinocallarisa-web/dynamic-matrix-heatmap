@@ -1,130 +1,99 @@
-# Tips &amp; Hints — Dynamic Matrix Heatmap
+# Dynamic Matrix Heatmap — Tips & Hints (v1.2.0.0)
 
-**Version 1.1.0.0 · TCViz**
-Video walkthrough: https://www.youtube.com/watch?v=vobbf6405e4
-
-> Content for the *Tips &amp; Hints* page of the sample `.pbix`.
-> Power BI text boxes do not render markdown tables — use `TIPS-AND-HINTS-PLAIN.txt` when pasting
-> into the report.
+A pivot table with a heatmap that **the reader turns**: rows, columns, the value and how it is shown are
+chosen inside the visual. This page is the short version of everything worth knowing.
+Full documentation, with search: https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/support.html
 
 ---
 
-## Getting started
+## Quick start
 
-1. Drop the visual on the canvas.
-2. Drag two or more fields into **Dimensions**. These fill the X and Y dropdowns.
-3. Drag at least one measure into **Measures**.
-4. Pick an **X axis** and a **Y axis** inside the visual. The matrix appears.
-5. Optional (Pro): drag a raw ID column into **Distinct count of** for exact unique counts.
+1. Drag two or more fields into **Dimensions** and at least one into **Measures**.
+2. Pick the **X axis**, the **Y axis** and the **Value** in the bar at the top of the visual.
+3. Showing an average? Put an ID in **Detail (rows)** — order, ticket or customer — and it is exact.
 
-Your selection is saved with the report, so it survives closing and reopening.
+> **The most common surprise:** an average that does not match the native matrix. Without Detail
+> (rows), Power BI sends averages at the grain of every bound dimension and the visual can only combine
+> them. One ID in Detail (rows) fixes it; a note says so while you edit.
+
+---
 
 ## Field wells
 
-| Well | Accepts | Limit | Purpose |
-|---|---|---|---|
-| Dimensions | Any grouping field | 3 Free / 10 Pro | Fills the X and Y dropdowns |
-| Measures | Measures or numeric columns | 2 Free / 5 Pro | Values shown in the cells |
-| Distinct count of | Raw ID columns | 3 (Pro) | Exact unique counts, computed by the visual |
+| Well | Limit | What it does |
+|---|---|---|
+| **Dimensions** | 10 (Free: 3) | Fields offered in X axis, Y axis and Group rows. |
+| **Measures** | 5 (Free: 2) | Aggregated as set in the field well; the model's format is used. |
+| **Detail (rows)** | 3, optional | An ID per row: exact averages, and distinct counts of these fields in Value (Pro). |
 
-Aim for roughly 20–25 distinct values per dimension. Up to 25 are rendered per axis.
+---
+
+## The bar in the visual
+
+- **X axis · Y axis · Value** — anyone reading the report can change them.
+- **Show as** *(Pro)* — absolute, % of row, % of column, % of grand total. Each measure remembers its own:
+  never add the same measure twice (Power BI treats both copies as one).
+- **Group rows** *(Pro, with 3+ dimensions)* — a third dimension with subtotal rows that open and close;
+  the corner button opens or closes all.
+
+---
+
+## Exact numbers
+
+- **Sum, Min, Max, Count** — always exact.
+- **Average** — exact with Detail (rows).
+- **Count (Distinct)** — choose it in the field well; exact when the same column is also in Dimensions
+  or Detail (rows).
+- **Ratios and non-additive DAX** — flagged with a note; bind only the dimensions you compare.
+
+---
+
+## Sorting and Others
+
+- **Click a column header** to sort the rows by it: highest first, lowest first, off.
+- **Automatic** order keeps the data order and puts days and months in calendar order.
+- **Others (N)** groups the smallest categories beyond Maximum rows / columns (25 by default, up to 200)
+  so totals still add up; it does not stretch the color scale.
+- **Order by similarity** *(Pro)* puts rows or columns with the same pattern together.
+
+---
 
 ## Format pane
 
-| Card | Setting | What it does |
-|---|---|---|
-| Values | Show value as *(Pro)* | Absolute, % of row, % of column, % of grand total |
-| Values | Show totals *(Pro)* | Total row and column, with exact distinct counts |
-| Heatmap colors | Minimum / Middle / Maximum | Three-point scale, applied globally |
-| Empty cells | Display as | Blank, dash, zero or grey fill |
-| Text | Axis labels / Values / Controls | Font, size and colour, set separately |
-| Layout | Row height / Column width | Sizing in pixels |
-| Layout | Column header orientation | Horizontal, vertical (90°) or diagonal (45°) |
+- **Style template** — Classic, Clean, Tiles, Contrast, Compact; your own settings win.
+- **Values** — Show totals *(Pro)*.
+- **Heatmap colors** — 12 schemes (Viridis and Cividis are colour-blind safe) or Custom.
+- **Color rules** — up to three thresholds with their own color; percentages as fractions (0.25).
+- **Rows and columns** — order, maximums, Others, similarity.
+- **Empty cells**, **Text**, **Layout** (row height, column width, header orientation, cell gap and radius).
+- Text on dark cells turns white automatically unless you set the value color.
 
-## Free vs Pro
+---
 
-| Capability | Free | Pro |
-|---|---|---|
-| Matrix with in-canvas dropdowns | ✓ | ✓ |
-| Heatmap colour scale | ✓ | ✓ |
-| All formatting options | ✓ | ✓ |
-| Cross-filtering, tooltips, context menu | ✓ | ✓ |
-| High contrast | ✓ | ✓ |
-| Dimensions | up to 3 | up to 10 |
-| Measures | up to 2 | up to 5 |
-| Distinct count of | — | ✓ |
-| Show value as % | — | ✓ |
-| Row and column totals | — | ✓ |
+## Filtering
 
-## Tips and best practices
+- Click a cell to filter the page; click again to clear; **Ctrl+click** to add.
+- With row groups, a cell filters by column, row **and** group.
+- A cell in Others filters by all of its categories.
+- **Bookmarks** restore the selected cells.
 
-**Put the high-cardinality dimension on Y.** Rows scroll comfortably; columns run out of width fast.
+---
 
-**Use the diagonal header orientation** when column labels are long. It keeps columns narrow without
-truncating text.
+## Free and Pro
 
-**Keep dimensions lean.** Every field you add multiplies the combinations Power BI has to compute.
-Three or four well-chosen dimensions perform far better than ten, and the dropdowns stay usable.
+Free is a correct pivot, not a cut-down one: 3 dimensions and 2 measures, heatmap, rules, templates,
+Others, sorting and exact averages. Pro adds 10 dimensions and 5 measures, Show as, totals, row groups,
+order by similarity and distinct counts of Detail fields. While editing without a licence, Pro features
+are drawn working under a *Pro preview* watermark; reading view shows the free result.
 
-**Set the heatmap midpoint deliberately.** The scale is global across every visible cell, so a single
-outlier flattens everything else. If one cell dominates, consider filtering it out.
+---
 
-**Empty is not zero.** Use *Dash* for empty cells when absence of data means something different
-from a genuine zero — they are easy to confuse in a dense matrix.
+## What changed in 1.2
 
-## Pro features in practice
+- **Distinct count of → Detail (rows).** Fields already there stay.
+- **Weights for averages is gone.** Use an ID in Detail (rows) instead.
+- **Show value as** moved from the Format pane to **Show as** in the visual; reports keep their mode.
 
-**Distinct count of** — the reason the visual exists. Drag `customer_id` (the raw column, not a
-measure) into this well. The visual counts unique values itself, so the figure is exact for every
-X/Y combination. Verify it against a card with *Count (Distinct)*: the grand totals match.
+---
 
-Why a DAX measure cannot do this: Power BI computes the measure across all the fields in the visual,
-and a customer appearing under two categories would be counted in both. Recombining those into a
-two-dimensional view double counts. Counting from the raw column avoids the problem entirely.
-
-**Show value as** — *% of grand total* answers "where is the mass of this data?" in one glance.
-*% of row* and *% of column* answer "how does this row split?".
-
-**Totals** — with distinct counts, the margins are genuine distinct counts across the whole row or
-column, not the sum of the cells. That is correct, and it is why the row total is usually smaller
-than adding the cells across.
-
-## Example configurations
-
-**Customer coverage by service level**
-X = picking type · Y = delivery distance · Value = Distinct customer_id · Show totals on
-→ how many distinct customers fall in each service combination, with an exact overall figure.
-
-**Revenue concentration**
-X = channel · Y = quarter · Value = Sum of sales · Show value as = % of grand total
-→ which channel and quarter carry the business, as percentages totalling 100%.
-
-**Quality scores**
-X = route · Y = complexity · Value = Average of score
-→ mean score per intersection. Row totals show the mean for the whole row.
-
-## Troubleshooting
-
-**Numbers do not match my card.** For counts of things that appear in more than one category, use
-*Distinct count of* with the raw column rather than a DAX measure.
-
-**A field shows as a percentage when it should not.** This happens when the same field is added
-twice, once normally and once with *Show value as → Percent of grand total*: Power BI marks the
-underlying column as a percentage and it reaches both. The visual detects and corrects this. If it
-persists, check the column's format in your model — the visual uses the model's format string, in
-your report's locale.
-
-**An average is not the number the native matrix shows.** X and Y are chosen inside the visual, so
-Power BI cannot aggregate to that pair: it aggregates at the grain of every bound dimension and the
-visual combines the rest. Sums, minimums, maximums and counts survive that; an average does not,
-because every combination would count the same whether it holds one row or ten thousand. Bind a row
-count to the **Weights for averages** well and the visual uses the weighted average.
-
-**A distinct count is too high.** Do not bind *Count (Distinct)* as a measure: a customer buying in two
-regions sits in two combinations and gets counted twice. Use the **Distinct count of** well with the raw
-ID column, which the visual counts per cell and is exact for any X/Y pair.
-
-**"Showing a partial dataset".** Too many dimension combinations. Remove a dimension or two.
-
-**Clicking does not filter another table.** In Model view, set the relationship's cross-filter
-direction to **Both**.
+Questions: https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/discussions · support@tcviz.com

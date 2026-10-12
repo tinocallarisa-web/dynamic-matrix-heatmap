@@ -1,4 +1,4 @@
-Dynamic Matrix Heatmap 1.1.0.0 - GUID dynamicMatrixHeatmap790912782D2A48CE80E680D64C793458
+Dynamic Matrix Heatmap 1.2.0.0 - GUID dynamicMatrixHeatmap790912782D2A48CE80E680D64C793458
 
 SOURCE CODE
 github.com/tinocallarisa-web/dynamic-matrix-heatmap, branch "certification".
@@ -10,36 +10,33 @@ There is no activation key: Pro is granted by the AppSource plan through
 IVisualLicenseManager, so none exists outside the marketplace. You do not need one.
 The submitted package already renders every premium feature: import this .pbiviz and
 open a report in EDIT mode without a licence. Each Pro capability is drawn WORKING
-under a "Pro preview" watermark naming it - same code, same data, nothing hidden or
-stubbed. Reading view shows the free result, so a published report never uses an
-unpaid feature.
-Without the watermark: npm install, then node build-test.js (isPro forced true, GUID +
-"_test") or --free. Neither build is ever submitted.
+under a "Pro preview" watermark naming it - same code, same data. Reading view shows
+the free result, so a published report never uses an unpaid feature.
 
 WHAT TO CHECK
-Bind 4+ Dimensions, 3+ Measures and an ID column to Distinct count of.
-Editing, no licence: watermark, a banner naming the blocked feature, Upgrade about 10 s
-later, every Pro well rendering. Reading view: a note naming what was withheld, no
-watermark. Click a cell: other visuals filter. Bookmark, leave the page and return:
-filter and highlight come back. Right click: menu. Tab + Enter: same as click.
+Bind 4 Dimensions and 2 Measures. Pick X, Y, Value in the bar. Editing, no licence:
+Show as and Group rows appear with the watermark; Group rows adds subtotal rows that
+open and close. Click a cell: other visuals filter (tuple filter on X, Y and, with
+groups, the group). Click a column header: rows sort. Bookmark, leave, return: the
+selection comes back. Format mode: click a header or a value - on-object panes.
 
-WHAT CHANGED SINCE 1.0.1.0
-Correctness in how values combine across the dimensions not chosen for X and Y: a
-counted field returned the number of row groups, a distinct count bound as a measure
-was added up, and averages can be weighted through a new optional "Weights" well.
-Numbers follow the report locale. Bookmarks, allowInteractions, es-ES in the pane.
-No new dependency, no new privilege. Detail in CHANGELOG.md.
+WHAT CHANGED SINCE 1.1.0.0
+Show as moved from the format pane into the visual (per measure). Row groups with
+subtotals, order by similarity, Others (smallest categories grouped so totals add up),
+sorting, colour rules, schemes, templates, on-object formatting, 12 locales.
+Detail (rows) is the former distinctFields role renamed; the Weights role was removed.
+New dependency: powerbi-visuals-utils-onobjectutils (Microsoft). No new privilege.
+
+FETCHMOREDATA WARNING
+pbiviz only detects fetchMoreData for table mappings; this visual is categorical and
+calls host.fetchMoreData(true) in renderFromDataView, capped at 20 segments.
 
 PRIVACY
-No network calls, no telemetry, no storage. Only the dataView; the picked dimensions
-and value are persisted in the .pbix. privileges is []. The TupleFilter $schema is an
-identifier, not a requested URL. No innerHTML.
+No network calls, no telemetry. privileges []. persistProperties stores the view
+(fields picked, Show as per measure, sort column, closed groups) in the .pbix. The
+TupleFilter $schema is an identifier, not a requested URL. No innerHTML.
 
-FREE VS PRO
-Free: X/Y/Value dropdowns, heatmap, formatting, tooltips, cross-filter, menu, keyboard,
-high contrast, weighted averages, 3 dimensions, 2 measures.
-Pro: 10 dimensions, 5 measures, Distinct count of, Show value as %, totals.
-
-Rendering events on every update() path. eslint 0.
+Rendering events: one started/finished pair per update(); sorting, group toggles and
+licence repaints redraw without calling update(). eslint 0.
 Video https://www.youtube.com/watch?v=vobbf6405e4
 Support/privacy/terms: tinocallarisa-web.github.io/dynamic-matrix-heatmap/

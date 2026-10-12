@@ -34,7 +34,7 @@
 
 <header>
   <h1>Privacy Policy</h1>
-  <p class="sub">Dynamic Matrix Heatmap — a Power BI custom visual by TCViz · Last updated: 3 August 2026</p>
+  <p class="sub">Dynamic Matrix Heatmap — a Power BI custom visual by TCViz · Last updated: 12 October 2026 </p>
 </header>
 
 <div class="card ok">
@@ -53,7 +53,7 @@ workspace, your account or your device.</p>
   <tr><th>Field well</th><th>What it receives</th></tr>
   <tr><td><code>Dimensions</code></td><td>Category values for the fields you assign, used to populate the X and Y dropdowns and to build the matrix axes.</td></tr>
   <tr><td><code>Measures</code></td><td>Numeric values for the measures you assign, plus their format strings and aggregation metadata.</td></tr>
-  <tr><td><code>Distinct count of</code></td><td>Raw column values (for example customer identifiers), used solely to count unique values in memory while rendering.</td></tr>
+  <tr><td><code>Detail (rows)</code></td><td>Raw column values (for example order or customer identifiers), used solely to compute averages and distinct counts in memory while rendering.</td></tr>
 </table>
 
 <h2>2. Network access</h2>
@@ -66,16 +66,17 @@ workspace, your account or your device.</p>
 </div>
 
 <h2>3. What is written, and where</h2>
-<p>The visual persists exactly three values, and only inside your own <code>.pbix</code> report file
-through the standard Power BI <code>persistProperties</code> API:</p>
+<p>The visual persists a few settings, only inside your own .pbix report file, through the standard Power
+BI <code>persistProperties</code> API, so your view survives saving and reopening the report:</p>
 <ul>
-  <li>The field name chosen in the <strong>X axis</strong> dropdown</li>
-  <li>The field name chosen in the <strong>Y axis</strong> dropdown</li>
-  <li>The key of the entry chosen in the <strong>Value</strong> dropdown</li>
+  <li>The fields chosen in the X axis, Y axis and Group rows dropdowns, and the entry chosen in Value</li>
+  <li>How each measure is shown (absolute or a percentage)</li>
+  <li>The column the rows are sorted by, and its direction</li>
+  <li>Which row groups are closed</li>
 </ul>
-<p>These are field <em>names</em>, never data values. They exist so your selection survives saving
-and reopening the report. They travel nowhere else.</p>
-
+<p>The first two are field names and settings. <strong>The last two are category values from your data</strong>
+&mdash; for example the column header &ldquo;Wednesday&rdquo; or the group &ldquo;Gloves&rdquo; &mdash; stored in the
+report exactly like a slicer selection. They travel nowhere else.</p>
 <p>The visual also writes a standard Power BI filter when you click a cell, so other visuals on
 the page react. That filter lives in your report, exactly like a slicer selection.</p>
 

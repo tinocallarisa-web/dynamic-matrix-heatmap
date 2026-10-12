@@ -38,7 +38,7 @@
 
 <header>
   <h1>Terms of Use &amp; Licence</h1>
-  <p class="sub">Dynamic Matrix Heatmap — a Power BI custom visual by TCViz · Last updated: 28 September 2026 · Applies to version 1.1.0.0 and later</p>
+  <p class="sub">Dynamic Matrix Heatmap — a Power BI custom visual by TCViz · Last updated: 12 October 2026 · Applies to version 1.2.0.0 and later</p>
 </header>
 
 <p>By installing or using Dynamic Matrix Heatmap (the "visual") you agree to these terms. If you do
@@ -55,17 +55,22 @@ through Microsoft AppSource and unlocks the remaining capabilities.</p>
 
 <table>
   <tr><th style="width:52%">Capability</th><th>Free</th><th>Pro</th></tr>
-  <tr><td>Matrix with in-canvas X / Y / Value dropdowns</td><td>✓</td><td>✓</td></tr>
-  <tr><td>Global heatmap colour scale (3 configurable colours)</td><td>✓</td><td>✓</td></tr>
+  <tr><td>Pivot with in-canvas X / Y / Value dropdowns</td><td>✓</td><td>✓</td></tr>
+  <tr><td>Heatmap: 12 colour schemes or 3 custom colours, colour rules, 5 style templates</td><td>✓</td><td>✓</td></tr>
+  <tr><td>Others, sorting (by name, total or column), calendar order of days and months</td><td>✓</td><td>✓</td></tr>
+  <tr><td>Detail (rows): exact averages, and exact Count (Distinct) measures</td><td>✓</td><td>✓</td></tr>
+  <tr><td>Format on the canvas, bookmarks, 12 languages</td><td>✓</td><td>✓</td></tr>
   <tr><td>Empty cell handling, fonts, colours, row and column sizing</td><td>✓</td><td>✓</td></tr>
   <tr><td>Column header orientation (horizontal / vertical / diagonal)</td><td>✓</td><td>✓</td></tr>
   <tr><td>Tooltips, cross-filtering, context menu, keyboard navigation</td><td>✓</td><td>✓</td></tr>
   <tr><td>High contrast support</td><td>✓</td><td>✓</td></tr>
   <tr><td>Dimensions in the dropdowns</td><td>up to 3</td><td>up to 10</td></tr>
   <tr><td>Measures</td><td>up to 2</td><td>up to 5</td></tr>
-  <tr><td><strong>Distinct count of</strong> — exact unique counts for any X/Y combination</td><td>—</td><td>✓</td></tr>
-  <tr><td><strong>Show value as</strong> % of row, % of column, % of grand total</td><td>—</td><td>✓</td></tr>
-  <tr><td><strong>Row and column totals</strong>, with exact distinct counts in the margins</td><td>—</td><td>✓</td></tr>
+  <tr><td><strong>Show as</strong> % of row, % of column, % of grand total</td><td>—</td><td>✓</td></tr>
+  <tr><td><strong>Row and column totals</strong></td><td>—</td><td>✓</td></tr>
+  <tr><td><strong>Group rows</strong> by a third dimension, with subtotals that open and close</td><td>—</td><td>✓</td></tr>
+  <tr><td><strong>Order by similarity</strong> of rows and columns</td><td>—</td><td>✓</td></tr>
+  <tr><td><strong>Distinct counts</strong> of Detail (rows) fields in the Value dropdown</td><td>—</td><td>✓</td></tr>
 </table>
 
 <div class="note">
@@ -101,11 +106,11 @@ transmits nothing. See the <a href="privacy.html">Privacy Policy</a> for detail.
 
 <h2>6. Accuracy of aggregation</h2>
 <p>The visual re-aggregates values when projecting a multi-dimension result onto the two dimensions
-you select. Sum, Minimum, Maximum and Count re-aggregate exactly. <strong>Average is an unweighted
-approximation.</strong> A distinct count produced by a DAX measure cannot be re-aggregated correctly
-by any client — use the <code>Distinct count of</code> field well, where the visual counts unique
-values from the raw column and the result is exact. You are responsible for validating figures
-before relying on them for decisions.</p>
+you select. Sum, Minimum, Maximum and Count re-aggregate exactly. <strong>Average is exact only with an
+ID in Detail (rows)</strong>; without it the visual combines averages and says so while you edit. A Count
+(Distinct) measure is exact when its column is also in Dimensions or Detail (rows); otherwise, like any
+non-additive DAX measure, it cannot be re-aggregated correctly by any client, and the visual says so.
+You are responsible for validating figures before relying on them for decisions.</p>
 
 <h2>7. No warranty</h2>
 <p>The visual is provided "as is", without warranty of any kind, express or implied, including

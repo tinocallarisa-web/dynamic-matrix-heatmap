@@ -1,4 +1,4 @@
-# AppSource Listing — Dynamic Matrix Heatmap
+# AppSource Listing — Dynamic Matrix Heatmap 1.2.0.0
 
 Copy ready to paste into Partner Center, English only. **The marketplace description is the
 documentation most people read** — update it on every release.
@@ -7,8 +7,12 @@ Limits measured in Partner Center: *Search results summary* 100 characters, *Des
 characters (truncated silently), *Certification notes* 2,500 **counted with CRLF** and **cleared on
 every resubmission**.
 
-**1.1.0.0 changes the description**, because it changes what the buyer gets: a Weights field well,
-counts that were wrong, per-measure display and numbers in the report's locale.
+**1.2.0.0 changes the description**, because it changes what the buyer gets: the matrix becomes a
+pivot table (Show as in the visual, row groups with subtotals, sorting, Others), and Detail (rows)
+replaces the Distinct count of and Weights wells.
+
+Rules for this listing: no comparisons with other marketplace visuals, not even implied; compare only
+with the native Power BI matrix. "Power BI" always with that capitalisation (rejection 100.7.1).
 
 ---
 
@@ -18,85 +22,86 @@ counts that were wrong, per-measure display and numbers in the report's locale.
 Dynamic Matrix Heatmap
 ```
 
+Not renamed (decision 11-10-2026): the name has downloads and an OKviz entry behind it. "Pivot" goes
+in the summary and the description instead.
+
 ---
 
 ## Search results summary
 
 ```
-A matrix your readers can pivot themselves, with distinct counts that stay exact.
+A pivot table with a heatmap that your readers turn themselves: rows, columns, % and subtotals.
 ```
+
+*(95 characters)*
 
 ---
 
 ## Description
 
 ```
-A matrix answers the question its author had. Swapping the rows for another dimension means opening the report, editing the visual and republishing, so every new question turns into a request, a ticket and a week of waiting.
+A Power BI matrix answers the question its author had. Readers who want the rows by product instead of region, or the value as a share of the row, have to ask for another matrix, and every new question becomes a request.
 
-Dynamic Matrix Heatmap puts the choice in the report itself. The X dimension, the Y dimension and the value are dropdowns inside the visual, so the person reading picks the combination they need and the heatmap redraws. Nobody edits anything.
-
-That freedom is the hard part, and it is where most crosstabs quietly go wrong. Because the pair is chosen after the query has run, the numbers have to be combined again for whichever pair you picked — and not every number survives being combined. This visual is built around getting that right, and around saying so when it cannot.
+Dynamic Matrix Heatmap is a pivot table with a heatmap that the reader turns. Rows, columns, the value and how it is shown are dropdowns inside the visual: whoever reads the report picks the view they need and the heatmap redraws. Nobody edits anything, and no DAX is needed.
 
 PIVOT IN THE REPORT
 
-• X, Y and the value are picked inside the visual, by whoever is reading it
-• Bind up to 10 dimensions and 5 measures and let the reader explore the combinations
-• A global heatmap scale across every visible cell, with your own three colours
-• Row height, column width and header orientation: horizontal, vertical or diagonal
-• The choice is stored in the report file, so it survives save, reopen and bookmarks
+• X, Y and the value are chosen inside the visual, by whoever is reading it
+• Show as: absolute, % of row, % of column or % of grand total — each measure remembers its own (Pro)
+• Group rows by a third dimension, with subtotals that open and close (Pro)
+• Click a column header to sort the rows by it; order by name or total; days and months in calendar order
+• Others: beyond the number of rows or columns you set, the smallest categories are grouped so the totals still add up
+• Order by similarity puts rows with the same pattern side by side (Pro)
 
 NUMBERS THAT SURVIVE THE PIVOT
 
-• Distinct counts are computed from the raw ID column, per cell, so a customer appearing under two regions is counted once — not once per combination
-• Averages can be weighted: bind a row count to Weights and the result matches the native matrix
-• Counts and sums are combined exactly, at whatever pair you land on
-• When a measure cannot be combined correctly — a ratio, a percentage, a distinct count bound as a measure — the visual says so while you edit, instead of showing a plausible wrong number
-• The field's own format string is honoured, in your report's locale
+Because the pair is chosen after the query has run, the numbers have to be combined again for whichever pair you picked, and not every number survives that. This visual is built around getting it right, and saying so when it cannot.
 
-NATIVE INTEGRATION
+• Sums, minimums, maximums and counts combine exactly, at any pair
+• Add an ID to Detail (rows) — the order, ticket or customer — and averages are exact too
+• A Count (Distinct) measure is counted exactly when its column is also in the visual
+• When a number cannot be combined correctly — a ratio, an average without Detail — a note says so while you edit, instead of showing a plausible wrong number
+• The model's format string is used, in the report's locale
 
-• Click a cell to cross-filter the report; Ctrl + click to add; click again to clear
-• The filter describes the selection instead of listing it, so a cell holding five million rows costs the same as one holding five
-• Bookmarks restore both the filter and what the matrix shows as selected
-• "Edit interactions" is respected
-• Standard and report page tooltips, and the native right-click menu
+LOOK
 
-ACCESSIBLE
+• 12 colour schemes, two of them colour-blind safe, or your own three colours
+• Colour rules: paint the cells above or below a threshold
+• Style templates: Classic, Clean, Tiles, Contrast, Compact; space between cells and rounded corners
+• Text on dark cells turns white by itself
 
-• Keyboard: Tab to a cell, Enter or Space to select
-• High contrast: cells are redrawn in the system colours, with selection marked by an outline rather than by opacity alone
-• Spanish and English throughout, including the format pane
+WORKS LIKE A NATIVE VISUAL
 
-PRO
-
-• Up to 10 dimensions and 5 measures, instead of 3 and 2
-• Distinct count of — exact unique counts for any X/Y pair
-• Show value as: % of row, % of column, % of grand total, set per measure
-• Total row and column, with exact distinct counts in the margins
+• Click a cell to cross-filter the report; Ctrl+click to add; click again to clear; with row groups, a cell filters by its group too
+• Bookmarks restore the selected cells; "Edit interactions" is respected
+• Tooltips, the native right-click menu and highlighting from other visuals
+• Format on the canvas: click values, headers or the dropdown bar to format them
+• Keyboard navigation and high contrast
+• Format pane and the bar in the visual in 12 languages
 
 FREE AND PRO
 
-The free tier gives a correct result, not a cut-down one: every number it shows is a number you can take to a meeting, and nothing is watermarked in a published report. What Pro adds is reach, and the analyst readings on top. Turn on a Pro capability without a licence while editing and it is drawn working, under a "Pro preview" watermark naming it — you see your own data, not a screenshot of somebody else's. Reading view shows the free result.
+The free tier gives a correct result, not a cut-down one: every number it shows is one you can take to a meeting, and nothing is watermarked in a published report. Free includes the pivot itself with 3 dimensions and 2 measures, the heatmap, colour rules, templates, Others, sorting and exact averages with Detail (rows). Pro raises the limits to 10 dimensions and 5 measures and adds Show as, totals, row groups with subtotals, order by similarity and distinct counts of Detail fields. Turn on a Pro capability without a licence while editing and it is drawn working, under a "Pro preview" watermark that names it — your own data, not a screenshot. Reading view shows the free result.
 
 Pro comes with a one-month free trial, and can be bought monthly or annually.
 
 PRIVACY
 
-The visual makes no network requests of any kind: no analytics, no telemetry, no external scripts, no storage. It receives the dataView and draws it. The only thing written into the report is which dimensions and value you picked. Licences are checked through Microsoft's own licensing API.
+The visual makes no network requests of any kind: no analytics, no telemetry, no external scripts. What it writes into the report is your view — the fields chosen, how each measure is shown, the sort column and which groups are closed — like a slicer selection. Licences are checked through Microsoft's own licensing API.
 
 GETTING STARTED
 
 1. Add two or more fields to Dimensions and at least one to Measures.
-2. Pick the X and Y dimensions in the dropdowns at the top of the visual.
-3. For exact unique counts, drag the raw ID column into Distinct count of — not a Count (Distinct) measure, which cannot be combined across the dimensions you did not pick.
-4. If you show an average, bind a row count to Weights for averages.
+2. Pick the rows, the columns and the value in the bar at the top of the visual.
+3. Showing an average? Add an ID to Detail (rows) and it is exact.
 
-Documentation, video and sample data: https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/support.html
+Documentation, video and FAQ: https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/support.html
+Questions: https://github.com/tinocallarisa-web/dynamic-matrix-heatmap/discussions
 Support: support@tcviz.com
 
-WHAT'S NEW IN 1.1.0.0
+WHAT'S NEW IN 1.2.0.0
 
-A counted field showed the number of groups instead of the count, and a distinct count bound as a measure was silently added up. Averages can now be weighted through a new Weights field well, and match the native matrix. Numbers follow the report's locale. Bookmarks, "Edit interactions" and Spanish in the format pane. The Aggregation and Number format settings were removed: the field well and the model already decide those, and decide them better.
+The matrix becomes a pivot table: Show as in the visual, row groups with subtotals, sorting by any column, Others so totals always add up, order by similarity, colour rules, schemes and templates, format on the canvas and 12 languages. Detail (rows) replaces Distinct count of and Weights for averages: one optional ID makes averages and distinct counts exact.
 ```
 
 ---
@@ -108,7 +113,7 @@ A counted field showed the number of groups instead of the count, and a distinct
 | Support / documentation | https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/support.html |
 | Privacy policy | https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/privacy.html |
 | Terms / licence | https://tinocallarisa-web.github.io/dynamic-matrix-heatmap/terms.html |
-| Video | https://www.youtube.com/watch?v=vobbf6405e4 |
+| Video | https://www.youtube.com/watch?v=vobbf6405e4 (1.1 — a 1.2 video is pending) |
 
 Canonical YouTube URL only (policy 100.3.3.3). Shorteners, `/shorts/` and `/embed/` are rejected.
 **Correcting it here does not correct the offer** — the field Microsoft reviews is only in Partner
@@ -118,31 +123,31 @@ Center.
 
 | Asset | File | Notes |
 |---|---|---|
-| Offer screenshot | `docs/infographic.html` -> PNG | **1366x768 is mandatory.** Open the page and press *Download PNG*. Regenerated for 1.1.0.0: the format pane row changed when Aggregation and Number format were removed. |
+| Offer screenshot | `docs/infographic.html` -> PNG | **1366x768 is mandatory.** To be regenerated for 1.2.0.0. |
 | Offer icon | `assets/icon_Matrix.png`, 300x300 | Uploaded by hand: it does not travel inside the package. |
 | Large logo | `assets/icon_216x216.png` | Partner Center's listing logo. |
-| Small logo | `assets/icon_48x48.png` | The one that was missing. Generated from the 300x300 master with LANCZOS resampling, not scaled down in the browser: at 48 px a badly resized icon just smears. `assets/icon_96x96.png` is there for whatever asks for it. |
-| Package icon | `assets/icon.png`, 36x36 | Embedded in the `.pbiviz`. Do not replace it with any of the above. |
+| Small logo | `assets/icon_48x48.png` | Generated with LANCZOS from the 300x300 master. |
+| Package icon | `assets/icon.png`, 36x36 | Embedded in the `.pbiviz`. |
 
-## Suggested categories and keywords
+## Categories and keywords
 
-- Categories (max 2): **Comparison**, **Correlation** — a crosstab compares one dimension against
-  another, and the heatmap reads as the relationship between the two.
+- Categories (max 2): **Comparison**, **Correlation**.
 - EULA: our own `terms.html`, which describes the Free/Pro split.
 - Offer ID: `dynamic-matrix-heatmap` · Offer alias: Dynamic Matrix Heatmap
 
 ### Search keywords (max 3)
 
-1. `distinct count matrix` — a **problem word**. Whoever types it has a distinct count that changed
-   when they grouped it and does not know why. It is exactly what the `Distinct count of` well
-   solves, and the description answers it in the same words.
-2. `cross tab` — the **niche technical term**. Low volume, very high intent: whoever knows it needs
-   no explanation of what this is.
-3. `matrix heatmap` — the **generic**, and only because there is room. It competes with the native
-   matrix and half the marketplace, but it is what the visual is called.
+1. `pivot table` — the **problem word** for whoever comes from Excel and wants readers to turn the
+   table themselves. **A bet, written down on 12-10-2026:** until 1.1 it was discarded because people
+   would expect Excel behaviour the visual did not have. 1.2 closes most of that gap (rows, columns,
+   value and Show as chosen by the reader, row groups with subtotals, sorting). It is still not Excel:
+   one level of row grouping, no column groups, one value at a time. Watch reviews and questions for
+   "where are the nested rows".
+2. `cross tab` — the **niche technical term**. Low volume, very high intent.
+3. `heatmap` — the **generic**, and the type OKviz files the visual under, which is the one we can lead.
 
-Discarded: `pivot table` brings people expecting Excel behaviour the visual does not have.
-`business intelligence` is volume without intent.
+Dropped: `distinct count matrix` — it named a problem the visual now solves without asking the user to
+know it (Detail (rows) and exact Count (Distinct)), so it no longer earns one of three slots.
 
 ## Plan
 
@@ -150,17 +155,18 @@ Discarded: `pivot table` brings people expecting Excel behaviour the visual does
 |---|---|
 | Plan ID | `dynamic-matrix-heatmap-tcviz` — matched as the full Service ID or as the Plan ID on its own |
 | Plan name | Dynamic Matrix Heatmap Pro |
-| Plan description | Unlocks 10 dimensions and 5 measures, exact distinct counts, percentage views per measure, and the total row and column. |
+| Plan description | 10 dimensions and 5 measures, Show as (% of row, column or total), totals, row groups with subtotals, order by similarity and distinct counts of Detail fields. |
 
 ---
 
 ## What must be pasted by hand in Partner Center
 
-Editing this file changes nothing in the offer. For 1.1.0.0:
+Editing this file changes nothing in the offer. For 1.2.0.0:
 
 1. **Description** — the whole block above. It changed for this release.
-2. **Search results summary** — it changed too.
-3. **Certification notes** — `docs/CERTIFICATION-NOTES-SHORT.txt`. This field is **cleared on every
-   resubmission**, so it has to be pasted again even when nothing in it changed.
-4. **Offer screenshot** — regenerate from `docs/infographic.html` and upload the 1366x768 PNG.
-5. **Video** — check the live field is the canonical `watch?v=` form.
+2. **Search results summary** — it changed.
+3. **Keywords** — `pivot table`, `cross tab`, `heatmap`.
+4. **Plan description** — if Partner Center allows editing it on the live plan.
+5. **Certification notes** — `docs/CERTIFICATION-NOTES-SHORT.txt`. Cleared on every resubmission.
+6. **Offer screenshot** — regenerate from `docs/infographic.html` and upload the 1366x768 PNG.
+7. **Video** — the canonical `watch?v=` form; replace when the 1.2 video exists.
