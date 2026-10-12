@@ -1633,6 +1633,25 @@ export class Visual implements IVisual {
                 tbody.appendChild(tr);
             });
         } else {
+            // Subtotales de cada grupo: se pintan con el mismo esquema y reglas, pero con su propia
+            // escala; frente a celdas sueltas serían todos el máximo. Con los grupos cerrados, la
+            // matriz sigue siendo un mapa de calor: el de los grupos.
+            const subVal = (gs: string, xs: string): number | null => {
+                const idx = gx.get(xs + KEY_SEP + gs) || [];
+                const raw = idx.length ? evaluate(idx) : null;
+                if (raw === null || displayMode === "absolute") { return raw; }
+                const den = displayMode === "pctRow" ? evaluate(gAll.get(gs) || [])
+                    : displayMode === "pctCol" ? evaluate(colBucket.get(xs) || []) : grandTotal;
+                return den ? raw / den : null;
+            };
+            let sMin = Infinity, sMax = -Infinity;
+            groupOrder.forEach(gs => xCats.forEach(xs => {
+                if (xs === OTH) { return; }
+                const v = subVal(gs, String(xs));
+                if (v !== null && !isNaN(v)) { sMin = Math.min(sMin, v); sMax = Math.max(sMax, v); }
+            }));
+            if (sMin === Infinity) { sMin = 0; sMax = 1; }
+            if (sMin === sMax) { sMax = sMin + 1; }
             groupOrder.forEach(gs => {
                 const closed = this.collapsedGroups.has(gs);
                 // Fila del grupo: nombre, abrir/cerrar y subtotales por columna.
@@ -1658,21 +1677,23 @@ export class Visual implements IVisual {
                 gtr.appendChild(gth);
                 xCats.forEach(xv => {
                     const xs = String(xv);
-                    const idx = gx.get(xs + KEY_SEP + gs) || [];
-                    const raw = idx.length ? evaluate(idx) : null;
-                    let v: number | null = raw;
-                    if (raw !== null && displayMode !== "absolute") {
-                        const den = displayMode === "pctRow" ? evaluate(gAll.get(gs) || [])
-                            : displayMode === "pctCol" ? evaluate(colBucket.get(xs) || []) : grandTotal;
-                        v = den ? raw / den : null;
-                    }
+                    const v = subVal(gs, xs);
                     const td = document.createElement("td");
-                    td.className = "dmh-cell dmh-total-cell dmh-subtotal";
+                    td.className = "dmh-cell dmh-subtotal";
                     td.textContent = v === null ? "" : fmt.format(v);
                     td.style.fontWeight = "600";
                     td.style.fontFamily = text.valueFontFamily.value;
                     td.style.fontSize = text.valueFontSize.value + "px";
-                    td.style.color = this.isHighContrast ? this.hcForeground : text.valueColor.value.value;
+                    if (this.isHighContrast || v === null) {
+                        td.style.color = this.isHighContrast ? this.hcForeground : text.valueColor.value.value;
+                        if (this.isHighContrast) { td.style.backgroundColor = this.hcBackground; td.style.borderColor = this.hcForeground; }
+                    } else {
+                        const bg = ruleColor(v) || this.colorForValue((v - sMin) / (sMax - sMin), cMin, cMid, cMax);
+                        td.style.backgroundColor = bg;
+                        td.style.color = autoText && lum(bg) < 0.32 ? "#FFFFFF" : text.valueColor.value.value;
+                    }
+                    if (radius > 0) { td.style.borderRadius = radius + "px"; }
+                    if (gap > 0) { td.style.border = "none"; }
                     gtr.appendChild(td);
                 });
                 if (showTotals) { totalCell(gtr, evaluate(gAll.get(gs) || []), " dmh-subtotal"); }
